@@ -3,24 +3,30 @@ channels:
   - defaults
 dependencies:
   - black
+  - cfgrib
   - codespell
+  - eccodes
   - flake8
   - flake8-black
   - ipdb
   - ipython
   - isort >= 5
+  - matplotlib
   - mypy
-  - eccodes
-  - python-eccodes
+  - numpy
   - pip
   - pre-commit
+  - psyplot
   - pydocstyle
   - pylint >= 2.6.0
+  - pyprojroot
   - pytest
+  - python-eccodes
   - rope
   - rstcheck
   - sphinx
   - sphinx-autobuild
-  - pip
+  - xarray
   - pip:
     - flake8-pyproject
+    - iconarray
