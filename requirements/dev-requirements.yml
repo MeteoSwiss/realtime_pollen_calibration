@@ -10,6 +10,8 @@ dependencies:
   - ipython
   - isort >= 5
   - mypy
+  - eccodes
+  - python-eccodes
   - pip
   - pre-commit
   - pydocstyle
