@@ -33,6 +33,7 @@ dependencies:
   - dill=0.3.5.1=pyhd8ed1ab_0
   - distlib=0.3.4=pyhd8ed1ab_0
   - docutils=0.18.1=py310hff52083_1
+  - eccodes=2.27.0=h164a9dd_0
   - executing=0.8.3=pyhd8ed1ab_0
   - filelock=3.7.1=pyhd8ed1ab_0
   - flake8=4.0.1=pyhd8ed1ab_2
@@ -91,6 +92,7 @@ dependencies:
   - pytest=7.1.2=py310hff52083_0
   - python=3.10.4=h9a8a25e_0_cpython
   - python_abi=3.10=2_cp310
+  - python-eccodes=1.4.2=py310hde88566_1
   - pytz=2022.1=pyhd8ed1ab_0
   - pyyaml=6.0=py310h5764c6d_4
   - readline=8.1.2=h0f457ee_0
