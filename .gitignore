@@ -109,3 +109,4 @@ venv_*/
 
 # VS Code
 .vscode
+data/*.idx
