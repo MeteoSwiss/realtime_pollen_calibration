@@ -1,0 +1,2 @@
+# start day for temperature sum minus 1 - CAUTION: day 1 is 1 Dec
+jul_days_excl = {"ALNUctsum": 14, "BETUctsum": 40, "CORYctsum": 3, "POACctsum": 46}

@@ -3,6 +3,7 @@ channels:
   - defaults
 dependencies:
   - black
+  - cartopy
   - cfgrib
   - codespell
   - eccodes
