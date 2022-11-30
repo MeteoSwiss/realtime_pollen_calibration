@@ -48,12 +48,18 @@ pip install --editable .
 
 Once your package is installed, run the tests by typing
 
-```
+```bash
 pytest
 ```
 
-. If the tests pass, you are good to go. If not, contact the package administrator Simon Adamov. Make sure to update your requirement files and export your environments after installation
+If the tests pass, you are good to go. If not, contact the package administrator Simon Adamov. Make sure to update your requirement files and export your environments after installation
 every time you add new imports while developing. Check the next section to find some guidance on the development process if you are new to Python and/ or APN.
+
+To set the required Fieldextra, GRIB and ECCODES paths execute the following script:
+
+```bash
+./requirements/setup-conda-env.sh
+```
 
 ## Development tools
 
