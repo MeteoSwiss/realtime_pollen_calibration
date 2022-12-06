@@ -31,3 +31,4 @@ dependencies:
   - pip:
     - flake8-pyproject
     - iconarray
+    - sphinx-mdinclude
