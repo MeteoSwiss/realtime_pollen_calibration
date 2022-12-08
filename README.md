@@ -1,5 +1,22 @@
 # Realtime Pollen Calibration
 
+This project translates the pollen calibration module from FORTRAN into Python.
+More information about the Pollen module currently in the weather model COSMO can be found here:
+https://service.meteoswiss.ch/confluence/x/dYQYBQ
+And in this paper: (currently under review :)
+
+This specific project also has a confluence page here:
+https://service.meteoswiss.ch/confluence/x/M_ahBw
+## Some instructions:
+In the /data folder are two case studies for the Species *Alder* (i.e. ALNU).
+- The first pair of laf files (i.e. GRIB2 files) are for the 2022-02-08 05h-06h should be used to calibrate the fields called **tthrs** and **tthre**.
+- The second pair of laf files are for the 2022-02-22 07h-08h should be used to calibrate the field called **tune**.
+
+- For the calibration of tthrs/tthre (i.e. phenology / season start and end) please use this file with the latest measurements: *pollen_measured_values_2022020805.atab*
+- For the calibration of tune (i.e. tuning factor) please use this file with the latest measurements: *pollen_measured_values_2022022207.atab* and this file with the latest modelled values: *pollen_modelled_values_2022022207.atab*
+
+In the /notebook folder is a simple script that allows for plotting 2D-maps using xarray and iconarray.
+
 ## Start developing
 
 Once you created or cloned this repository, make sure the installation is running properly. Install the package dependencies with the provided script `setup_env.sh`.
