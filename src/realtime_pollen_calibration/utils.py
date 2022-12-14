@@ -5,7 +5,6 @@ import logging
 # Third-party
 import numpy as np  # type: ignore
 import pandas as pd  # type: ignore
-import scipy.interpolate as interp  # type: ignore
 
 
 def count_to_log_level(count: int) -> int:
@@ -47,7 +46,7 @@ def simple_idw(x, y, z, xi, yi):
 
 
 def read_atab(file_data, file_data_mod=""):
-    with open(file_data) as f:
+    with open(file_data, encoding="utf-8") as f:
         for n, line in enumerate(f):
             if line.strip()[0:8] == "Latitude":
                 lat_stns = np.fromstring(line.strip()[10:], sep=" ")
@@ -63,7 +62,7 @@ def read_atab(file_data, file_data_mod=""):
         file_data, header=17, delim_whitespace=True, parse_dates=[[1, 2, 3, 4, 5]]
     )
     if file_data_mod != "":
-        with open(file_data_mod) as f:
+        with open(file_data_mod, encoding="utf-8") as f:
             for n, line in enumerate(f):
                 if line.strip()[0:9] == "Indicator":
                     stn_indicators_mod = np.array(line.strip()[29:].split("         "))
@@ -85,80 +84,61 @@ def read_atab(file_data, file_data_mod=""):
     return data, data_mod, lat_stns, lon_stns, missing_value, istation_mod
 
 
-def interpolate(change_tune, ds, lat_stns, lon_stns, method="IDW"):
-    nstns = len(lat_stns)
-    stns_points = np.array([[lat_stns[i], lon_stns[i]] for i in range(nstns)])
-    grid_points = np.array(
-        [ds.latitude.values.flatten(), ds.longitude.values.flatten()]
-    ).T
-    if method == "griddata":
-        tune_vec = interp.griddata(
-            stns_points, change_tune, (ds.latitude.values, ds.longitude.values)
+def get_field_at(ds, field, lon, lat, eps=1e-2):
+    return (
+        ds[field]
+        .where(
+            (np.abs(ds.longitude - lon) < eps) & (np.abs(ds.latitude - lat) < eps),
+            drop=True,
         )
-    elif method == "RBF":
-        tune_vec = interp.RBFInterpolator(
-            stns_points, change_tune, kernel="thin_plate_spline"
-        )(grid_points).reshape(ds.latitude.values.shape)
-    elif method == "IDW":
-        tune_vec = simple_idw(
-            lat_stns,
-            lon_stns,
-            change_tune,
-            ds.latitude.values.flatten(),
-            ds.longitude.values.flatten(),
-        ).reshape(ds.latitude.values.shape)
-    elif method == "Bspline":
-        Bspline = interp.interp2d(lat_stns, lon_stns, change_tune, kind="linear")
-        tune_vec = np.array(
-            [
-                Bspline(i, j)
-                for i, j in zip(
-                    ds.latitude.values.flatten(), ds.longitude.values.flatten()
-                )
-            ]
-        ).reshape(ds.latitude.values.shape)
-    elif method == "COSMO":
-        nstns = len(lat_stns)
+        .values[0][0]
+    )
+
+
+def interpolate(change, ds, field, lat_stns, lon_stns, method="multiply"):
+    nstns = len(lat_stns)
+    if method == "multiply":
         min_param = [3.389, 4.046, 7.738, 1.875]
         max_param = [0.235, 0.222, 0.216, 0.405]
-        ipollen = 0
-        diff_lon = np.zeros((nstns,) + ds.longitude.shape)
-        diff_lat = np.zeros((nstns,) + ds.longitude.shape)
-        dist = np.zeros((nstns,) + ds.longitude.shape)
-        for istation in range(nstns):
-            diff_lon[istation, :] = (
-                (ds.longitude - lon_stns[istation])
-                * np.pi
-                / 180
-                * np.cos(ds.latitude * np.pi / 180)
-            )
-            diff_lat[istation, :] = (ds.latitude - lat_stns[istation]) * np.pi / 180
-            dist[istation, :] = np.sqrt(
-                diff_lon[istation, :] ** 2 + diff_lat[istation, :] ** 2
-            )
-        if len(dist.shape) == 3:
-            tune_vec = np.maximum(
-                np.minimum(
-                    ds.ALNUtune.values
-                    * np.sum(change_tune[:, np.newaxis, np.newaxis] / dist, axis=0)
-                    / np.sum(1 / dist, axis=0),
-                    min_param[ipollen],
-                ),
-                max_param[ipollen],
-            )
-        else:
-            tune_vec = np.maximum(
-                np.minimum(
-                    ds.ALNUtune.values
-                    * np.sum(change_tune[:, np.newaxis] / dist, axis=0)
-                    / np.sum(1 / dist, axis=0),
-                    min_param[ipollen],
-                ),
-                max_param[ipollen],
-            )
     else:
-        print("Error: Invalid method selected!")
-    return tune_vec
+        min_param = 1e10 * np.ones(4)
+        max_param = -1e10 * np.ones(4)
+    ipollen = 0
+    diff_lon = np.zeros((nstns,) + ds.longitude.shape)
+    diff_lat = np.zeros((nstns,) + ds.longitude.shape)
+    dist = np.zeros((nstns,) + ds.longitude.shape)
+    for istation in range(nstns):
+        diff_lon[istation, :] = (
+            (ds.longitude - lon_stns[istation])
+            * np.pi
+            / 180
+            * np.cos(ds.latitude * np.pi / 180)
+        )
+        diff_lat[istation, :] = (ds.latitude - lat_stns[istation]) * np.pi / 180
+        dist[istation, :] = np.sqrt(
+            diff_lon[istation, :] ** 2 + diff_lat[istation, :] ** 2
+        )
+    if method == "multiply":
+        vec = np.maximum(
+            np.minimum(
+                ds[field].values
+                * np.sum(change[:, np.newaxis, np.newaxis] / dist, axis=0)
+                / np.sum(1 / dist, axis=0),
+                min_param[ipollen],
+            ),
+            max_param[ipollen],
+        )
+    elif method == "sum":
+        vec = np.maximum(
+            np.minimum(
+                ds[field].values
+                + np.sum(change[:, np.newaxis, np.newaxis] / dist, axis=0)
+                / np.sum(1 / dist, axis=0),
+                min_param[ipollen],
+            ),
+            max_param[ipollen],
+        )
+    return vec
 
 
 def treat_missing(array, missing_value=-9999.0, tune_pol_default=1.0, verbose=False):
@@ -200,31 +180,109 @@ def get_change_tune(
     nstns = array.shape[1]
     change_tune = np.zeros(nstns)
     for istation in range(nstns):
-        tune_stns = ds.ALNUtune.where(
-            (np.abs(ds.longitude - lon_stns[istation]) < eps)
-            & (np.abs(ds.latitude - lat_stns[istation]) < eps),
-            drop=True,
-        ).values[0][0]
-        saisn_stns = ds.ALNUsaisn.where(
-            (np.abs(ds.longitude - lon_stns[istation]) < eps)
-            & (np.abs(ds.latitude - lat_stns[istation]) < eps),
-            drop=True,
-        ).values[0][0]
-        if (
-            (np.sum(array[:, istation]) <= 720)
-            or (np.sum(array_mod[:, istation_mod]) <= 720)
-            and saisn_stns > 0
-        ):
+        # sum of hourly observed concentrations of the last 5 days
+        sum_obs = np.sum(array[:, istation])
+        # sum of hourly modelled concentrations of the last 5 days
+        sum_mod = np.sum(array_mod[:, istation_mod])
+        # tuning factor at the current station
+        tune_stns = get_field_at(
+            ds,
+            "ALNU" + "tune",
+            lon_stns[istation],
+            lat_stns[istation],
+            eps,
+        )
+        # saison days at the current station
+        # if > 0 then the pollen season has started
+        saisn_stns = get_field_at(
+            ds,
+            "ALNU" + "saisn",
+            lon_stns[istation],
+            lat_stns[istation],
+            eps,
+        )
+        if (saisn_stns > 0) and ((sum_obs <= 720) or (sum_mod <= 720)):
             change_tune[istation] = (tune_pol_default / tune_stns) ** (1 / 24)
-        if (
-            (np.sum(array[:, istation]) > 720)
-            and (np.sum(array_mod[:, istation_mod]) > 720)
-            and saisn_stns > 0
-        ):
-            change_tune[istation] = (
-                np.sum(array[:, istation]) / np.sum(array_mod[:, istation_mod])
-            ) ** (1 / 24)
+        if (saisn_stns > 0) and (sum_obs > 720) and (sum_mod > 720):
+            change_tune[istation] = (sum_obs / sum_mod) ** (1 / 24)
     return change_tune
+
+
+def get_change_phenol(array, ds, lat_stns, lon_stns, eps=1e-2):
+    date = pd.Timestamp(ds.time.values).day_of_year + 1 + 31
+    pollen_types = ["ALNU", "BETU", "POAC", "CORY"]
+    ipollen = 0
+    jul_days_excl = [14, 40, 3, 46]
+    nstns = array.shape[1]
+    change_tthrs = np.zeros(nstns)
+    change_tthre = np.zeros(nstns)
+    for istation in range(nstns):
+        tthrs_stns = get_field_at(
+            ds,
+            pollen_types[ipollen] + "tthrs",
+            lon_stns[istation],
+            lat_stns[istation],
+            eps,
+        )
+        tthre_stns = get_field_at(
+            ds,
+            pollen_types[ipollen] + "tthre",
+            lon_stns[istation],
+            lat_stns[istation],
+            eps,
+        )
+        saisn_stns = get_field_at(
+            ds,
+            pollen_types[ipollen] + "saisn",
+            lon_stns[istation],
+            lat_stns[istation],
+            eps,
+        )
+        ctsum_stns = get_field_at(
+            ds,
+            pollen_types[ipollen] + "ctsum",
+            lon_stns[istation],
+            lat_stns[istation],
+            eps,
+        )
+        t_2m_stns = (
+            get_field_at(ds, "T_2M", lon_stns[istation], lat_stns[istation], eps)
+            - 273.15
+        )
+        sum_obs_24 = np.sum(array[96:, istation])
+        sum_obs = np.sum(array[:, istation])
+        # ADJUSTMENT OF SEASON START AND END AT THE BEGINNING OF THE SEASON
+        if (sum_obs_24 >= 240) and (sum_obs >= 720) and ctsum_stns < tthrs_stns:
+            change_tthrs[istation] = ctsum_stns - tthrs_stns
+            change_tthre[istation] = ctsum_stns - tthrs_stns
+        elif (
+            (0 <= sum_obs_24 < 240)
+            and (0 <= sum_obs < 720)
+            and (ctsum_stns > max(tthrs_stns, tthre_stns))
+            and (0 < saisn_stns < 10)
+        ):
+            change_tthrs[istation] = t_2m_stns * (date - jul_days_excl[0])
+            change_tthre[istation] = t_2m_stns * (date - jul_days_excl[0])
+
+        # ADJUSTMENT OF SEASON END AT THE END OF THE SEASON
+        if (
+            (0 <= sum_obs_24 < 240)
+            and (0 <= sum_obs < 720)
+            and (tthre_stns - t_2m_stns * 5 * date < ctsum_stns < tthre_stns)
+        ):
+            change_tthre[istation] += ctsum_stns - tthre_stns
+        elif (
+            (sum_obs_24 > 240)
+            and (sum_obs > 720)
+            and (tthre_stns > ctsum_stns > tthre_stns - t_2m_stns * 5 * date)
+        ):
+            change_tthre[istation] += t_2m_stns * (date - jul_days_excl[0])
+        # FAILSAFE
+        if change_tthrs[istation] > 0:
+            change_tthrs[istation] = min(1000, change_tthrs[istation])
+        elif change_tthrs[istation] <= 0:
+            change_tthrs[istation] = max(-1000, change_tthrs[istation])
+    return change_tthrs, change_tthre
 
 
 def to_grib(field):

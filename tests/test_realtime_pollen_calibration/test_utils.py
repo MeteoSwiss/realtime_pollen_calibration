@@ -55,6 +55,8 @@ def test_interpolation():
             drop=True,
         ).values[0][0]
     change_tune_2 = tune_next / tune_old
-    tune_vec_2 = utils.interpolate(change_tune_2, ds, lat_stns, lon_stns, "COSMO")
+    tune_vec_2 = utils.interpolate(
+        change_tune_2, ds, "ALNUtune", lat_stns, lon_stns, "multiply"
+    )
     err = ds2.ALNUtune - tune_vec_2
     assert np.amax(np.abs(err.values)) < 1e-1

@@ -30,5 +30,5 @@ def update_strength_realtime(file_data, file_data_mod, file_grib, verbose):
         tune_pol_default=1.0,
         eps=1e-2,
     )
-    tune_vec = utils.interpolate(change_tune, ds, lat_stns, lon_stns, "COSMO")
+    tune_vec = utils.interpolate(change_tune, ds, lat_stns, lon_stns, "multiply")
     utils.to_grib(tune_vec)

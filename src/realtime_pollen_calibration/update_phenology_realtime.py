@@ -7,28 +7,18 @@ import cfgrib  # type: ignore
 from realtime_pollen_calibration import utils
 
 
-def update_strength_realtime(file_data, file_data_mod, file_grib, verbose):
-    data, data_mod, lat_stns, lon_stns, missing_value, istation_mod = utils.read_atab(
-        file_data, file_data_mod
-    )
+def update_strength_realtime(file_data, file_grib, verbose):
+    data, _, lat_stns, lon_stns, missing_value, _ = utils.read_atab(file_data)
 
     pollen_types = ["ALNU", "BETU", "POAC", "CORY"]
     ipollen = 0
     array = data[data["PARAMETER"] == pollen_types[ipollen]].iloc[:, 2:].to_numpy()
-    array_mod = (
-        data_mod[data_mod["PARAMETER"] == pollen_types[ipollen]].iloc[:, 2:].to_numpy()
-    )
     ds = cfgrib.open_dataset(file_grib, encode_cf=("time", "geography", "vertical"))
     array = utils.treat_missing(array, missing_value, verbose=verbose)
-    change_tune = utils.get_change_tune(
-        array,
-        array_mod,
-        ds,
-        lat_stns,
-        lon_stns,
-        istation_mod,
-        tune_pol_default=1.0,
-        eps=1e-2,
+    change_tthrs, change_tthre = utils.get_change_phenol(
+        array, ds, lat_stns, lon_stns, eps=1e-2
     )
-    tune_vec = utils.interpolate(change_tune, ds, lat_stns, lon_stns, "COSMO")
-    utils.to_grib(tune_vec)
+    tthrs_vec = utils.interpolate(change_tthrs, ds, lat_stns, lon_stns, "sum")
+    tthre_vec = utils.interpolate(change_tthre, ds, lat_stns, lon_stns, "sum")
+    utils.to_grib(tthrs_vec)
+    utils.to_grib(tthre_vec)
