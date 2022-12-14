@@ -8,15 +8,31 @@ And in this paper: (currently under review :)
 This specific project also has a confluence page here:
 <https://service.meteoswiss.ch/confluence/x/M_ahBw>
 
-## Some instructions
+## Data Import
 
-In the /data folder are two case studies for the Species *Alder* (i.e. ALNU).
+In the /data folder are case studies for four Species:
 
-- The first pair of laf files (i.e. GRIB2 files) are for the 2022-02-08 05h-06h should be used to calibrate the fields called **tthrs** and **tthre**.
-- The second pair of laf files are for the 2022-02-22 07h-08h should be used to calibrate the field called **tune**.
+- Alder (ALNU)
+- Birch (BETU)
+- Hazel (CORY)
+- Grasses (POAC)
 
-- For the calibration of tthrs/tthre (i.e. phenology / season start and end) please use this file with the latest measurements: *pollen_measured_values_2022020805.atab*
-- For the calibration of tune (i.e. tuning factor) please use this file with the latest measurements: *pollen_measured_values_2022022207.atab* and this file with the latest modelled values: *pollen_modelled_values_2022022207.atab*
+The `identify_cases` folder contain text files that were used to identify timesteps with large changes in the tthrs, tthre, tune or saisl fields. Based on these files, two subsequent
+hourly fields were selected to form case studies. For the first hour of the pair, additional atab files are provided. Based on these atab files and the input GRIB-fields the resulting fields one hour later can be calculated.
+
+The `atabs` folder contains modelled and measured hourly averages of the past 120h (5 days).
+Their use can be deducted from their names. The date at the end of the name corresponds to the
+first hour of the case study pair.
+Example name: `alnu_pollen_measured_values_2022020805`
+
+The `grib2_files_cosmo1e` folder contains the GRIB2 files for each case study pair.
+For each species there are 3 pairs
+
+- one for the season start *tthrs/tthre*
+- one for the tuning *tune*
+- for the season end *tthre/saisl*
+
+## Plotting
 
 In the /notebook folder is a simple script that allows for plotting 2D-maps using xarray and iconarray.
 
