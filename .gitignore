@@ -110,3 +110,4 @@ venv_*/
 # VS Code
 .vscode
 data/*.idx
+data/fieldextra.diagnostic
