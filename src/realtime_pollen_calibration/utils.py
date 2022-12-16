@@ -3,6 +3,7 @@
 import logging
 
 # Third-party
+import eccodes  # type: ignore
 import numpy as np  # type: ignore
 import pandas as pd  # type: ignore
 
@@ -285,6 +286,30 @@ def get_change_phenol(array, ds, lat_stns, lon_stns, eps=1e-2):
     return change_tthrs, change_tthre
 
 
-def to_grib(field):
-    # Todo
-    print(field)
+def to_grib(input, output, dict_fields):
+    # copy all the fields from input into output,
+    # besides the ones in the dictionary given as input
+    with open(input, "rb") as fin, open(output, "wb") as fout:
+        while 1:
+            gid = eccodes.codes_grib_new_from_file(fin)
+            if gid is None:
+                break
+            # clone record
+            clone_id = eccodes.codes_clone(gid)
+            # get short_name
+
+            short_name = eccodes.codes_get_string(
+                clone_id, "shortName"
+            )  # "short_name")
+            # read values
+            values = eccodes.codes_get_values(clone_id)
+            # eccodes.codes_set_key_vals(clone_id, "dataDate=" + year + month + day)
+            if short_name in dict_fields:
+                eccodes.codes_set_values(clone_id, dict_fields[short_name].flatten())
+            else:
+                eccodes.codes_set_values(clone_id, values)
+            eccodes.codes_write(clone_id, fout)
+            eccodes.codes_release(clone_id)
+            eccodes.codes_release(gid)
+        fin.close()
+        fout.close()

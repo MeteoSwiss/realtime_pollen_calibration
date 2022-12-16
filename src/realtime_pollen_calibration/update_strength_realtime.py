@@ -7,7 +7,7 @@ import cfgrib  # type: ignore
 from realtime_pollen_calibration import utils
 
 
-def update_strength_realtime(file_data, file_data_mod, file_grib, verbose):
+def update_strength_realtime(file_data, file_data_mod, file_grib, file_out, verbose):
     data, data_mod, lat_stns, lon_stns, missing_value, istation_mod = utils.read_atab(
         file_data, file_data_mod
     )
@@ -31,4 +31,5 @@ def update_strength_realtime(file_data, file_data_mod, file_grib, verbose):
         eps=1e-2,
     )
     tune_vec = utils.interpolate(change_tune, ds, lat_stns, lon_stns, "multiply")
-    utils.to_grib(tune_vec)
+    dict_fields = {"ALNUtune": tune_vec}
+    utils.to_grib(file_grib, file_out, dict_fields)

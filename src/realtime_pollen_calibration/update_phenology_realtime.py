@@ -7,7 +7,7 @@ import cfgrib  # type: ignore
 from realtime_pollen_calibration import utils
 
 
-def update_strength_realtime(file_data, file_grib, verbose):
+def update_strength_realtime(file_data, file_grib, file_out, verbose):
     data, _, lat_stns, lon_stns, missing_value, _ = utils.read_atab(file_data)
 
     pollen_types = ["ALNU", "BETU", "POAC", "CORY"]
@@ -20,5 +20,8 @@ def update_strength_realtime(file_data, file_grib, verbose):
     )
     tthrs_vec = utils.interpolate(change_tthrs, ds, lat_stns, lon_stns, "sum")
     tthre_vec = utils.interpolate(change_tthre, ds, lat_stns, lon_stns, "sum")
-    utils.to_grib(tthrs_vec)
-    utils.to_grib(tthre_vec)
+    dict_fields = {
+        pollen_types[ipollen] + "tthrs": tthrs_vec,
+        pollen_types[ipollen] + "tthre": tthre_vec,
+    }
+    utils.to_grib(file_grib, file_out, dict_fields)
