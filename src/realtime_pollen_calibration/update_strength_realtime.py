@@ -21,6 +21,7 @@ def update_strength_realtime(file_data, file_data_mod, file_grib, file_out, verb
     ds = cfgrib.open_dataset(file_grib, encode_cf=("time", "geography", "vertical"))
     array = utils.treat_missing(array, missing_value, verbose=verbose)
     change_tune = utils.get_change_tune(
+        pollen_types[ipollen],
         array,
         array_mod,
         ds,
@@ -30,7 +31,13 @@ def update_strength_realtime(file_data, file_data_mod, file_grib, file_out, verb
         tune_pol_default=1.0,
     )
     tune_vec = utils.interpolate(
-        change_tune, ds, lat_stns, lon_stns, "multiply", ipollen=ipollen
+        change_tune,
+        ds,
+        pollen_types[ipollen] + "tune",
+        lat_stns,
+        lon_stns,
+        "multiply",
+        ipollen=ipollen,
     )
     dict_fields = {"ALNUtune": tune_vec}
     utils.to_grib(file_grib, file_out, dict_fields)

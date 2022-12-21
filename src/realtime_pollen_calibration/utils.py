@@ -258,16 +258,17 @@ def to_grib(input, output, dict_fields):
             clone_id = eccodes.codes_clone(gid)
             # get short_name
 
-            short_name = eccodes.codes_get_string(
-                clone_id, "shortName"
-            )  # "short_name")
+            short_name = eccodes.codes_get_string(clone_id, "shortName")
             # read values
             values = eccodes.codes_get_values(clone_id)
-            # eccodes.codes_set_key_vals(clone_id, "dataDate=" + year + month + day)
+            eccodes.codes_set(
+                clone_id, "dataTime", eccodes.codes_get(clone_id, "dataTime") + 100
+            )
             if short_name in dict_fields:
                 eccodes.codes_set_values(clone_id, dict_fields[short_name].flatten())
             else:
                 eccodes.codes_set_values(clone_id, values)
+
             eccodes.codes_write(clone_id, fout)
             eccodes.codes_release(clone_id)
             eccodes.codes_release(gid)
