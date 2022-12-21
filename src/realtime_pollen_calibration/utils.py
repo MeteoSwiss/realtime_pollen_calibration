@@ -20,32 +20,6 @@ def count_to_log_level(count: int) -> int:
         return logging.DEBUG
 
 
-def simple_idw(x, y, z, xi, yi):
-    def distance_matrix(x0, y0, x1, y1):
-        obs = np.vstack((x0, y0)).T
-        interpo = np.vstack((x1, y1)).T
-
-        # Make a distance matrix between pairwise observations
-        # Note: from <http://stackoverflow.com/questions/1871536>
-        # (Yay for ufuncs!)
-        d0 = np.subtract.outer(obs[:, 0], interpo[:, 0])
-        d1 = np.subtract.outer(obs[:, 1], interpo[:, 1])
-
-        return np.hypot(d0, d1)
-
-    dist = distance_matrix(x, y, xi, yi)
-
-    # In IDW, weights are 1 / distance
-    weights = 1.0 / dist
-
-    # Make weights sum to one
-    weights /= weights.sum(axis=0)
-
-    # Multiply the weights for each interpolated point by all observed Z-values
-    zi = np.dot(weights.T, z)
-    return zi
-
-
 def read_atab(file_data, file_data_mod=""):
     with open(file_data, encoding="utf-8") as f:
         for n, line in enumerate(f):
@@ -85,18 +59,12 @@ def read_atab(file_data, file_data_mod=""):
     return data, data_mod, lat_stns, lon_stns, missing_value, istation_mod
 
 
-def get_field_at(ds, field, lon, lat, eps=1e-2):
-    return (
-        ds[field]
-        .where(
-            (np.abs(ds.longitude - lon) < eps) & (np.abs(ds.latitude - lat) < eps),
-            drop=True,
-        )
-        .values[0][0]
-    )
+def get_field_at(ds, field, lat, lon):
+    dist = (ds.latitude - lat) ** 2 + (ds.longitude - lon) ** 2
+    return ds[field].where(dist == dist.min(), drop=True)
 
 
-def interpolate(change, ds, field, lat_stns, lon_stns, method="multiply"):
+def interpolate(change, ds, field, lat_stns, lon_stns, method="multiply", ipollen=0):
     nstns = len(lat_stns)
     if method == "multiply":
         min_param = [3.389, 4.046, 7.738, 1.875]
@@ -104,7 +72,6 @@ def interpolate(change, ds, field, lat_stns, lon_stns, method="multiply"):
     else:
         min_param = 1e10 * np.ones(4)
         max_param = -1e10 * np.ones(4)
-    ipollen = 0
     diff_lon = np.zeros((nstns,) + ds.longitude.shape)
     diff_lat = np.zeros((nstns,) + ds.longitude.shape)
     dist = np.zeros((nstns,) + ds.longitude.shape)
@@ -169,6 +136,7 @@ def treat_missing(array, missing_value=-9999.0, tune_pol_default=1.0, verbose=Fa
 
 
 def get_change_tune(
+    pollen,
     array,
     array_mod,
     ds,
@@ -176,10 +144,9 @@ def get_change_tune(
     lon_stns,
     istation_mod,
     tune_pol_default=1.0,
-    eps=1e-2,
 ):
     nstns = array.shape[1]
-    change_tune = np.zeros(nstns)
+    change_tune = np.ones(nstns)
     for istation in range(nstns):
         # sum of hourly observed concentrations of the last 5 days
         sum_obs = np.sum(array[:, istation])
@@ -188,19 +155,17 @@ def get_change_tune(
         # tuning factor at the current station
         tune_stns = get_field_at(
             ds,
-            "ALNU" + "tune",
-            lon_stns[istation],
+            pollen + "tune",
             lat_stns[istation],
-            eps,
+            lon_stns[istation],
         )
         # saison days at the current station
         # if > 0 then the pollen season has started
         saisn_stns = get_field_at(
             ds,
-            "ALNU" + "saisn",
-            lon_stns[istation],
+            pollen + "saisn",
             lat_stns[istation],
-            eps,
+            lon_stns[istation],
         )
         if (saisn_stns > 0) and ((sum_obs <= 720) or (sum_mod <= 720)):
             change_tune[istation] = (tune_pol_default / tune_stns) ** (1 / 24)
@@ -209,7 +174,7 @@ def get_change_tune(
     return change_tune
 
 
-def get_change_phenol(array, ds, lat_stns, lon_stns, eps=1e-2):
+def get_change_phenol(array, ds, lat_stns, lon_stns):
     date = pd.Timestamp(ds.time.values).day_of_year + 1 + 31
     pollen_types = ["ALNU", "BETU", "POAC", "CORY"]
     ipollen = 0
@@ -221,34 +186,29 @@ def get_change_phenol(array, ds, lat_stns, lon_stns, eps=1e-2):
         tthrs_stns = get_field_at(
             ds,
             pollen_types[ipollen] + "tthrs",
-            lon_stns[istation],
             lat_stns[istation],
-            eps,
+            lon_stns[istation],
         )
         tthre_stns = get_field_at(
             ds,
             pollen_types[ipollen] + "tthre",
-            lon_stns[istation],
             lat_stns[istation],
-            eps,
+            lon_stns[istation],
         )
         saisn_stns = get_field_at(
             ds,
             pollen_types[ipollen] + "saisn",
-            lon_stns[istation],
             lat_stns[istation],
-            eps,
+            lon_stns[istation],
         )
         ctsum_stns = get_field_at(
             ds,
             pollen_types[ipollen] + "ctsum",
-            lon_stns[istation],
             lat_stns[istation],
-            eps,
+            lon_stns[istation],
         )
         t_2m_stns = (
-            get_field_at(ds, "T_2M", lon_stns[istation], lat_stns[istation], eps)
-            - 273.15
+            get_field_at(ds, "T_2M", lat_stns[istation], lon_stns[istation]) - 273.15
         )
         sum_obs_24 = np.sum(array[96:, istation])
         sum_obs = np.sum(array[:, istation])

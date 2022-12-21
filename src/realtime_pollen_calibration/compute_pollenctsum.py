@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Example for Updating Pollen Fields in GRIB Data."""
-
+# pylint: disable-all
 # Standard library
 import datetime
 import sys

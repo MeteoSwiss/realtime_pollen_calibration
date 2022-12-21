@@ -28,8 +28,9 @@ def update_strength_realtime(file_data, file_data_mod, file_grib, file_out, verb
         lon_stns,
         istation_mod,
         tune_pol_default=1.0,
-        eps=1e-2,
     )
-    tune_vec = utils.interpolate(change_tune, ds, lat_stns, lon_stns, "multiply")
+    tune_vec = utils.interpolate(
+        change_tune, ds, lat_stns, lon_stns, "multiply", ipollen=ipollen
+    )
     dict_fields = {"ALNUtune": tune_vec}
     utils.to_grib(file_grib, file_out, dict_fields)

@@ -29,31 +29,28 @@ def test_count_to_log_level():
 def test_interpolation():
     # Specify the test case
     ds = cfgrib.open_dataset(
-        "data/laf2022022207_filtered", encode_cf=("time", "geography", "vertical")
+        "data/grib2_files_cosmo1e/laf2022022207_ALNUtune",
+        encode_cf=("time", "geography", "vertical"),
     )
     ds2 = cfgrib.open_dataset(
-        "data/laf2022022208_filtered", encode_cf=("time", "geography", "vertical")
+        "data/grib2_files_cosmo1e/laf2022022208_ALNUtune",
+        encode_cf=("time", "geography", "vertical"),
     )
     _, _, lat_stns, lon_stns, _, _ = utils.read_atab(
-        "data/pollen_measured_values_2022020805.atab"
+        "data/atabs/alnu_pollen_measured_values_2022020805.atab"
     )
-    eps = 1e-2
     ######################
     # Specify the test
     nstns = len(lon_stns)
     tune_old = np.zeros(nstns)
     tune_next = np.zeros(nstns)
     for istation in range(nstns):
-        tune_old[istation] = ds.ALNUtune.where(
-            (np.abs(ds.longitude - lon_stns[istation]) < eps)
-            & (np.abs(ds.latitude - lat_stns[istation]) < eps),
-            drop=True,
-        ).values[0][0]
-        tune_next[istation] = ds2.ALNUtune.where(
-            (np.abs(ds2.longitude - lon_stns[istation]) < eps)
-            & (np.abs(ds2.latitude - lat_stns[istation]) < eps),
-            drop=True,
-        ).values[0][0]
+        tune_old[istation] = utils.get_field_at(
+            ds, "ALNUtune", lat_stns[istation], lon_stns[istation]
+        )
+        tune_next[istation] = utils.get_field_at(
+            ds2, "ALNUtune", lat_stns[istation], lon_stns[istation]
+        )
     change_tune_2 = tune_next / tune_old
     tune_vec_2 = utils.interpolate(
         change_tune_2, ds, "ALNUtune", lat_stns, lon_stns, "multiply"

@@ -15,11 +15,13 @@ def update_strength_realtime(file_data, file_grib, file_out, verbose):
     array = data[data["PARAMETER"] == pollen_types[ipollen]].iloc[:, 2:].to_numpy()
     ds = cfgrib.open_dataset(file_grib, encode_cf=("time", "geography", "vertical"))
     array = utils.treat_missing(array, missing_value, verbose=verbose)
-    change_tthrs, change_tthre = utils.get_change_phenol(
-        array, ds, lat_stns, lon_stns, eps=1e-2
+    change_tthrs, change_tthre = utils.get_change_phenol(array, ds, lat_stns, lon_stns)
+    tthrs_vec = utils.interpolate(
+        change_tthrs, ds, lat_stns, lon_stns, "sum", ipollen=ipollen
     )
-    tthrs_vec = utils.interpolate(change_tthrs, ds, lat_stns, lon_stns, "sum")
-    tthre_vec = utils.interpolate(change_tthre, ds, lat_stns, lon_stns, "sum")
+    tthre_vec = utils.interpolate(
+        change_tthre, ds, lat_stns, lon_stns, "sum", ipollen=ipollen
+    )
     dict_fields = {
         pollen_types[ipollen] + "tthrs": tthrs_vec,
         pollen_types[ipollen] + "tthre": tthre_vec,
