@@ -7,11 +7,13 @@ fxfilter /store/s83/osm/KENDA-1/ANA22/det/laf2022020806 -s ALNUtthrs,ALNUtthre,A
 fxfilter /store/s83/osm/KENDA-1/ANA22/det/laf2022022207 -s ALNUtune,ALNUctsum,ALNUsaisn,T_2M -o laf2022022207_ALNUtune
 fxfilter /store/s83/osm/KENDA-1/ANA22/det/laf2022022208 -s ALNUtune,ALNUctsum,ALNUsaisn,T_2M -o laf2022022208_ALNUtune
 # tthre (season end)
-cd
+fxfilter /store/s83/osm/KENDA-1/ANA22/det/laf2022031114 -s ALNUtthre,ALNUctsum,ALNUsaisn,T_2M -o laf2022031114_ALNUtthre
+fxfilter /store/s83/osm/KENDA-1/ANA22/det/laf2022031115 -s ALNUtthre,ALNUctsum,ALNUsaisn,T_2M -o laf2022031115_ALNUtthre
+
 # BETU
 # tthrs
-fxfilter /store/s83/osm/KENDA-1/ANA22/det/laf2022031814 -s BETUtthrs,BETUtthre,BETUctsum,BETUsaisn,T_2M -o laf2022031815_BETUtthrs_tthre
-fxfilter /store/s83/osm/KENDA-1/ANA22/det/laf2022031815 -s BETUtthrs,BETUtthre,BETUctsum,BETUsaisn,T_2M -o laf2022031814_BETUtthrs_tthre
+fxfilter /store/s83/osm/KENDA-1/ANA22/det/laf2022031814 -s BETUtthrs,BETUtthre,BETUctsum,BETUsaisn,T_2M -o laf2022031814_BETUtthrs_tthre
+fxfilter /store/s83/osm/KENDA-1/ANA22/det/laf2022031815 -s BETUtthrs,BETUtthre,BETUctsum,BETUsaisn,T_2M -o laf2022031815_BETUtthrs_tthre
 # tune
 fxfilter /store/s83/osm/KENDA-1/ANA22/det/laf2022032309 -s BETUtune,BETUctsum,BETUsaisn,T_2M -o laf2022032309_BETUtune
 fxfilter /store/s83/osm/KENDA-1/ANA22/det/laf2022032310 -s BETUtune,BETUctsum,BETUsaisn,T_2M -o laf2022032310_BETUtune
