@@ -7,23 +7,32 @@ import cfgrib  # type: ignore
 from realtime_pollen_calibration import utils
 
 
-def update_strength_realtime(file_data, file_grib, file_out, verbose):
-    data, _, lat_stns, lon_stns, missing_value, _ = utils.read_atab(file_data)
-
-    pollen_types = ["ALNU", "BETU", "POAC", "CORY"]
-    ipollen = 0
-    array = data[data["PARAMETER"] == pollen_types[ipollen]].iloc[:, 2:].to_numpy()
+def update_phenology_realtime(file_data, file_grib, file_out, verbose=False):
     ds = cfgrib.open_dataset(file_grib, encode_cf=("time", "geography", "vertical"))
+    pollen_type = utils.get_pollen_type(ds)
+    array, _, coord_stns, missing_value, _ = utils.read_atab(pollen_type, file_data)
     array = utils.treat_missing(array, missing_value, verbose=verbose)
-    change_tthrs, change_tthre = utils.get_change_phenol(array, ds, lat_stns, lon_stns)
+    change_tthrs, change_tthre = utils.get_change_phenol(
+        pollen_type, array, ds, coord_stns, verbose
+    )
     tthrs_vec = utils.interpolate(
-        change_tthrs, ds, lat_stns, lon_stns, "sum", ipollen=ipollen
+        change_tthrs,
+        ds,
+        pollen_type + "tthrs",
+        coord_stns,
+        method="sum",
+        verbose=verbose,
     )
     tthre_vec = utils.interpolate(
-        change_tthre, ds, lat_stns, lon_stns, "sum", ipollen=ipollen
+        change_tthre,
+        ds,
+        pollen_type + "tthre",
+        coord_stns,
+        method="sum",
+        verbose=verbose,
     )
     dict_fields = {
-        pollen_types[ipollen] + "tthrs": tthrs_vec,
-        pollen_types[ipollen] + "tthre": tthre_vec,
+        pollen_type + "tthrs": tthrs_vec,
+        pollen_type + "tthre": tthre_vec,
     }
     utils.to_grib(file_grib, file_out, dict_fields)

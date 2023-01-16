@@ -8,36 +8,30 @@ from realtime_pollen_calibration import utils
 
 
 def update_strength_realtime(file_data, file_data_mod, file_grib, file_out, verbose):
-    data, data_mod, lat_stns, lon_stns, missing_value, istation_mod = utils.read_atab(
-        file_data, file_data_mod
-    )
-
-    pollen_types = ["ALNU", "BETU", "POAC", "CORY"]
-    ipollen = 0
-    array = data[data["PARAMETER"] == pollen_types[ipollen]].iloc[:, 2:].to_numpy()
-    array_mod = (
-        data_mod[data_mod["PARAMETER"] == pollen_types[ipollen]].iloc[:, 2:].to_numpy()
-    )
     ds = cfgrib.open_dataset(file_grib, encode_cf=("time", "geography", "vertical"))
+    pollen_type = utils.get_pollen_type(ds)
+    array, array_mod, coord_stns, missing_value, istation_mod = utils.read_atab(
+        pollen_type, file_data, file_data_mod
+    )
     array = utils.treat_missing(array, missing_value, verbose=verbose)
     change_tune = utils.get_change_tune(
-        pollen_types[ipollen],
+        pollen_type,
         array,
         array_mod,
         ds,
-        lat_stns,
-        lon_stns,
+        coord_stns,
         istation_mod,
-        tune_pol_default=1.0,
+        verbose=verbose,
     )
+    # does not seem to have an important effect on the end result.
+    # coord_stns2 = utils.set_stn_gridpoint(ds, coord_stns)
     tune_vec = utils.interpolate(
         change_tune,
         ds,
-        pollen_types[ipollen] + "tune",
-        lat_stns,
-        lon_stns,
-        "multiply",
-        ipollen=ipollen,
+        pollen_type + "tune",
+        coord_stns,
+        method="multiply",
+        verbose=verbose,
     )
-    dict_fields = {"ALNUtune": tune_vec}
+    dict_fields = {pollen_type + "tune": tune_vec}
     utils.to_grib(file_grib, file_out, dict_fields)
