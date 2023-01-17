@@ -32,11 +32,11 @@ fxfilter /store/s83/osm/KENDA-1/ANA22/det/laf2022032215 -s CORYtthre,CORYctsum,C
 
 # POAC
 # tthrs (we started the season too late in the model no adjustments made)
-fxfilter /store/s83/osm/KENDA-1/ANA22/det/laf2022042714 -s POACtthrs,POACtthre,POACctsum,POACsaisn,T_2M -o laf2022042714_POACtthrs
-fxfilter /store/s83/osm/KENDA-1/ANA22/det/laf2022042715 -s POACtthrs,POACtthre,POACctsum,POACsaisn,T_2M -o laf2022042715_POACtthrs
+fxfilter /store/s83/osm/KENDA-1/ANA22/det/laf2022042714 -s POACtthrs,POACctsum,POACsaisn,T_2M -o laf2022042714_POACtthrs
+fxfilter /store/s83/osm/KENDA-1/ANA22/det/laf2022042715 -s POACtthrs,POACctsum,POACsaisn,T_2M -o laf2022042715_POACtthrs
 # tune
 fxfilter /store/s83/osm/KENDA-1/ANA22/det/laf2022051308 -s POACtune,POACctsum,POACsaisn,T_2M -o laf2022051308_POACtune
 fxfilter /store/s83/osm/KENDA-1/ANA22/det/laf2022051309 -s POACtune,POACctsum,POACsaisn,T_2M -o laf2022051309_POACtune
 # saisl
-fxfilter /store/s83/osm/KENDA-1/ANA22/det/laf2022081014 -s POACsaisl,POACctsum,POACsaisn,T_2M -o laf2022081014_POACsaisl
-fxfilter /store/s83/osm/KENDA-1/ANA22/det/laf2022081015 -s POACsaisl,POACctsum,POACsaisn,T_2M -o laf2022081015_POACsaisl
+fxfilter /store/s83/osm/KENDA-1/ANA22/det/laf2022081014 -s POACtthrs,POACsaisl,POACctsum,POACsaisn,T_2M -o laf2022081014_POACsaisl
+fxfilter /store/s83/osm/KENDA-1/ANA22/det/laf2022081015 -s POACtthrs,POACsaisl,POACctsum,POACsaisn,T_2M -o laf2022081015_POACsaisl
