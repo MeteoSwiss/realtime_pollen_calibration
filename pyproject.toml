@@ -117,8 +117,6 @@ inlinevar-rgx = "^[A-Za-z_][A-Za-z0-9_]*$"
 # Disable selected warnings, errors etc. that conflict with style guide etc.
 # Note: To locally ignore certain errors, use "pylint: disable=XXXX" comments instead!
 disable = [
-    "C0115", # Missing class docstring
-    "C0116", # Missing function or method docstring
     "R0903", # Too few public methods (*/2) (too-few-public-methods)
     # "R0801", # Similar lines in 2 files (duplicate-code)
     # -> see https://github.com/PyCQA/pylint/issues/214

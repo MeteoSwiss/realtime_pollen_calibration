@@ -12,7 +12,7 @@ def update_phenology_realtime(file_data, file_grib, file_out, verbose=False):
     pollen_type = utils.get_pollen_type(ds)
     array, _, coord_stns, missing_value, _ = utils.read_atab(pollen_type, file_data)
     array = utils.treat_missing(array, missing_value, verbose=verbose)
-    change_tthrs, change_tthre = utils.get_change_phenol(
+    change_tthrs, change_tthre_saisl = utils.get_change_phenol(
         pollen_type, array, ds, coord_stns, verbose
     )
     tthrs_vec = utils.interpolate(
@@ -23,16 +23,22 @@ def update_phenology_realtime(file_data, file_grib, file_out, verbose=False):
         method="sum",
         verbose=verbose,
     )
-    tthre_vec = utils.interpolate(
-        change_tthre,
+    tthre_saisl_vec = utils.interpolate(
+        change_tthre_saisl,
         ds,
         pollen_type + "tthre",
         coord_stns,
         method="sum",
         verbose=verbose,
     )
-    dict_fields = {
-        pollen_type + "tthrs": tthrs_vec,
-        pollen_type + "tthre": tthre_vec,
-    }
+    if pollen_type != 'POAC':
+        dict_fields = {
+            pollen_type + "tthrs": tthrs_vec,
+            pollen_type + "tthre": tthre_saisl_vec,
+        }
+    else:
+        dict_fields = {
+            pollen_type + "tthrs": tthrs_vec,
+            pollen_type + "saisl": tthre_saisl_vec,
+        }
     utils.to_grib(file_grib, file_out, dict_fields)

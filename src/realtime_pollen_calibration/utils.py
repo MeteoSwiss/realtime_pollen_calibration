@@ -233,13 +233,19 @@ def get_change_tune(
 
 def get_change_phenol(pollen_type, array, ds, coord_stns, verbose=False):
     date = pd.Timestamp(ds.time.values).day_of_year + 1 + 31
+    thr_con_24 = {"ALNU": 240, "BETU": 240, "POAC": 72, "CORY": 240}
+    thr_con_120 = {"ALNU": 720, "BETU": 720, "POAC": 216, "CORY": 720}
     jul_days_excl = {"ALNU": 14, "BETU": 40, "POAC": 3, "CORY": 46}
     nstns = array.shape[1]
     change_tthrs = np.zeros(nstns)
-    change_tthre = np.zeros(nstns)
+    # change_tthre if not POAC, change_saisl if POAC
+    change_tthre_saisl = np.zeros(nstns)
     for istation in range(nstns):
         tthrs_stns = get_field_at(ds, pollen_type + "tthrs", coord_stns[istation])
-        tthre_stns = get_field_at(ds, pollen_type + "tthre", coord_stns[istation])
+        if pollen_type != 'POAC':
+            tthre_stns = get_field_at(ds, pollen_type + "tthre", coord_stns[istation])
+        else:
+            saisl_stns = get_field_at(ds, pollen_type + "saisl", coord_stns[istation])
         saisn_stns = get_field_at(ds, pollen_type + "saisn", coord_stns[istation])
         ctsum_stns = get_field_at(ds, pollen_type + "ctsum", coord_stns[istation])
         t_2m_stns = get_field_at(ds, "T_2M", coord_stns[istation]) - 273.15
@@ -255,43 +261,67 @@ def get_change_phenol(pollen_type, array, ds, coord_stns, verbose=False):
             )
             print(
                 f"Cumulative temperature sum {ctsum_stns.values[0][0]} ",
-                f"and threshold: {tthrs_stns.values[0][0]}",
+                f"and threshold: {tthrs_stns.values[0][0]}",    
             )
             print(f"Temperature at station {t_2m_stns.values[0][0]}, " f"date: {date}")
             print("-----------------------------------------")
         # ADJUSTMENT OF SEASON START AND END AT THE BEGINNING OF THE SEASON
-        if (sum_obs_24 >= 240) and (sum_obs >= 720) and ctsum_stns < tthrs_stns:
+        if (sum_obs_24 >= thr_con_24[pollen_type]) and (sum_obs >= thr_con_120[pollen_type]) and ctsum_stns < tthrs_stns:
             change_tthrs[istation] = ctsum_stns - tthrs_stns
-            change_tthre[istation] = ctsum_stns - tthrs_stns
+            if pollen_type != 'POAC':
+                change_tthre_saisl[istation] = ctsum_stns - tthrs_stns
             if verbose:
                 print("Big data and below threshold")
         elif (
-            (0 <= sum_obs_24 < 240)
-            and (0 <= sum_obs < 720)
+            (0 <= sum_obs_24 < thr_con_24[pollen_type])
+            and (0 <= sum_obs < thr_con_120[pollen_type])
             and (ctsum_stns > max(tthrs_stns, tthre_stns))
             and (0 < saisn_stns < 10)
         ):
-            change_tthrs[istation] = t_2m_stns * (date - jul_days_excl[pollen_type])
-            change_tthre[istation] = t_2m_stns * (date - jul_days_excl[pollen_type])
+            
+            if pollen_type != 'POAC':
+                change_tthre_saisl[istation] = t_2m_stns * (date - jul_days_excl[pollen_type])
+                change_tthrs[istation] = t_2m_stns * (date - jul_days_excl[pollen_type])
+            else: # case POAC
+                if saisn_stns < saisl_stns:
+                    change_tthrs[istation] = t_2m_stns * (date - jul_days_excl[pollen_type])
             if verbose:
                 print("Low data and in first 10 days of season")
         # ADJUSTMENT OF SEASON END AT THE END OF THE SEASON
-        if (
-            (0 <= sum_obs_24 < 240)
-            and (0 <= sum_obs < 720)
-            and (tthre_stns - t_2m_stns * 5 * date < ctsum_stns < tthre_stns)
-        ):
-            if verbose:
-                print("Low data (end of season)")
-            change_tthre[istation] += ctsum_stns - tthre_stns
-        elif (
-            (sum_obs_24 > 240)
-            and (sum_obs > 720)
-            and (tthre_stns > ctsum_stns > tthre_stns - t_2m_stns * 5 * date)
-        ):
-            if verbose:
-                print("Big data (end of season)")
-            change_tthre[istation] += t_2m_stns * (date - jul_days_excl[pollen_type])
+        if pollen_type != "POAC":
+            if (
+                (0 <= sum_obs_24 < thr_con_24[pollen_type])
+                and (0 <= sum_obs < thr_con_120[pollen_type])
+                and (tthre_stns - t_2m_stns * 5 * date < ctsum_stns < tthre_stns)
+            ):
+                if verbose:
+                    print("Low data (end of season)")
+                change_tthre_saisl[istation] += ctsum_stns - tthre_stns
+            elif (
+                (sum_obs_24 > thr_con_24[pollen_type])
+                and (sum_obs > thr_con_120[pollen_type])
+                and (tthre_stns > ctsum_stns > tthre_stns - t_2m_stns * 5 * date)
+            ):
+                if verbose:
+                    print("Big data (end of season)")
+                change_tthre_saisl[istation] += t_2m_stns * (date - jul_days_excl[pollen_type])
+        else: # POAC
+            if (
+                (0 <= sum_obs_24 < thr_con_24[pollen_type])
+                and (0 <= sum_obs < thr_con_120[pollen_type])
+                and (saisn_stns < saisl_stns < saisn_stns + 5)
+            ):
+                if verbose:
+                    print("Low data (end of season) POAC")
+                change_tthre_saisl[istation] = saisn_stns - saisl_stns
+            elif (
+                (sum_obs_24 > thr_con_24[pollen_type])
+                and (sum_obs > thr_con_120[pollen_type])
+                and (saisn_stns < saisl_stns < saisn_stns + 5)
+            ):
+                if verbose:
+                    print("Big data (end of season)")
+                change_tthre_saisl[istation] = 1
         # FAILSAFE
         if change_tthrs[istation] > 0:
             change_tthrs[istation] = min(1000, change_tthrs[istation])
@@ -300,10 +330,10 @@ def get_change_phenol(pollen_type, array, ds, coord_stns, verbose=False):
         if verbose:
             print(
                 f"Change tthrs is now {change_tthrs[istation]} ",
-                f"and change tthre is now {change_tthre[istation]}",
+                f"and change tthre is now {change_tthre_saisl[istation]}",
             )
             print("-----------------------------------------")
-    return change_tthrs, change_tthre
+    return change_tthrs, change_tthre_saisl
 
 
 def to_grib(inp, outp, dict_fields):

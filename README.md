@@ -100,7 +100,11 @@ and exclusively run your tests and checks on GitHub actions.
 
 ## Features
 
-- TODO
+The project itself consists of two scripts: one for updating the season phenology for different pollen species and the other to update the strength of the pollen season based on observed and modelled concentrations.
+- `update_phenology_realtime`:  Takes as input an ATAB file which contains the measured pollen concentrations, a GRIB file containing the following fields: `T_2M`, `tthrs`, `tthre` (for POAC, `saisl` instead), `saisn` and `ctsum` for a pollen species, and the name of the desired output file. The output file is in grib format, advanced by 1 hour and contains the fields `tthrs` and `tthre` (for POAC, `saisl` instead).
+- `update_strength_realtime`: Takes as input two ATAB file which contain the measured and modeled pollen concentrations, a GRIB file containing the following fields: `tune` and `saisn` for a pollen species, and the name of the desired output file. The output file is in grib format, advanced by 1 hour and contains the field `tune`.
+- `TODO`: Explain the expected ATAB format ? 
+
 
 ## Credits
 
