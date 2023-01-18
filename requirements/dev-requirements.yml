@@ -1,34 +1,345 @@
 channels:
   - conda-forge
   - defaults
+  - r
 dependencies:
+  - _ipython_minor_entry_point
+  - _libgcc_mutex
+  - _openmp_mutex
+  - alabaster
+  - alsa-lib
+  - anyio
+  - argon2-cffi
+  - argon2-cffi-bindings
+  - astroid
+  - asttokens
+  - attrs
+  - babel
+  - backcall
+  - backports
+  - backports.functools_lru_cache
+  - bcrypt
+  - beautifulsoup4
   - black
+  - bleach
+  - brotli
+  - brotli-bin
+  - brotlipy
+  - bump2version
+  - bzip2
+  - c-ares
+  - ca-certificates
   - cartopy
+  - certifi
+  - cffi
   - cfgrib
+  - cfgv
+  - chardet
+  - charset-normalizer
+  - click
   - codespell
+  - colorama
+  - comm
+  - contourpy
+  - copier
+  - cryptography
+  - curl
+  - cycler
+  - dataclasses
+  - dbus
+  - debugpy
+  - decorator
+  - defusedxml
+  - dill
+  - distlib
+  - docrep
+  - docutils
+  - dunamai
   - eccodes
+  - entrypoints
+  - exceptiongroup
+  - executing
+  - expat
+  - filelock
+  - findlibs
   - flake8
   - flake8-black
+  - flit-core
+  - font-ttf-dejavu-sans-mono
+  - font-ttf-inconsolata
+  - font-ttf-source-code-pro
+  - font-ttf-ubuntu
+  - fontconfig
+  - fonts-conda-ecosystem
+  - fonts-conda-forge
+  - fonttools
+  - freeglut
+  - freetype
+  - funcargparse
+  - geos
+  - gettext
+  - git
+  - glib
+  - glib-tools
+  - gst-plugins-base
+  - gstreamer
+  - hdf4
+  - hdf5
+  - icu
+  - identify
+  - idna
+  - imagesize
+  - importlib-metadata
+  - importlib_resources
+  - iniconfig
   - ipdb
+  - ipykernel
   - ipython
-  - isort >= 5
+  - ipython_genutils
+  - ipywidgets
+  - isort
+  - iteration_utilities
+  - jasper
+  - jedi
+  - jinja2
+  - jinja2-ansible-filters
+  - jpeg
+  - jsonschema
+  - jupyter
+  - jupyter_client
+  - jupyter_console
+  - jupyter_core
+  - jupyter_events
+  - jupyter_server
+  - jupyter_server_terminals
+  - jupyterlab_pygments
+  - jupyterlab_widgets
+  - keyutils
+  - kiwisolver
+  - krb5
+  - lazy-object-proxy
+  - lcms2
+  - ld_impl_linux-64
+  - lerc
+  - libaec
+  - libblas
+  - libbrotlicommon
+  - libbrotlidec
+  - libbrotlienc
+  - libcblas
+  - libclang
+  - libcurl
+  - libdeflate
+  - libedit
+  - libev
+  - libevent
+  - libffi
+  - libgcc-ng
+  - libgfortran-ng
+  - libgfortran5
+  - libglib
+  - libglu
+  - libgomp
+  - libiconv
+  - liblapack
+  - libllvm11
+  - libllvm13
+  - libnetcdf
+  - libnghttp2
+  - libnsl
+  - libogg
+  - libopenblas
+  - libopus
+  - libpng
+  - libpq
+  - libsodium
+  - libsqlite
+  - libssh2
+  - libstdcxx-ng
+  - libtiff
+  - libuuid
+  - libvorbis
+  - libwebp-base
+  - libxcb
+  - libxkbcommon
+  - libxml2
+  - libzip
+  - libzlib
+  - livereload
+  - markupsafe
   - matplotlib
+  - matplotlib-base
+  - matplotlib-inline
+  - mccabe
+  - mistune
+  - munkres
   - mypy
+  - mypy_extensions
+  - mysql-common
+  - mysql-libs
+  - nbclassic
+  - nbclient
+  - nbconvert
+  - nbconvert-core
+  - nbconvert-pandoc
+  - nbformat
+  - ncurses
+  - nest-asyncio
+  - nodeenv
+  - notebook
+  - notebook-shim
+  - nspr
+  - nss
   - numpy
+  - openjpeg
+  - openssl
+  - packaging
+  - pandas
+  - pandoc
+  - pandocfilters
+  - paramiko
+  - parso
+  - pathlib
+  - pathspec
+  - pcre2
+  - perl
+  - pexpect
+  - pickleshare
+  - pillow
   - pip
+  - pkgutil-resolve-name
+  - platformdirs
+  - pluggy
+  - plumbum
   - pre-commit
+  - proj
+  - prometheus_client
+  - prompt-toolkit
+  - prompt_toolkit
+  - psutil
   - psyplot
+  - pthread-stubs
+  - ptyprocess
+  - pure_eval
+  - py
+  - pycodestyle
+  - pycparser
+  - pydantic
   - pydocstyle
-  - pylint >= 2.6.0
+  - pyflakes
+  - pygments
+  - pylint
+  - pynacl
+  - pyopenssl
+  - pyparsing
+  - pyproj
   - pyprojroot
+  - pyqt
+  - pyqt-impl
+  - pyqt5-sip
+  - pyqtchart
+  - pyqtwebengine
+  - pyrsistent
+  - pyshp
+  - pysocks
   - pytest
+  - python
+  - python-dateutil
   - python-eccodes
+  - python-fastjsonschema
+  - python-json-logger
+  - python_abi
+  - pytoolconfig
+  - pytz
+  - pywin32-on-windows
+  - pyyaml
+  - pyyaml-include
+  - pyzmq
+  - qt
+  - qtconsole
+  - qtconsole-base
+  - qtpy
+  - questionary
+  - readline
+  - requests
   - rope
   - rstcheck
+  - rstcheck-core
+  - ruamel.yaml
+  - ruamel.yaml.clib
+  - scipy
+  - send2trash
+  - setuptools
+  - shapely
+  - shellingham
+  - six
+  - sniffio
+  - snowballstemmer
+  - soupsieve
   - sphinx
   - sphinx-autobuild
+  - sphinxcontrib-applehelp
+  - sphinxcontrib-devhelp
+  - sphinxcontrib-htmlhelp
+  - sphinxcontrib-jsmath
+  - sphinxcontrib-qthelp
+  - sphinxcontrib-serializinghtml
+  - sqlite
+  - stack_data
+  - terminado
+  - tinycss2
+  - tk
+  - toml
+  - tomli
+  - tomlkit
+  - tornado
+  - tox
+  - tox-conda
+  - traitlets
+  - typed-ast
+  - typer
+  - types-docutils
+  - typing
+  - typing-extensions
+  - typing_extensions
+  - tzdata
+  - ukkonen
+  - unicodedata2
+  - urllib3
+  - virtualenv
+  - wcwidth
+  - webencodings
+  - websocket-client
+  - wheel
+  - widgetsnbextension
+  - wrapt
   - xarray
+  - xorg-fixesproto
+  - xorg-inputproto
+  - xorg-kbproto
+  - xorg-libx11
+  - xorg-libxau
+  - xorg-libxdmcp
+  - xorg-libxext
+  - xorg-libxfixes
+  - xorg-libxi
+  - xorg-xextproto
+  - xorg-xproto
+  - xz
+  - yaml
+  - zeromq
+  - zipp
+  - zlib
+  - zstd
   - pip:
-    - flake8-pyproject
     - iconarray
-    - sphinx-mdinclude
+    - install
+    - patsy
+    - psy-maps
+    - psy-reg
+    - psy-simple
+    - statsmodels
+    - install -e .
+variables:
+  FIELDEXTRA_PATH: /project/s83c/fieldextra/tsa/bin/fieldextra_gnu_opt_omp
+  GRIB_DEFINITION_PATH: /project/g110/spack-install/tsa/cosmo-eccodes-definitions/2.19.0.7/gcc/zcuyy4uduizdpxfzqmxg6bc74p2skdfp/cosmoDefinitions/definitions/:/project/g110/spack-install/tsa/eccodes/2.19.0/gcc/viigacbsqxbbcid22hjvijrrcihebyeh/share/eccodes/definitions/

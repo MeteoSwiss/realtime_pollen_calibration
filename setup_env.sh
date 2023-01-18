@@ -12,11 +12,11 @@ DEFAULT_DEV_ENV_NAME="${DEFAULT_ENV_NAME}-dev"
 
 # Default options
 ENV_NAME=""
-PYVERSION=3.10
+PYVERSION=3.10.8
 PINNED=true
 DEV=false
 EXPORT=false
-CONDA=conda
+CONDA=mamba
 HELP=false
 
 help_msg="Usage: $(basename "${0}") [-n NAME] [-p VER] [-u] [-e] [-d] [-m] [-h]
