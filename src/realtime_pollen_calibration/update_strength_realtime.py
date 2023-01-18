@@ -8,6 +8,18 @@ from realtime_pollen_calibration import utils
 
 
 def update_strength_realtime(file_data, file_data_mod, file_grib, file_out, verbose):
+    """Advance the tune field by one hour.
+
+    Args:
+        file_data: Location of ATAB file containing the pollen concentration
+                information at the stations.
+        file_data_mod: Location of ATAB file for the modelled concentrations
+        file_grib: Location of GRIB file containing the following fields:
+                'tune' and 'saisn'.
+        file_out: Location of the desired output file.
+        verbose: Optional additional debug prints.
+
+    """
     ds = cfgrib.open_dataset(file_grib, encode_cf=("time", "geography", "vertical"))
     pollen_type = utils.get_pollen_type(ds)
     array, array_mod, coord_stns, missing_value, istation_mod = utils.read_atab(

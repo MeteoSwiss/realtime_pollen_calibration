@@ -20,14 +20,46 @@ def count_to_log_level(count: int) -> int:
         return logging.DEBUG
 
 
-def read_atab(pollen_type, file_data, file_data_mod=""):
+def read_atab(pollen_type: str, file_data: str, file_data_mod: str = ""):
+    """Read the pollen concentrations and the station locations from ATAB files.
+
+    Args:
+        pollen_type: String describing the pollen type analysed.
+
+        file_data: Location of the observation ATAB file.
+        file_data_mod: Location of the model ATAB file. (Optional)
+
+    Returns:
+        data: Array containing the observed concentration values.
+        data_mod: Array containing the modelled concentration values.
+                (if provided.)
+        coord_stns: List of (lat, lon) tuples of the stations' coordinates.
+        missing_value: Value considered as a missing measurement.
+        istation_mod: Index for the correspondance between the columns of data
+                and the columns data_mod (if file_data_mod is provided.)
+
+    """
+
     def get_mod_stn_index(stn_indicators, stn_indicators_mod):
+        """Find the correspondance between station indeces in the two files."""
         [_, is1, is2] = np.intersect1d(
             stn_indicators, stn_indicators_mod, assume_unique=True, return_indices=True
         )
         return is2[np.argsort(is1)]
 
-    def read_obs_header(file_data):
+    def read_obs_header(file_data: str):
+        """Read the info from the header of the ATAB.
+
+        Args:
+            file_data: Location of the ATAB file.
+
+        Returns:
+            coord_stns: List of (lat, lon) tuples of the stations' coordinates.
+            missing_value: Value considered as a missing measurement.
+            stn_indicators: Used for correspondance between
+                    observed and modelled data.
+
+        """
         with open(file_data, encoding="utf-8") as f:
             for n, line in enumerate(f):
                 if line.strip()[0:8] == "Latitude":
@@ -68,12 +100,91 @@ def read_atab(pollen_type, file_data, file_data_mod=""):
     return data, data_mod, coord_stns, missing_value, istation_mod
 
 
-def get_field_at(ds, field, coords):
+def treat_missing(array, missing_value=-9999.0, tune_pol_default=1.0, verbose=False):
+    """Treat the missing values of the input array.
+
+    Args:
+        array: Array containing the concentration values.
+        missing_value: Value considered as a missing measurement.
+        tune_pol_default: Default value to which all values of a station
+                are set if more than 10% of the observations are missing.
+        verbose: Optional additional debug prints.
+
+    Returns:
+        array: Modified array with removed missing values.
+
+    """
+    array_missing = array == missing_value
+    nstns = array.shape[1]
+    skip_missing_stn = np.zeros(nstns)
+    for istation in range(nstns):
+        skip_missing_stn[istation] = np.count_nonzero(array_missing[:, istation])
+        if verbose:
+            print(
+                f"Station n°{istation} has",
+                f"{skip_missing_stn[istation]} missing values",
+            )
+        if skip_missing_stn[istation] > 0:
+            if (
+                np.count_nonzero(np.abs(array[:, istation] - missing_value) < 0.01)
+                / len(array[:, istation])
+                < 0.1
+            ):
+                idx1 = np.where(np.abs(array[:, istation] - missing_value) > 0.01)
+                idx2 = np.where(np.abs(array[:, istation] - missing_value) < 0.01)
+                if verbose:
+                    print(
+                        "Less than 10% of the data is missing, ",
+                        f"mean of the rest is: {np.mean(array[idx1, istation])}",
+                    )
+                array[idx2, istation] = np.mean(array[idx1, istation])
+            else:
+                if verbose:
+                    print("More than 10% of the data is missing")
+                array[:, istation] = tune_pol_default
+    return array
+
+
+def get_field_at(ds, field: str, coords: tuple):
+    """Get the field in a xarray.DataSet at a given location.
+
+    Args:
+        ds: xarray.DataSet.
+        field: Name of the field.
+        coords: (lat, lon) tuple of the location.
+
+    Returns:
+        Field at the desired location.
+
+    """
     dist = (ds.latitude - coords[0]) ** 2 + (ds.longitude - coords[1]) ** 2
     return ds[field].where(dist == dist.min(), drop=True)
 
 
-def interpolate(change, ds, field, coord_stns, method="multiply", verbose=False):
+def interpolate(
+    change,
+    ds,
+    field: str,
+    coord_stns,
+    method: str = "multiply",
+    verbose: bool = False,
+):
+    """Interpolate the change of a field from its values at the stations.
+
+    Args:
+        change: Value of the change at the stations.
+        ds: xarray.DataSet.
+        field: Name of the field to be interpolated on.
+        coord_stns: List of (lat, lon) tuples of the stations' coordinates.
+        method: Either 'multiply' (strength) or add (phenology)
+        verbose: Optional additional debug prints.
+
+    Returns:
+        vec: Obtained field over the full grid.
+    This is a reproduction of the IDW implemented in COSMO by Simon Sadamov,
+    with different threshold (minima and maxima) for different species.
+
+    """
     nstns = len(coord_stns)
     pollen_type = field[:4]
     if method == "multiply":
@@ -140,38 +251,6 @@ def interpolate(change, ds, field, coord_stns, method="multiply", verbose=False)
     return vec
 
 
-def treat_missing(array, missing_value=-9999.0, tune_pol_default=1.0, verbose=False):
-    array_missing = array == missing_value
-    nstns = array.shape[1]
-    skip_missing_stn = np.zeros(nstns)
-    for istation in range(nstns):
-        skip_missing_stn[istation] = np.count_nonzero(array_missing[:, istation])
-        if verbose:
-            print(
-                f"Station n°{istation} has",
-                f"{skip_missing_stn[istation]} missing values",
-            )
-        if skip_missing_stn[istation] > 0:
-            if (
-                np.count_nonzero(np.abs(array[:, istation] - missing_value) < 0.01)
-                / len(array[:, istation])
-                < 0.1
-            ):
-                idx1 = np.where(np.abs(array[:, istation] - missing_value) > 0.01)
-                idx2 = np.where(np.abs(array[:, istation] - missing_value) < 0.01)
-                if verbose:
-                    print(
-                        "Less than 10% of the data is missing, ",
-                        f"mean of the rest is: {np.mean(array[idx1, istation])}",
-                    )
-                array[idx2, istation] = np.mean(array[idx1, istation])
-            else:
-                if verbose:
-                    print("More than 10% of the data is missing")
-                array[:, istation] = tune_pol_default
-    return array
-
-
 def get_change_tune(
     pollen_type,
     array,
@@ -181,6 +260,24 @@ def get_change_tune(
     istation_mod,
     verbose=False,
 ):
+    """Compute the change of the tune field.
+
+    Args:
+        pollen_type: String describing the pollen type analysed.
+        array: Last 120H pollen concentration observed.
+        array_mod: Last 120H pollen concetration modelled.
+        ds: xarray.DataSet containing 'tune' and 'saisn'.
+        coord_stns: List of (lat, lon) tuples of the stations
+        istation_mod: Indeces for the correspondance between array and
+            array_mod.
+        verbose: Optional additional debug prints.
+
+    Returns:
+        change_tune: Amount by which tune should be changed at each station
+    The new tune value corresponds to:
+    tune(station, T+dT) = tune(station, T) * change_tune(station).
+
+    """
     tune_pol_default = 1.0
     nstns = array.shape[1]
     change_tune = np.ones(nstns)
@@ -232,6 +329,23 @@ def get_change_tune(
 
 
 def get_change_phenol(pollen_type, array, ds, coord_stns, verbose=False):
+    """Compute the change of the temperature thresholds for the phenology.
+
+    Args:
+        pollen_type: String describing the pollen type analysed.
+        array: Last 120H pollen concentration observed.
+        ds: xarray.DataSet containing 'T_2M', 'tthrs', 'tthre'
+            (for POAC, 'saisl' instead), 'saisn' and 'ctsum'.
+        coord_stns: List of (lat, lon) tuples of the stations
+        verbose: Optional additional debug prints.
+
+    Returns:
+        change_tthrs: Amount by which tthrs should be changed at each station
+        change_tthre_saisl: As above for tthre or saisl for POAC.
+    The new threshold value corresponds to:
+    tthrs(station, T+dT) = tthrs(station, T) + change_tthrs(station).
+
+    """
     date = pd.Timestamp(ds.time.values).day_of_year + 1 + 31
     thr_con_24 = {"ALNU": 240, "BETU": 240, "POAC": 72, "CORY": 240}
     thr_con_120 = {"ALNU": 720, "BETU": 720, "POAC": 216, "CORY": 720}
@@ -340,10 +454,14 @@ def get_change_phenol(pollen_type, array, ds, coord_stns, verbose=False):
             change_tthrs[istation] = max(-failsafe[pollen_type], change_tthrs[istation])
         if pollen_type != "POAC":
             if change_tthre_saisl[istation] > 0:
-                change_tthre_saisl[istation] = min(failsafe[pollen_type], change_tthre_saisl[istation])
+                change_tthre_saisl[istation] = min(
+                    failsafe[pollen_type], change_tthre_saisl[istation]
+                )
             elif change_tthre_saisl[istation] <= 0:
-                change_tthre_saisl[istation] = max(-failsafe[pollen_type], change_tthre_saisl[istation])
-        else: # POAC
+                change_tthre_saisl[istation] = max(
+                    -failsafe[pollen_type], change_tthre_saisl[istation]
+                )
+        else:  # POAC
             if change_tthre_saisl[istation] > 0:
                 change_tthre_saisl[istation] = min(7, change_tthre_saisl[istation])
             elif change_tthre_saisl[istation] <= 0:
@@ -358,6 +476,16 @@ def get_change_phenol(pollen_type, array, ds, coord_stns, verbose=False):
 
 
 def to_grib(inp, outp, dict_fields):
+    """Output fields to a GRIB file.
+
+    Args:
+        inp: Location of the GRIB file which must contain at least the same
+    fields as the ones in the dictionary that are to be outputted.
+        outp: Location of the desired GRIB file
+        dict_fields: Dictionary containing the fields to be outputted as
+            { name : value }
+
+    """
     # copy all the fields from input into output,
     # besides the ones in the dictionary given as input
     with open(inp, "rb") as fin, open(outp, "wb") as fout:
@@ -388,6 +516,15 @@ def to_grib(inp, outp, dict_fields):
 
 
 def get_pollen_type(ds):
+    """Get the pollen type from the variables in the xarray.DataSet.
+
+    Args:
+        ds: xarray.DataSet containing one pollen-related field.
+
+    Returns:
+        pollen_type: String from pollen_types.
+
+    """
     pollen_types = ["ALNU", "BETU", "POAC", "CORY"]
     for var in ds:
         if var[:4] in pollen_types:
@@ -396,6 +533,9 @@ def get_pollen_type(ds):
 
 
 def set_stn_gridpoint(ds, coord_stns):
+    """TEMPORARY: set the (lat, lon) info of the station obtained from
+    the ATAB to the closest point in the grid of the xarray.DataSet.
+    """
     nstns = len(coord_stns)
     lat_stns2 = np.zeros(nstns)
     lon_stns2 = np.zeros(nstns)
