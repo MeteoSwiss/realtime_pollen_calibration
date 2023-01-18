@@ -23,20 +23,28 @@ def update_phenology_realtime(file_data, file_grib, file_out, verbose=False):
         method="sum",
         verbose=verbose,
     )
-    tthre_saisl_vec = utils.interpolate(
+    if pollen_type != "POAC":
+        tthre_saisl_vec = utils.interpolate(
         change_tthre_saisl,
         ds,
         pollen_type + "tthre",
         coord_stns,
         method="sum",
         verbose=verbose,
-    )
-    if pollen_type != 'POAC':
+        )
         dict_fields = {
             pollen_type + "tthrs": tthrs_vec,
             pollen_type + "tthre": tthre_saisl_vec,
         }
     else:
+        tthre_saisl_vec = utils.interpolate(
+        change_tthre_saisl,
+        ds,
+        pollen_type + "saisl",
+        coord_stns,
+        method="sum",
+        verbose=verbose,
+        )
         dict_fields = {
             pollen_type + "tthrs": tthrs_vec,
             pollen_type + "saisl": tthre_saisl_vec,
