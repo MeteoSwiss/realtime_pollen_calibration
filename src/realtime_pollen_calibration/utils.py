@@ -35,13 +35,13 @@ def read_atab(pollen_type: str, file_data: str, file_data_mod: str = ""):
                 (if provided.)
         coord_stns: List of (lat, lon) tuples of the stations' coordinates.
         missing_value: Value considered as a missing measurement.
-        istation_mod: Index for the correspondance between the columns of data
+        istation_mod: Index for the correspondence between the columns of data
                 and the columns data_mod (if file_data_mod is provided.)
 
     """
 
     def get_mod_stn_index(stn_indicators, stn_indicators_mod):
-        """Find the correspondance between station indeces in the two files."""
+        """Find the correspondence between station indices in the two files."""
         [_, is1, is2] = np.intersect1d(
             stn_indicators, stn_indicators_mod, assume_unique=True, return_indices=True
         )
@@ -56,7 +56,7 @@ def read_atab(pollen_type: str, file_data: str, file_data_mod: str = ""):
         Returns:
             coord_stns: List of (lat, lon) tuples of the stations' coordinates.
             missing_value: Value considered as a missing measurement.
-            stn_indicators: Used for correspondance between
+            stn_indicators: Used for correspondence between
                     observed and modelled data.
 
         """
@@ -161,7 +161,7 @@ def get_field_at(ds, field: str, coords: tuple):
     return ds[field].where(dist == dist.min(), drop=True)
 
 
-def interpolate(
+def interpolate(  # pylint: disable=R0913,R0914
     change,
     ds,
     field: str,
@@ -236,7 +236,8 @@ def interpolate(
             i2 = 250
             print(f"dist from point ({i1},{i2}): {dist[:,i1,i2]}")
             print(
-                f"Weighted change_tune by inverse distance: {np.sum(change_vec / dist, axis=0)[i1, i2]}"
+                "Weighted change_tune by inverse distance: "
+                f"{np.sum(change_vec / dist, axis=0)[i1, i2]}"
             )
             print(f"Sum of inverse distance: {np.sum(1 / dist, axis=0)[i1, i2]}")
     elif method == "sum":
@@ -251,7 +252,7 @@ def interpolate(
     return vec
 
 
-def get_change_tune(
+def get_change_tune(  # pylint: disable=R0913
     pollen_type,
     array,
     array_mod,
@@ -268,7 +269,7 @@ def get_change_tune(
         array_mod: Last 120H pollen concetration modelled.
         ds: xarray.DataSet containing 'tune' and 'saisn'.
         coord_stns: List of (lat, lon) tuples of the stations
-        istation_mod: Indeces for the correspondance between array and
+        istation_mod: Indices for the correspondence between array and
             array_mod.
         verbose: Optional additional debug prints.
 
@@ -328,7 +329,9 @@ def get_change_tune(
     return change_tune
 
 
-def get_change_phenol(pollen_type, array, ds, coord_stns, verbose=False):
+def get_change_phenol(
+    pollen_type, array, ds, coord_stns, verbose=False
+):  # pylint: disable=R0912,R0914,R0915
     """Compute the change of the temperature thresholds for the phenology.
 
     Args:
@@ -533,19 +536,17 @@ def get_pollen_type(ds):
 
 
 def set_stn_gridpoint(ds, coord_stns):
-    """TEMPORARY: set the (lat, lon) info of the station obtained from
-    the ATAB to the closest point in the grid of the xarray.DataSet.
-    """
+    """Retrieve the closest gridpoints for each stations."""
     nstns = len(coord_stns)
     lat_stns2 = np.zeros(nstns)
     lon_stns2 = np.zeros(nstns)
-    for ist in range(nstns):
-        lat_stns2[ist] = get_field_at(ds, "latitude", coord_stns[ist]).latitude.values[
-            0
-        ][0]
-        lon_stns2[ist] = get_field_at(ds, "latitude", coord_stns[ist]).longitude.values[
-            0
-        ][0]
+    for istn in range(nstns):
+        lat_stns2[istn] = get_field_at(
+            ds, "latitude", coord_stns[istn]
+        ).latitude.values[0][0]
+        lon_stns2[istn] = get_field_at(
+            ds, "latitude", coord_stns[istn]
+        ).longitude.values[0][0]
     coord_stns2 = list(zip(lat_stns2, lon_stns2))
     print(f"Changed the stations coordinates to: {coord_stns2}")
     return coord_stns2
