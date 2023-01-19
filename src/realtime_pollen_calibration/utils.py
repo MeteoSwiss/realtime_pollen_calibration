@@ -93,7 +93,7 @@ def read_atab(pollen_type: str, file_data: str, file_data_mod: str = ""):
             delim_whitespace=True,
             parse_dates=[[3, 4, 5, 6, 7]],
         )
-        data_mod = data_mod[data_mod["PARAMETER"] == pollen_type].iloc[:, 2:].to_numpy()
+        data_mod = data_mod[data_mod["PARAMETER"] == pollen_type].iloc[:, 4:].to_numpy()
     else:
         data_mod = 0
         istation_mod = 0
