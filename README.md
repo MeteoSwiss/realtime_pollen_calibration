@@ -1,6 +1,6 @@
 # Realtime Pollen Calibration
 
-This project translates the pollen calibration module from FORTRAN into Python.
+This repository calculates the pollen input fields needed for the real-time pollen calibration in ICON-ART. It is very similar to the FORTRAN implementation used in COSMO-ART.
 More information about the Pollen module currently in the weather model COSMO can be found here:
 <https://service.meteoswiss.ch/confluence/x/dYQYBQ>
 And in this paper: (currently under review :)
