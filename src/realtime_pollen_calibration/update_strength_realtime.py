@@ -7,23 +7,24 @@ import cfgrib  # type: ignore
 from realtime_pollen_calibration import utils
 
 
-def update_strength_realtime(file_data, file_data_mod, file_grib, file_out, verbose):
+def update_strength_realtime(file_obs, file_mod, file_in, file_out, verbose):
     """Advance the tune field by one hour.
 
     Args:
-        file_data: Location of ATAB file containing the pollen concentration
+        file_obs: Location of ATAB file containing the pollen concentration
                 information at the stations.
-        file_data_mod: Location of ATAB file for the modelled concentrations
-        file_grib: Location of GRIB file containing the following fields:
-                'tune' and 'saisn'.
+        file_mod: Location of ATAB file for the modelled concentrations
+        file_in: Location of GRIB file containing the following fields:
+                'tune' and 'saisn'. Lat-lon information of the grid must be
+                present in the file.
         file_out: Location of the desired output file.
         verbose: Optional additional debug prints.
 
     """
-    ds = cfgrib.open_dataset(file_grib, encode_cf=("time", "geography", "vertical"))
+    ds = cfgrib.open_dataset(file_in, encode_cf=("time", "geography", "vertical"))
     pollen_type = utils.get_pollen_type(ds)
     array, array_mod, coord_stns, missing_value, istation_mod = utils.read_atab(
-        pollen_type, file_data, file_data_mod
+        pollen_type, file_obs, file_mod
     )
     array = utils.treat_missing(array, missing_value, verbose=verbose)
     change_tune = utils.get_change_tune(
@@ -46,4 +47,4 @@ def update_strength_realtime(file_data, file_data_mod, file_grib, file_out, verb
         verbose=verbose,
     )
     dict_fields = {pollen_type + "tune": tune_vec}
-    utils.to_grib(file_grib, file_out, dict_fields)
+    utils.to_grib(file_in, file_out, dict_fields)

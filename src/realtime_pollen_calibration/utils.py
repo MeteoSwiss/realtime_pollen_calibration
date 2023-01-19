@@ -20,14 +20,14 @@ def count_to_log_level(count: int) -> int:
         return logging.DEBUG
 
 
-def read_atab(pollen_type: str, file_data: str, file_data_mod: str = ""):
+def read_atab(pollen_type: str, file_obs: str, file_mod: str = ""):
     """Read the pollen concentrations and the station locations from ATAB files.
 
     Args:
         pollen_type: String describing the pollen type analysed.
 
-        file_data: Location of the observation ATAB file.
-        file_data_mod: Location of the model ATAB file. (Optional)
+        file_obs: Location of the observation ATAB file.
+        file_mod: Location of the model ATAB file. (Optional)
 
     Returns:
         data: Array containing the observed concentration values.
@@ -75,20 +75,20 @@ def read_atab(pollen_type: str, file_data: str, file_data_mod: str = ""):
             coord_stns = list(zip(lat_stns, lon_stns))
         return coord_stns, missing_value, stn_indicators
 
-    coord_stns, missing_value, stn_indicators = read_obs_header(file_data)
+    coord_stns, missing_value, stn_indicators = read_obs_header(file_obs)
     data = pd.read_csv(
-        file_data, header=17, delim_whitespace=True, parse_dates=[[1, 2, 3, 4, 5]]
+        file_obs, header=17, delim_whitespace=True, parse_dates=[[1, 2, 3, 4, 5]]
     )
     data = data[data["PARAMETER"] == pollen_type].iloc[:, 2:].to_numpy()
-    if file_data_mod != "":
-        with open(file_data_mod, encoding="utf-8") as f:
+    if file_mod != "":
+        with open(file_mod, encoding="utf-8") as f:
             for line in f:
                 if line.strip()[0:9] == "Indicator":
                     stn_indicators_mod = np.array(line.strip()[29:].split("         "))
                     break
         istation_mod = get_mod_stn_index(stn_indicators, stn_indicators_mod)
         data_mod = pd.read_csv(
-            file_data_mod,
+            file_mod,
             header=18,
             delim_whitespace=True,
             parse_dates=[[3, 4, 5, 6, 7]],
@@ -253,7 +253,7 @@ def interpolate(
 
 def get_change_tune(
     pollen_type,
-    array,
+    array_obs,
     array_mod,
     ds,
     coord_stns,
@@ -264,7 +264,7 @@ def get_change_tune(
 
     Args:
         pollen_type: String describing the pollen type analysed.
-        array: Last 120H pollen concentration observed.
+        array_obs: Last 120H pollen concentration observed.
         array_mod: Last 120H pollen concetration modelled.
         ds: xarray.DataSet containing 'tune' and 'saisn'.
         coord_stns: List of (lat, lon) tuples of the stations
@@ -279,11 +279,11 @@ def get_change_tune(
 
     """
     tune_pol_default = 1.0
-    nstns = array.shape[1]
+    nstns = array_obs.shape[1]
     change_tune = np.ones(nstns)
     for istation in range(nstns):
         # sum of hourly observed concentrations of the last 5 days
-        sum_obs = np.sum(array[:, istation])
+        sum_obs = np.sum(array_obs[:, istation])
         # sum of hourly modelled concentrations of the last 5 days
         sum_mod = np.sum(array_mod[:, istation_mod[istation]])
         # tuning factor at the current station
@@ -328,12 +328,12 @@ def get_change_tune(
     return change_tune
 
 
-def get_change_phenol(pollen_type, array, ds, coord_stns, verbose=False):
+def get_change_phenol(pollen_type, array_obs, ds, coord_stns, verbose=False):
     """Compute the change of the temperature thresholds for the phenology.
 
     Args:
         pollen_type: String describing the pollen type analysed.
-        array: Last 120H pollen concentration observed.
+        array_obs: Last 120H pollen concentration observed.
         ds: xarray.DataSet containing 'T_2M', 'tthrs', 'tthre'
             (for POAC, 'saisl' instead), 'saisn' and 'ctsum'.
         coord_stns: List of (lat, lon) tuples of the stations
@@ -351,7 +351,7 @@ def get_change_phenol(pollen_type, array, ds, coord_stns, verbose=False):
     thr_con_120 = {"ALNU": 720, "BETU": 720, "POAC": 216, "CORY": 720}
     failsafe = {"ALNU": 1000, "BETU": 2500, "POAC": 6000, "CORY": 2500}
     jul_days_excl = {"ALNU": 14, "BETU": 40, "POAC": 3, "CORY": 46}
-    nstns = array.shape[1]
+    nstns = array_obs.shape[1]
     change_tthrs = np.zeros(nstns)
     # change_tthre if not POAC, change_saisl if POAC
     change_tthre_saisl = np.zeros(nstns)
@@ -364,8 +364,8 @@ def get_change_phenol(pollen_type, array, ds, coord_stns, verbose=False):
         saisn_stns = get_field_at(ds, pollen_type + "saisn", coord_stns[istation])
         ctsum_stns = get_field_at(ds, pollen_type + "ctsum", coord_stns[istation])
         t_2m_stns = get_field_at(ds, "T_2M", coord_stns[istation]) - 273.15
-        sum_obs_24 = np.sum(array[96:, istation])
-        sum_obs = np.sum(array[:, istation])
+        sum_obs_24 = np.sum(array_obs[96:, istation])
+        sum_obs = np.sum(array_obs[:, istation])
         if verbose:
             print(
                 f"Current station n°{istation}, ",
