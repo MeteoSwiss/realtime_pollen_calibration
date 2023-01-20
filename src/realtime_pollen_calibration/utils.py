@@ -114,7 +114,12 @@ def read_atab(
     return obs_mod_data(data, coord_stns, missing_value, data_mod, istation_mod)
 
 
-def treat_missing(array, missing_value=-9999.0, tune_pol_default=1.0, verbose=False):
+def treat_missing(
+    array,
+    missing_value: float = -9999.0,
+    tune_pol_default: float = 1.0,
+    verbose: bool = False,
+):
     """Treat the missing values of the input array.
 
     Args:
@@ -267,10 +272,10 @@ def interpolate(  # pylint: disable=R0913,R0914
 
 
 def get_change_tune(  # pylint: disable=R0913
-    pollen_type,
-    obs_mod_data,
+    pollen_type: str,
+    obs_mod_data: obs_mod_data,
     ds,
-    verbose=False,
+    verbose: bool = False,
 ):
     """Compute the change of the tune field.
 
@@ -341,8 +346,8 @@ def get_change_tune(  # pylint: disable=R0913
 
 
 def get_change_phenol(
-    pollen_type, obs_mod_data, ds, verbose=False
-):  # pylint: disable=R0912,R0914,R0915
+    pollen_type: str, obs_mod_data: obs_mod_data, ds, verbose: bool = False
+) -> change_phenology_fields:  # pylint: disable=R0912,R0914,R0915
     """Compute the change of the temperature thresholds for the plant phenology.
 
     Args:
@@ -508,7 +513,7 @@ def get_change_phenol(
     return change_phenology_fields(change_tthrs, change_tthre, change_saisl)
 
 
-def to_grib(inp, outp, dict_fields):
+def to_grib(inp: str, outp: str, dict_fields: dict) -> None:
     """Output fields to a GRIB file.
 
     Args:
@@ -548,7 +553,7 @@ def to_grib(inp, outp, dict_fields):
         fout.close()
 
 
-def get_pollen_type(ds):
+def get_pollen_type(ds) -> list:
     """Get the pollen type from the variables in the xarray.DataSet.
 
     Args:
