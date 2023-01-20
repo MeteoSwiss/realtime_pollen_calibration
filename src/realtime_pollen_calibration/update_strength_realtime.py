@@ -23,9 +23,7 @@ def update_strength_realtime(file_obs, file_mod, file_in, file_out, verbose):
     """
     ds = cfgrib.open_dataset(file_in, encode_cf=("time", "geography", "vertical"))
     pollen_type = utils.get_pollen_type(ds)
-    obs_mod_data = utils.read_atab(
-        pollen_type, file_obs, file_mod, verbose=verbose
-    )
+    obs_mod_data = utils.read_atab(pollen_type, file_obs, file_mod, verbose=verbose)
     change_tune = utils.get_change_tune(
         pollen_type,
         obs_mod_data,

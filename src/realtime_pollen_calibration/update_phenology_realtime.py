@@ -29,11 +29,15 @@ def update_phenology_realtime(file_obs, file_in, file_out, verbose=False):
         pollen_type, obs_mod_data, ds, verbose
     )
     dict_fields = {}
-    for field_name, field_values in zip(change_phenology_fields._asdict(), change_phenology_fields):
+    for field_name, field_values in zip(
+        change_phenology_fields._asdict(), change_phenology_fields
+    ):
         if verbose:
-            print(f"Number of non-zero values in {field_name}: ",
-            np.count_nonzero(field_values),
-            field_values)
+            print(
+                f"Number of non-zero values in {field_name}: ",
+                np.count_nonzero(field_values),
+                field_values,
+            )
         if np.count_nonzero(field_values) > 0:
             dict_fields[pollen_type + field_name[7:]] = utils.interpolate(
                 field_values,
