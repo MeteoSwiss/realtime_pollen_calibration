@@ -417,7 +417,7 @@ def get_change_phenol(
             if pollen_type != "POAC":
                 change_tthre[istation] = ctsum_stns - tthrs_stns
             if verbose:
-                print("Big data and below threshold")
+                print("High observed concentrations and below threshold")
         elif (
             (0 <= sum_obs_24 < thr_con_24[pollen_type])
             and (0 <= sum_obs < thr_con_120[pollen_type])
@@ -433,24 +433,32 @@ def get_change_phenol(
                         date - jul_days_excl[pollen_type]
                     )
             if verbose:
-                print("Low data and in first 10 days of season")
+                print("Low observed concentrations and in first 10 days of season")
         # ADJUSTMENT OF SEASON END AT THE END OF THE SEASON
         if pollen_type != "POAC":
             if (
                 (0 <= sum_obs_24 < thr_con_24[pollen_type])
                 and (0 <= sum_obs < thr_con_120[pollen_type])
-                and (tthre_stns - t_2m_stns * 5 * date < ctsum_stns < tthre_stns)
+                and (
+                    tthre_stns - t_2m_stns * 5 * (date - jul_days_excl[pollen_type])
+                    < ctsum_stns
+                    < tthre_stns
+                )
             ):
                 if verbose:
-                    print("Low data (end of season)")
+                    print("Low observed concentrations (end of season)")
                 change_tthre[istation] += ctsum_stns - tthre_stns
             elif (
                 (sum_obs_24 > thr_con_24[pollen_type])
                 and (sum_obs > thr_con_120[pollen_type])
-                and (tthre_stns > ctsum_stns > tthre_stns - t_2m_stns * 5 * date)
+                and (
+                    tthre_stns
+                    > ctsum_stns
+                    > tthre_stns - t_2m_stns * 5 * (date - jul_days_excl[pollen_type])
+                )
             ):
                 if verbose:
-                    print("Big data (end of season)")
+                    print("High observed concentrations(end of season)")
                 change_tthre[istation] += t_2m_stns * (
                     date - jul_days_excl[pollen_type]
                 )
@@ -461,7 +469,7 @@ def get_change_phenol(
                 and (saisn_stns < saisl_stns < saisn_stns + 5)
             ):
                 if verbose:
-                    print("Low data (end of season) POAC")
+                    print("Low observed concentrations (end of season) POAC")
                 change_saisl[istation] = saisn_stns - saisl_stns
             elif (
                 (sum_obs_24 > thr_con_24[pollen_type])
@@ -469,7 +477,7 @@ def get_change_phenol(
                 and (saisn_stns < saisl_stns < saisn_stns + 5)
             ):
                 if verbose:
-                    print("Big data (end of season) POAC")
+                    print("High observed concentrations (end of season) POAC")
                 change_saisl[istation] = 1
         # FAILSAFE
         if change_tthrs[istation] > 0:
