@@ -2,6 +2,7 @@
 
 # Third-party
 import cfgrib  # type: ignore
+import numpy as np
 
 # First-party
 from realtime_pollen_calibration import utils
@@ -23,43 +24,23 @@ def update_phenology_realtime(file_obs, file_in, file_out, verbose=False):
     """
     ds = cfgrib.open_dataset(file_in, encode_cf=("time", "geography", "vertical"))
     pollen_type = utils.get_pollen_type(ds)
-    array, _, coord_stns, missing_value, _ = utils.read_atab(pollen_type, file_obs)
-    array = utils.treat_missing(array, missing_value, verbose=verbose)
-    change_tthrs, change_tthre_saisl = utils.get_change_phenol(
-        pollen_type, array, ds, coord_stns, verbose
+    obs_mod_data = utils.read_atab(pollen_type, file_obs, verbose=verbose)
+    change_phenology_fields = utils.get_change_phenol(
+        pollen_type, obs_mod_data, ds, verbose
     )
-    tthrs_vec = utils.interpolate(
-        change_tthrs,
-        ds,
-        pollen_type + "tthrs",
-        coord_stns,
-        method="sum",
-        verbose=verbose,
-    )
-    if pollen_type != "POAC":
-        tthre_saisl_vec = utils.interpolate(
-            change_tthre_saisl,
-            ds,
-            pollen_type + "tthre",
-            coord_stns,
-            method="sum",
-            verbose=verbose,
-        )
-        dict_fields = {
-            pollen_type + "tthrs": tthrs_vec,
-            pollen_type + "tthre": tthre_saisl_vec,
-        }
-    else:
-        tthre_saisl_vec = utils.interpolate(
-            change_tthre_saisl,
-            ds,
-            pollen_type + "saisl",
-            coord_stns,
-            method="sum",
-            verbose=verbose,
-        )
-        dict_fields = {
-            pollen_type + "tthrs": tthrs_vec,
-            pollen_type + "saisl": tthre_saisl_vec,
-        }
+    dict_fields = {}
+    for field_name, field_values in zip(change_phenology_fields._asdict(), change_phenology_fields):
+        if verbose:
+            print(f"Number of non-zero values in {field_name}: ",
+            np.count_nonzero(field_values),
+            field_values)
+        if np.count_nonzero(field_values) > 0:
+            dict_fields[pollen_type + field_name[7:]] = utils.interpolate(
+                field_values,
+                ds,
+                pollen_type + field_name[7:],
+                obs_mod_data.coord_stns,
+                method="sum",
+                verbose=verbose,
+            )
     utils.to_grib(file_in, file_out, dict_fields)

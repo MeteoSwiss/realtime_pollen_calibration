@@ -6,7 +6,10 @@ import logging
 import eccodes  # type: ignore
 import numpy as np  # type: ignore
 import pandas as pd  # type: ignore
+from collections import namedtuple
 
+obs_mod_data = namedtuple("obs_mod_data", ["data_obs","coord_stns", "missing_value", "data_mod", "istation_mod"], defaults=[None, None])
+change_phenology_fields = namedtuple("change_phenology_fields", ["change_tthrs", "change_tthre", "change_saisl"])
 
 def count_to_log_level(count: int) -> int:
     """Map occurrence of the command line option verbose to the log level."""
@@ -20,7 +23,7 @@ def count_to_log_level(count: int) -> int:
         return logging.DEBUG
 
 
-def read_atab(pollen_type: str, file_obs: str, file_mod: str = ""):
+def read_atab(pollen_type: str, file_obs: str, file_mod: str = "", verbose : bool = False) -> obs_mod_data:
     """Read the pollen concentrations and the station locations from ATAB files.
 
     Args:
@@ -28,6 +31,7 @@ def read_atab(pollen_type: str, file_obs: str, file_mod: str = ""):
 
         file_obs: Location of the observation ATAB file.
         file_mod: Location of the model ATAB file. (Optional)
+        verbose: Optional additional debug prints.
 
     Returns:
         data: Array containing the observed concentration values.
@@ -97,7 +101,8 @@ def read_atab(pollen_type: str, file_obs: str, file_mod: str = ""):
     else:
         data_mod = 0
         istation_mod = 0
-    return data, data_mod, coord_stns, missing_value, istation_mod
+    data = treat_missing(data, missing_value, verbose=verbose)
+    return obs_mod_data(data, coord_stns, missing_value, data_mod, istation_mod)
 
 
 def treat_missing(array, missing_value=-9999.0, tune_pol_default=1.0, verbose=False):
@@ -254,23 +259,18 @@ def interpolate(  # pylint: disable=R0913,R0914
 
 def get_change_tune(  # pylint: disable=R0913
     pollen_type,
-    array_obs,
-    array_mod,
+    obs_mod_data,
     ds,
-    coord_stns,
-    istation_mod,
     verbose=False,
 ):
     """Compute the change of the tune field.
 
     Args:
         pollen_type: String describing the pollen type analysed.
-        array_obs: Last 120H pollen concentration observed.
-        array_mod: Last 120H pollen concetration modelled.
+        obs_mod_data: NamedTuple which must contain the last 120H
+            pollen concentration observed and modelled and the 
+            coordinates of the stations.
         ds: xarray.DataSet containing 'tune' and 'saisn'.
-        coord_stns: List of (lat, lon) tuples of the stations
-        istation_mod: Indices for the correspondence between array and
-            array_mod.
         verbose: Optional additional debug prints.
 
     Returns:
@@ -280,27 +280,27 @@ def get_change_tune(  # pylint: disable=R0913
 
     """
     tune_pol_default = 1.0
-    nstns = array_obs.shape[1]
+    nstns = obs_mod_data.data_obs.shape[1]
     change_tune = np.ones(nstns)
     for istation in range(nstns):
         # sum of hourly observed concentrations of the last 5 days
-        sum_obs = np.sum(array_obs[:, istation])
+        sum_obs = np.sum(obs_mod_data.data_obs[:, istation])
         # sum of hourly modelled concentrations of the last 5 days
-        sum_mod = np.sum(array_mod[:, istation_mod[istation]])
+        sum_mod = np.sum(obs_mod_data.data_mod[:, obs_mod_data.istation_mod[istation]])
         # tuning factor at the current station
         tune_stns = get_field_at(
             ds,
             pollen_type + "tune",
-            coord_stns[istation],
+            obs_mod_data.coord_stns[istation],
         )
         # saison days at the current station
         # if > 0 then the pollen season has started
-        saisn_stns = get_field_at(ds, pollen_type + "saisn", coord_stns[istation])
+        saisn_stns = get_field_at(ds, pollen_type + "saisn", obs_mod_data.coord_stns[istation])
         if verbose:
             print(
                 f"Current station n°{istation}, ",
-                f"(lat: {coord_stns[istation][0]}, ",
-                f"lon: {coord_stns[istation][1]}), ",
+                f"(lat: {obs_mod_data.coord_stns[istation][0]}, ",
+                f"lon: {obs_mod_data.coord_stns[istation][1]}), ",
                 f"last 120H concentration observed: {sum_obs}, ",
                 f"modeled: {sum_mod}",
             )
@@ -330,16 +330,17 @@ def get_change_tune(  # pylint: disable=R0913
 
 
 def get_change_phenol(
-    pollen_type, array_obs, ds, coord_stns, verbose=False
+    pollen_type, obs_mod_data, ds, verbose=False
 ):  # pylint: disable=R0912,R0914,R0915
     """Compute the change of the temperature thresholds for the phenology.
 
     Args:
         pollen_type: String describing the pollen type analysed.
-        array_obs: Last 120H pollen concentration observed.
+        obs_mod_data: NamedTuple which must contain the last 120H
+            pollen concentration observed and the 
+            coordinates of the stations.
         ds: xarray.DataSet containing 'T_2M', 'tthrs', 'tthre'
             (for POAC, 'saisl' instead), 'saisn' and 'ctsum'.
-        coord_stns: List of (lat, lon) tuples of the stations
         verbose: Optional additional debug prints.
 
     Returns:
@@ -354,32 +355,34 @@ def get_change_phenol(
     thr_con_120 = {"ALNU": 720, "BETU": 720, "POAC": 216, "CORY": 720}
     failsafe = {"ALNU": 1000, "BETU": 2500, "POAC": 6000, "CORY": 2500}
     jul_days_excl = {"ALNU": 14, "BETU": 40, "POAC": 3, "CORY": 46}
-    nstns = array_obs.shape[1]
+    nstns = obs_mod_data.data_obs.shape[1]
     change_tthrs = np.zeros(nstns)
-    # change_tthre if not POAC, change_saisl if POAC
-    change_tthre_saisl = np.zeros(nstns)
+    change_tthre = np.zeros(nstns)
+    change_saisl = np.zeros(nstns)
     for istation in range(nstns):
-        tthrs_stns = get_field_at(ds, pollen_type + "tthrs", coord_stns[istation])
+        tthrs_stns = get_field_at(ds, pollen_type + "tthrs", obs_mod_data.coord_stns[istation])
         if pollen_type != "POAC":
-            tthre_stns = get_field_at(ds, pollen_type + "tthre", coord_stns[istation])
+            tthre_stns = get_field_at(ds, pollen_type + "tthre", obs_mod_data.coord_stns[istation])
         else:
-            saisl_stns = get_field_at(ds, pollen_type + "saisl", coord_stns[istation])
-        saisn_stns = get_field_at(ds, pollen_type + "saisn", coord_stns[istation])
-        ctsum_stns = get_field_at(ds, pollen_type + "ctsum", coord_stns[istation])
-        t_2m_stns = get_field_at(ds, "T_2M", coord_stns[istation]) - 273.15
-        sum_obs_24 = np.sum(array_obs[96:, istation])
-        sum_obs = np.sum(array_obs[:, istation])
+            saisl_stns = get_field_at(ds, pollen_type + "saisl", obs_mod_data.coord_stns[istation])
+        saisn_stns = get_field_at(ds, pollen_type + "saisn", obs_mod_data.coord_stns[istation])
+        ctsum_stns = get_field_at(ds, pollen_type + "ctsum", obs_mod_data.coord_stns[istation])
+        t_2m_stns = get_field_at(ds, "T_2M", obs_mod_data.coord_stns[istation]) - 273.15
+        sum_obs_24 = np.sum(obs_mod_data.data_obs[96:, istation])
+        sum_obs = np.sum(obs_mod_data.data_obs[:, istation])
         if verbose:
             print(
                 f"Current station n°{istation}, ",
-                f"(lat: {coord_stns[istation][0]}, ",
-                f"lon: {coord_stns[istation][1]}), ",
+                f"(lat: {obs_mod_data.coord_stns[istation][0]}, ",
+                f"lon: {obs_mod_data.coord_stns[istation][1]}), ",
                 f"last 24H concentration observed: {sum_obs_24}, ",
                 f"and last 120H {sum_obs}",
             )
             print(
                 f"Cumulative temperature sum {ctsum_stns.values[0][0]} ",
-                f"and threshold: {tthrs_stns.values[0][0]}",
+                f"and threshold (start): {tthrs_stns.values[0][0]}",
+                f" and end: {tthre_stns.values[0][0]}",
+                f" and saisn: {saisn_stns.values[0][0]}"
             )
             print(f"Temperature at station {t_2m_stns.values[0][0]}, " f"date: {date}")
             print("-----------------------------------------")
@@ -391,18 +394,17 @@ def get_change_phenol(
         ):
             change_tthrs[istation] = ctsum_stns - tthrs_stns
             if pollen_type != "POAC":
-                change_tthre_saisl[istation] = ctsum_stns - tthrs_stns
+                change_tthre[istation] = ctsum_stns - tthrs_stns
             if verbose:
                 print("Big data and below threshold")
         elif (
             (0 <= sum_obs_24 < thr_con_24[pollen_type])
             and (0 <= sum_obs < thr_con_120[pollen_type])
-            and (ctsum_stns > max(tthrs_stns, tthre_stns))
+            and (tthrs_stns < ctsum_stns)
             and (0 < saisn_stns < 10)
         ):
-
-            if pollen_type != "POAC":
-                change_tthre_saisl[istation] = t_2m_stns * (
+            if (pollen_type != "POAC" and ctsum_stns < tthre_stns):
+                change_tthre[istation] = t_2m_stns * (
                     date - jul_days_excl[pollen_type]
                 )
                 change_tthrs[istation] = t_2m_stns * (date - jul_days_excl[pollen_type])
@@ -422,7 +424,7 @@ def get_change_phenol(
             ):
                 if verbose:
                     print("Low data (end of season)")
-                change_tthre_saisl[istation] += ctsum_stns - tthre_stns
+                change_tthre[istation] += ctsum_stns - tthre_stns
             elif (
                 (sum_obs_24 > thr_con_24[pollen_type])
                 and (sum_obs > thr_con_120[pollen_type])
@@ -430,7 +432,7 @@ def get_change_phenol(
             ):
                 if verbose:
                     print("Big data (end of season)")
-                change_tthre_saisl[istation] += t_2m_stns * (
+                change_tthre[istation] += t_2m_stns * (
                     date - jul_days_excl[pollen_type]
                 )
         else:  # POAC
@@ -441,7 +443,7 @@ def get_change_phenol(
             ):
                 if verbose:
                     print("Low data (end of season) POAC")
-                change_tthre_saisl[istation] = saisn_stns - saisl_stns
+                change_saisl[istation] = saisn_stns - saisl_stns
             elif (
                 (sum_obs_24 > thr_con_24[pollen_type])
                 and (sum_obs > thr_con_120[pollen_type])
@@ -449,33 +451,34 @@ def get_change_phenol(
             ):
                 if verbose:
                     print("Big data (end of season) POAC")
-                change_tthre_saisl[istation] = 1
+                change_saisl[istation] = 1
         # FAILSAFE
         if change_tthrs[istation] > 0:
             change_tthrs[istation] = min(failsafe[pollen_type], change_tthrs[istation])
         elif change_tthrs[istation] <= 0:
             change_tthrs[istation] = max(-failsafe[pollen_type], change_tthrs[istation])
         if pollen_type != "POAC":
-            if change_tthre_saisl[istation] > 0:
-                change_tthre_saisl[istation] = min(
-                    failsafe[pollen_type], change_tthre_saisl[istation]
+            if change_tthre[istation] > 0:
+                change_tthre[istation] = min(
+                    failsafe[pollen_type], change_tthre[istation]
                 )
-            elif change_tthre_saisl[istation] <= 0:
-                change_tthre_saisl[istation] = max(
-                    -failsafe[pollen_type], change_tthre_saisl[istation]
+            elif change_tthre[istation] <= 0:
+                change_tthre[istation] = max(
+                    -failsafe[pollen_type], change_tthre[istation]
                 )
         else:  # POAC
-            if change_tthre_saisl[istation] > 0:
-                change_tthre_saisl[istation] = min(7, change_tthre_saisl[istation])
-            elif change_tthre_saisl[istation] <= 0:
-                change_tthre_saisl[istation] = max(-7, change_tthre_saisl[istation])
+            if change_saisl[istation] > 0:
+                change_saisl[istation] = min(7, change_saisl[istation])
+            elif change_saisl[istation] <= 0:
+                change_saisl[istation] = max(-7, change_saisl[istation])
         if verbose:
             print(
                 f"Change tthrs is now {change_tthrs[istation]} ",
-                f"and change tthre/saisl is now {change_tthre_saisl[istation]}",
+                f"Change tthre is now {change_tthre[istation]} ",
+                f"Change saisl is now {change_saisl[istation]} ",
             )
             print("-----------------------------------------")
-    return change_tthrs, change_tthre_saisl
+    return change_phenology_fields(change_tthrs, change_tthre, change_saisl)
 
 
 def to_grib(inp, outp, dict_fields):
@@ -534,19 +537,3 @@ def get_pollen_type(ds):
             return var[:4]
     return "Error: pollen type not recognized."
 
-
-def set_stn_gridpoint(ds, coord_stns):
-    """Retrieve the closest gridpoints for each stations."""
-    nstns = len(coord_stns)
-    lat_stns2 = np.zeros(nstns)
-    lon_stns2 = np.zeros(nstns)
-    for istn in range(nstns):
-        lat_stns2[istn] = get_field_at(
-            ds, "latitude", coord_stns[istn]
-        ).latitude.values[0][0]
-        lon_stns2[istn] = get_field_at(
-            ds, "latitude", coord_stns[istn]
-        ).longitude.values[0][0]
-    coord_stns2 = list(zip(lat_stns2, lon_stns2))
-    print(f"Changed the stations coordinates to: {coord_stns2}")
-    return coord_stns2

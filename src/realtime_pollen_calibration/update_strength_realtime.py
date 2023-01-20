@@ -23,26 +23,20 @@ def update_strength_realtime(file_obs, file_mod, file_in, file_out, verbose):
     """
     ds = cfgrib.open_dataset(file_in, encode_cf=("time", "geography", "vertical"))
     pollen_type = utils.get_pollen_type(ds)
-    array, array_mod, coord_stns, missing_value, istation_mod = utils.read_atab(
-        pollen_type, file_obs, file_mod
+    obs_mod_data = utils.read_atab(
+        pollen_type, file_obs, file_mod, verbose=verbose
     )
-    array = utils.treat_missing(array, missing_value, verbose=verbose)
     change_tune = utils.get_change_tune(
         pollen_type,
-        array,
-        array_mod,
+        obs_mod_data,
         ds,
-        coord_stns,
-        istation_mod,
         verbose=verbose,
     )
-    # does not seem to have an important effect on the end result.
-    # coord_stns2 = utils.set_stn_gridpoint(ds, coord_stns)
     tune_vec = utils.interpolate(
         change_tune,
         ds,
         pollen_type + "tune",
-        coord_stns,
+        obs_mod_data.coord_stns,
         method="multiply",
         verbose=verbose,
     )
