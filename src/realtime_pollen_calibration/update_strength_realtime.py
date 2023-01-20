@@ -7,7 +7,9 @@ import cfgrib  # type: ignore
 from realtime_pollen_calibration import utils
 
 
-def update_strength_realtime(file_obs, file_mod, file_in, file_out, verbose):
+def update_strength_realtime(
+    file_obs, file_mod, file_in, file_out, verbose
+):  # pylint: disable=R0801
     """Advance the tune field by one hour.
 
     Args:

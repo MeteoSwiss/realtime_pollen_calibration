@@ -8,13 +8,13 @@ import eccodes  # type: ignore
 import numpy as np  # type: ignore
 import pandas as pd  # type: ignore
 
-obs_mod_data = namedtuple(
-    "obs_mod_data",
+ObsModData = namedtuple(
+    "ObsModData",
     ["data_obs", "coord_stns", "missing_value", "data_mod", "istation_mod"],
     defaults=[None, None],
 )
-change_phenology_fields = namedtuple(
-    "change_phenology_fields", ["change_tthrs", "change_tthre", "change_saisl"]
+ChangePhenologyFields = namedtuple(
+    "ChangePhenologyFields", ["change_tthrs", "change_tthre", "change_saisl"]
 )
 
 
@@ -32,7 +32,7 @@ def count_to_log_level(count: int) -> int:
 
 def read_atab(
     pollen_type: str, file_obs: str, file_mod: str = "", verbose: bool = False
-) -> obs_mod_data:
+) -> ObsModData:
     """Read the pollen concentrations and the station locations from ATAB files.
 
     Args:
@@ -111,7 +111,7 @@ def read_atab(
         data_mod = 0
         istation_mod = 0
     data = treat_missing(data, missing_value, verbose=verbose)
-    return obs_mod_data(data, coord_stns, missing_value, data_mod, istation_mod)
+    return ObsModData(data, coord_stns, missing_value, data_mod, istation_mod)
 
 
 def treat_missing(
@@ -273,7 +273,7 @@ def interpolate(  # pylint: disable=R0913,R0914
 
 def get_change_tune(  # pylint: disable=R0913
     pollen_type: str,
-    obs_mod_data: obs_mod_data,
+    obs_mod_data: ObsModData,
     ds,
     verbose: bool = False,
 ):
@@ -345,9 +345,9 @@ def get_change_tune(  # pylint: disable=R0913
     return change_tune
 
 
-def get_change_phenol(
-    pollen_type: str, obs_mod_data: obs_mod_data, ds, verbose: bool = False
-) -> change_phenology_fields:  # pylint: disable=R0912,R0914,R0915
+def get_change_phenol(  # pylint: disable=R0912,R0914,R0915
+    pollen_type: str, obs_mod_data: ObsModData, ds, verbose: bool = False
+) -> ChangePhenologyFields:
     """Compute the change of the temperature thresholds for the plant phenology.
 
     Args:
@@ -510,7 +510,7 @@ def get_change_phenol(
                 f"Change saisl is now {change_saisl[istation]} ",
             )
             print("-----------------------------------------")
-    return change_phenology_fields(change_tthrs, change_tthre, change_saisl)
+    return ChangePhenologyFields(change_tthrs, change_tthre, change_saisl)
 
 
 def to_grib(inp: str, outp: str, dict_fields: dict) -> None:
