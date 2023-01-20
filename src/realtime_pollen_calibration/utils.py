@@ -200,7 +200,7 @@ def interpolate(  # pylint: disable=R0913,R0914
 
     Returns:
         vec: Obtained field over the full grid.
-    This is a reproduction of the IDW implemented in COSMO by Simon Sadamov,
+    This is a reproduction of the IDW implemented in COSMO.
     with different threshold (minima and maxima) for different species.
 
     """
