@@ -23,28 +23,32 @@ def update_phenology_realtime(file_obs, file_in, file_out, verbose=False):
 
     """
     ds = cfgrib.open_dataset(file_in, encode_cf=("time", "geography", "vertical"))
-    pollen_type = utils.get_pollen_type(ds)
-    obs_mod_data = utils.read_atab(pollen_type, file_obs, verbose=verbose)
-    change_phenology_fields = utils.get_change_phenol(
-        pollen_type, obs_mod_data, ds, verbose
-    )
+    ptype_present = utils.get_pollen_type(ds)
+    if verbose:
+        print(f"Detected pollen types in the DataSet provided: {ptype_present}")
     dict_fields = {}
-    for field_name, field_values in zip(
-        change_phenology_fields._asdict(), change_phenology_fields
-    ):
-        if verbose:
-            print(
-                f"Number of non-zero values in {field_name}: ",
-                np.count_nonzero(field_values),
-                field_values,
-            )
-        if np.count_nonzero(field_values) > 0:
-            dict_fields[pollen_type + field_name[7:]] = utils.interpolate(
-                field_values,
-                ds,
-                pollen_type + field_name[7:],
-                obs_mod_data.coord_stns,
-                method="sum",
-                verbose=verbose,
-            )
+    for pollen_type in ptype_present:
+        obs_mod_data = utils.read_atab(pollen_type, file_obs, verbose=verbose)
+        change_phenology_fields = utils.get_change_phenol(
+            pollen_type, obs_mod_data, ds, verbose
+        )
+
+        for field_name, field_values in zip(
+            change_phenology_fields._asdict(), change_phenology_fields
+        ):
+            if verbose:
+                print(
+                    f"Number of non-zero values in {field_name}: ",
+                    np.count_nonzero(field_values),
+                    field_values,
+                )
+            if np.count_nonzero(field_values) > 0:
+                dict_fields[pollen_type + field_name[7:]] = utils.interpolate(
+                    field_values,
+                    ds,
+                    pollen_type + field_name[7:],
+                    obs_mod_data.coord_stns,
+                    method="sum",
+                    verbose=verbose,
+                )
     utils.to_grib(file_in, file_out, dict_fields)

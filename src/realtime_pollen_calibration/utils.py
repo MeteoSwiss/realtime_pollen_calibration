@@ -343,7 +343,7 @@ def get_change_tune(  # pylint: disable=R0913
 def get_change_phenol(
     pollen_type, obs_mod_data, ds, verbose=False
 ):  # pylint: disable=R0912,R0914,R0915
-    """Compute the change of the temperature thresholds for the phenology.
+    """Compute the change of the temperature thresholds for the plant phenology.
 
     Args:
         pollen_type: String describing the pollen type analysed.
@@ -555,11 +555,13 @@ def get_pollen_type(ds):
         ds: xarray.DataSet containing one pollen-related field.
 
     Returns:
-        pollen_type: String from pollen_types.
+        present_ptype: List of pollen types for which data
+            is present in ds.
 
     """
     pollen_types = ["ALNU", "BETU", "POAC", "CORY"]
+    present_ptype = []
     for var in ds:
-        if var[:4] in pollen_types:
-            return var[:4]
-    return "Error: pollen type not recognized."
+        if var[:4] in pollen_types and var[:4] not in present_ptype:
+            present_ptype.append(var[:4])
+    return present_ptype

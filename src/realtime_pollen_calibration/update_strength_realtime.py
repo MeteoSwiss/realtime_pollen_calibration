@@ -22,21 +22,25 @@ def update_strength_realtime(file_obs, file_mod, file_in, file_out, verbose):
 
     """
     ds = cfgrib.open_dataset(file_in, encode_cf=("time", "geography", "vertical"))
-    pollen_type = utils.get_pollen_type(ds)
-    obs_mod_data = utils.read_atab(pollen_type, file_obs, file_mod, verbose=verbose)
-    change_tune = utils.get_change_tune(
-        pollen_type,
-        obs_mod_data,
-        ds,
-        verbose=verbose,
-    )
-    tune_vec = utils.interpolate(
-        change_tune,
-        ds,
-        pollen_type + "tune",
-        obs_mod_data.coord_stns,
-        method="multiply",
-        verbose=verbose,
-    )
-    dict_fields = {pollen_type + "tune": tune_vec}
+    ptype_present = utils.get_pollen_type(ds)
+    if verbose:
+        print(f"Detected pollen types in the DataSet provided: {ptype_present}")
+    dict_fields = {}
+    for pollen_type in ptype_present:
+        obs_mod_data = utils.read_atab(pollen_type, file_obs, file_mod, verbose=verbose)
+        change_tune = utils.get_change_tune(
+            pollen_type,
+            obs_mod_data,
+            ds,
+            verbose=verbose,
+        )
+        tune_vec = utils.interpolate(
+            change_tune,
+            ds,
+            pollen_type + "tune",
+            obs_mod_data.coord_stns,
+            method="multiply",
+            verbose=verbose,
+        )
+        dict_fields[pollen_type + "tune"] = tune_vec
     utils.to_grib(file_in, file_out, dict_fields)
