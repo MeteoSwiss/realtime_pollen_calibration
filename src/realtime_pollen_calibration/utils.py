@@ -13,6 +13,9 @@ ObsModData = namedtuple(
     ["data_obs", "coord_stns", "missing_value", "data_mod", "istation_mod"],
     defaults=[None, None],
 )
+HeaderData = namedtuple(
+    "HeaderData", ["coord_stns", "missing_value", "stn_indicators", "n_header"]
+)
 ChangePhenologyFields = namedtuple(
     "ChangePhenologyFields", ["change_tthrs", "change_tthre", "change_saisl"]
 )
@@ -87,11 +90,14 @@ def read_atab(
                     n_header = n
                     break
             coord_stns = list(zip(lat_stns, lon_stns))
-        return coord_stns, missing_value, stn_indicators, n_header
+        return HeaderData(coord_stns, missing_value, stn_indicators, n_header)
 
-    coord_stns, missing_value, stn_indicators, n_header = read_obs_header(file_obs)
+    headerdata = read_obs_header(file_obs)
     data = pd.read_csv(
-        file_obs, header=n_header, delim_whitespace=True, parse_dates=[[1, 2, 3, 4, 5]]
+        file_obs,
+        header=headerdata.n_header,
+        delim_whitespace=True,
+        parse_dates=[[1, 2, 3, 4, 5]],
     )
     data = data[data["PARAMETER"] == pollen_type].iloc[:, 2:].to_numpy()
     if file_mod != "":
@@ -102,7 +108,7 @@ def read_atab(
                 if line.strip()[0:9] == "PARAMETER":
                     n_header_mod = n
                     break
-        istation_mod = get_mod_stn_index(stn_indicators, stn_indicators_mod)
+        istation_mod = get_mod_stn_index(headerdata.stn_indicators, stn_indicators_mod)
         data_mod = pd.read_csv(
             file_mod,
             header=n_header_mod,
@@ -113,8 +119,10 @@ def read_atab(
     else:
         data_mod = 0
         istation_mod = 0
-    data = treat_missing(data, missing_value, verbose=verbose)
-    return ObsModData(data, coord_stns, missing_value, data_mod, istation_mod)
+    data = treat_missing(data, headerdata.missing_value, verbose=verbose)
+    return ObsModData(
+        data, headerdata.coord_stns, headerdata.missing_value, data_mod, istation_mod
+    )
 
 
 def treat_missing(
