@@ -224,17 +224,17 @@ def interpolate(  # pylint: disable=R0913,R0914
     nstns = len(coord_stns)
     pollen_type = field[:4]
     if method == "multiply":
-        min_param = {"ALNU": 3.389, "BETU": 4.046, "POAC": 1.875, "CORY": 7.738}
-        max_param = {"ALNU": 0.235, "BETU": 0.222, "POAC": 0.405, "CORY": 0.216}
+        max_param = {"ALNU": 3.389, "BETU": 4.046, "POAC": 1.875, "CORY": 7.738}
+        min_param = {"ALNU": 0.235, "BETU": 0.222, "POAC": 0.405, "CORY": 0.216}
     else:
         bigvalue = 1e10
-        min_param = {
+        max_param = {
             "ALNU": bigvalue,
             "BETU": bigvalue,
             "POAC": bigvalue,
             "CORY": bigvalue,
         }
-        max_param = {
+        min_param = {
             "ALNU": -bigvalue,
             "BETU": -bigvalue,
             "POAC": -bigvalue,
@@ -263,9 +263,9 @@ def interpolate(  # pylint: disable=R0913,R0914
                 ds[field].values
                 * np.sum(change_vec / dist, axis=0)
                 / np.sum(1 / dist, axis=0),
-                min_param[pollen_type],
+                max_param[pollen_type],
             ),
-            max_param[pollen_type],
+            min_param[pollen_type],
         )
         if verbose:
             i1 = 100
@@ -281,9 +281,9 @@ def interpolate(  # pylint: disable=R0913,R0914
             np.minimum(
                 ds[field].values
                 + np.sum(change_vec / dist, axis=0) / np.sum(1 / dist, axis=0),
-                min_param[pollen_type],
+                max_param[pollen_type],
             ),
-            max_param[pollen_type],
+            min_param[pollen_type],
         )
     return vec
 
