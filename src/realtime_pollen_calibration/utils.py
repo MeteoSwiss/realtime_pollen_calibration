@@ -20,6 +20,12 @@ ChangePhenologyFields = namedtuple(
     "ChangePhenologyFields", ["change_tthrs", "change_tthre", "change_saisl"]
 )
 
+pollen_types = ["ALNU", "BETU", "POAC", "CORY"]
+thr_con_24 = {"ALNU": 240, "BETU": 240, "POAC": 72, "CORY": 240}
+thr_con_120 = {"ALNU": 720, "BETU": 720, "POAC": 216, "CORY": 720}
+failsafe = {"ALNU": 1000, "BETU": 2500, "POAC": 6000, "CORY": 2500}
+jul_days_excl = {"ALNU": 14, "BETU": 40, "POAC": 3, "CORY": 46}
+
 
 def count_to_log_level(count: int) -> int:
     """Map occurrence of the command line option verbose to the log level."""
@@ -378,10 +384,6 @@ def get_change_phenol(  # pylint: disable=R0912,R0914,R0915
 
     """
     date = pd.Timestamp(ds.time.values).day_of_year + 1 + 31
-    thr_con_24 = {"ALNU": 240, "BETU": 240, "POAC": 72, "CORY": 240}
-    thr_con_120 = {"ALNU": 720, "BETU": 720, "POAC": 216, "CORY": 720}
-    failsafe = {"ALNU": 1000, "BETU": 2500, "POAC": 6000, "CORY": 2500}
-    jul_days_excl = {"ALNU": 14, "BETU": 40, "POAC": 3, "CORY": 46}
     nstns = obs_mod_data.data_obs.shape[1]
     change_tthrs = np.zeros(nstns)
     change_tthre = np.zeros(nstns)
@@ -575,7 +577,6 @@ def get_pollen_type(ds) -> list:
             is present in ds.
 
     """
-    pollen_types = ["ALNU", "BETU", "POAC", "CORY"]
     present_ptype = []
     for var in ds:
         if var[:4] in pollen_types and var[:4] not in present_ptype:
