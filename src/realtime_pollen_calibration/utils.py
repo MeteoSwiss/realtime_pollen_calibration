@@ -83,26 +83,29 @@ def read_atab(
                     missing_value = float(line.strip()[20:])
                 if line.strip()[0:9] == "Indicator":
                     stn_indicators = np.array(line.strip()[11:].split("\t"))
-                if n == 16:
+                if line.strip()[0:9] == "PARAMETER":
+                    n_header = n
                     break
             coord_stns = list(zip(lat_stns, lon_stns))
-        return coord_stns, missing_value, stn_indicators
+        return coord_stns, missing_value, stn_indicators, n_header
 
-    coord_stns, missing_value, stn_indicators = read_obs_header(file_obs)
+    coord_stns, missing_value, stn_indicators, n_header = read_obs_header(file_obs)
     data = pd.read_csv(
-        file_obs, header=17, delim_whitespace=True, parse_dates=[[1, 2, 3, 4, 5]]
+        file_obs, header=n_header, delim_whitespace=True, parse_dates=[[1, 2, 3, 4, 5]]
     )
     data = data[data["PARAMETER"] == pollen_type].iloc[:, 2:].to_numpy()
     if file_mod != "":
         with open(file_mod, encoding="utf-8") as f:
-            for line in f:
+            for n, line in enumerate(f):
                 if line.strip()[0:9] == "Indicator":
                     stn_indicators_mod = np.array(line.strip()[29:].split("         "))
+                if line.strip()[0:9] == "PARAMETER":
+                    n_header_mod = n
                     break
         istation_mod = get_mod_stn_index(stn_indicators, stn_indicators_mod)
         data_mod = pd.read_csv(
             file_mod,
-            header=18,
+            header=n_header_mod,
             delim_whitespace=True,
             parse_dates=[[3, 4, 5, 6, 7]],
         )
