@@ -420,9 +420,12 @@ def get_change_phenol(  # pylint: disable=R0912,R0914,R0915
             print(
                 f"Cumulative temperature sum {ctsum_stns.values[0][0]} ",
                 f"and threshold (start): {tthrs_stns.values[0][0]}",
-                f" and end: {tthre_stns.values[0][0]}",
                 f" and saisn: {saisn_stns.values[0][0]}",
             )
+            if pollen_type != "POAC":
+                print(f"Cumsum temp threshold end: {tthre_stns.values[0][0]}")
+            else:
+                print(f"Saisl: {saisl_stns.values[0][0]}")
             print(f"Temperature at station {t_2m_stns.values[0][0]}, " f"date: {date}")
             print("-----------------------------------------")
         # ADJUSTMENT OF SEASON START AND END AT THE BEGINNING OF THE SEASON

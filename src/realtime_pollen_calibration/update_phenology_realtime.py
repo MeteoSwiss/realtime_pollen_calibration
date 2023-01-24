@@ -40,7 +40,6 @@ def update_phenology_realtime(file_obs, file_in, file_out, verbose=False):
                 print(
                     f"Number of non-zero values in {field_name}: ",
                     np.count_nonzero(field_values),
-                    field_values,
                 )
             if np.count_nonzero(field_values) > 0:
                 dict_fields[pollen_type + field_name[7:]] = utils.interpolate(
