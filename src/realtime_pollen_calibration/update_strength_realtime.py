@@ -42,7 +42,6 @@ def update_strength_realtime(
             pollen_type + "tune",
             obs_mod_data.coord_stns,
             method="multiply",
-            verbose=verbose,
         )
         dict_fields[pollen_type + "tune"] = tune_vec
     utils.to_grib(file_in, file_out, dict_fields)
