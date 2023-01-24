@@ -267,15 +267,6 @@ def interpolate(  # pylint: disable=R0913,R0914
             ),
             min_param[pollen_type],
         )
-        if verbose:
-            i1 = 100
-            i2 = 250
-            print(f"dist from point ({i1},{i2}): {dist[:,i1,i2]}")
-            print(
-                "Weighted change_tune by inverse distance: "
-                f"{np.sum(change_vec / dist, axis=0)[i1, i2]}"
-            )
-            print(f"Sum of inverse distance: {np.sum(1 / dist, axis=0)[i1, i2]}")
     elif method == "sum":
         vec = np.maximum(
             np.minimum(
