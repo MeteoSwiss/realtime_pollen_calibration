@@ -203,7 +203,6 @@ def interpolate(  # pylint: disable=R0913,R0914
     field: str,
     coord_stns,
     method: str = "multiply",
-    verbose: bool = False,
 ):
     """Interpolate the change of a field from its values at the stations.
 

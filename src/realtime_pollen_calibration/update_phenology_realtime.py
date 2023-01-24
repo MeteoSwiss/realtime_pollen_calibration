@@ -48,6 +48,5 @@ def update_phenology_realtime(file_obs, file_in, file_out, verbose=False):
                     pollen_type + field_name[7:],
                     obs_mod_data.coord_stns,
                     method="sum",
-                    verbose=verbose,
                 )
     utils.to_grib(file_in, file_out, dict_fields)
