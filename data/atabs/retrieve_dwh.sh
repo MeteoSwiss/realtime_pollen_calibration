@@ -2,7 +2,7 @@
 # ALNU
 #-----------------
 # tthrs
-~osm/bin/dwh_retrieve -s pollen_obs -t 202202030600-202202080500 --fmt atab --outfile=alnu_pollen_measured_values_2022020805.atab
+~osm/bin/dwh_retrieve -s pollen_obs -t 202202081500-202202131400 --fmt atab --outfile=alnu_pollen_measured_values_2022021314.atab
 # tune
 ~osm/bin/dwh_retrieve -s pollen_obs -t 202202170800-202202220700 --fmt atab --outfile=alnu_pollen_measured_values_2022022207.atab
 # tthre (season end)
