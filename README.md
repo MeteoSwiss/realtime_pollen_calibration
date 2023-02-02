@@ -47,8 +47,7 @@ setup_env.sh -h
 
 We distinguish development installations which are editable and have additional dependencies on formatters and linters from productive installations which are non-editable
 and have no additional dependencies. Moreover we distinguish pinned installations based on exported (reproducible) environments and free installations where the installation
-is based on first level dependencies listed in `requirements/requirements.yml` and `requirements/dev-requirements.yml` respectively. If you start developing, you might want to do a free
-development installation and export the environments right away.
+is based on first level dependencies listed in `requirements/requirements.yml` and `requirements/dev-requirements.yml` respectively. If you start developing, you might want to do a free development installation and export the environments right away.
 
 ```bash
 setup_env.sh -d -e -m -n <package_env_name>

@@ -109,5 +109,6 @@ venv_*/
 
 # VS Code
 .vscode
-data/*.idx
+*.idx
 data/fieldextra.diagnostic
+data/grib2_files_cosmo1e/laf2022021314_ALNUtthrs_tthre.923a8.idx

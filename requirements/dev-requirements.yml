@@ -235,7 +235,6 @@ dependencies:
   - pyproj
   - pyprojroot
   - pyqt
-  - pyqt-impl
   - pyqt5-sip
   - pyqtchart
   - pyqtwebengine
