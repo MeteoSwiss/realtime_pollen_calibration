@@ -1,8 +1,8 @@
 """Run test cases for realtime calibration."""
 
 # Standard library
-from pathlib import Path
 import os
+from pathlib import Path
 
 # First-party
 from realtime_pollen_calibration import update_phenology_realtime
