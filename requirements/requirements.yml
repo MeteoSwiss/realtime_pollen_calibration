@@ -24,6 +24,7 @@ dependencies:
   - pre-commit>=2.20
   - pydocstyle>=6.1
   - pylint>=2.15
+  - pyprojroot
   - pytest>=7.2
   - rich>=12.6
   - rope>=1.6
