@@ -9,7 +9,8 @@ from realtime_pollen_calibration import update_phenology_realtime
 from realtime_pollen_calibration import update_strength_realtime
 
 cwd = Path(os.getcwd())
-data_path = str(cwd.parent.parent.absolute())
+data_path = str(cwd)
+# data_path = str(cwd.parent.parent.absolute())
 
 file_data = data_path + "/data/atabs/alnu_pollen_measured_values_2022021314.atab"
 file_grib = data_path + "/data/grib2_files_cosmo1e/laf2022021314_ALNUtthrs_tthre"
