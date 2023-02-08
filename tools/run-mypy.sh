@@ -13,8 +13,10 @@ set -o errexit
 
 VERBOSE=${VERBOSE:-false}
 
-cd "$(dirname "${0}")"
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+cd "${SCRIPT_DIR}/.."
 
+# Paths relative to project root
 paths=(
     src/realtime_pollen_calibration
     tests/test_realtime_pollen_calibration

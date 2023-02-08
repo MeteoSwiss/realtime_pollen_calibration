@@ -28,7 +28,6 @@ def printf(format_opt, *args):
 
 
 def compute_ctsum(year, month, day):  # pylint: disable=R0914
-
     yyyymmdd = datetime.date(int(year), int(month), int(day))
 
     # day of year - count starts on 1 Dec
