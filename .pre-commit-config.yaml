@@ -38,6 +38,7 @@ repos:
         description: Check for spelling errors
         language: system
         entry: codespell
+        exclude: ^notebooks/
 -   repo: local
     hooks:
     -   id: black

@@ -157,6 +157,7 @@ dependencies:
   - pygments=2.14.0
   - pylint=2.16.1
   - pyopenssl=23.0.0
+  - pyprojroot=0.2.0
   - pyrsistent=0.19.3
   - pysocks=1.7.1
   - pytest=7.2.1
