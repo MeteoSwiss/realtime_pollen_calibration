@@ -14,7 +14,7 @@ data_path = str(cwd)
 
 file_data = data_path + "/data/atabs/alnu_pollen_measured_values_2022021314.atab"
 file_grib = data_path + "/data/grib2_files_cosmo1e/laf2022021314_ALNUtthrs_tthre"
-file_out = data_path + "/data/2022020815_ALNUtthrs_tthre"
+file_out = data_path + "/data/2022021315_ALNUtthrs_tthre"
 update_phenology_realtime.update_phenology_realtime(
     file_data, file_grib, file_out, False
 )
