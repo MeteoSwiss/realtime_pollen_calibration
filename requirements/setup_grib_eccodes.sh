@@ -89,7 +89,7 @@ elif [[ $(hostname -s) == *'daint'* ]]; then
     echo 'Setting FIELDEXTRA_PATH for daint'
     conda env config vars set FIELDEXTRA_PATH=/project/s83c/fieldextra/daint/bin/fieldextra_gnu_opt_omp
 
-elif [[ $(hostname -s) == *'nid'* ]]; then
+elif [[ $(hostname -s) == *'balfrin'* ]]; then
 
     echo 'Setting FIELDEXTRA_PATH for balfrin'
     conda env config vars set FIELDEXTRA_PATH=/users/oprusers/osm/bin/fieldextra
