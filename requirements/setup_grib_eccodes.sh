@@ -60,7 +60,7 @@ elif [[ $(hostname -s) == *'daint'* ]]; then
     source /project/g110/spack/user/admin-daint/spack/share/spack/setup-env.sh
     set_grib_definition_path
 
-elif [[ $(hostname -s) == *'nid'* ]]; then
+elif [[ $(hostname -s) == *'balfrin'* ]]; then
 
     check_python
 
