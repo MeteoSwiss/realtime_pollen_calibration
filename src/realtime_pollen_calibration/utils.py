@@ -1,3 +1,9 @@
+# Copyright (c) 2022 MeteoSwiss, contributors listed in AUTHORS
+
+# Distributed under the terms of the BSD 3-Clause License.
+
+# SPDX-License-Identifier: BSD-3-Clause
+
 """Utils for the command line tool."""
 # Standard library
 import logging
