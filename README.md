@@ -78,6 +78,17 @@ pytest
 If the tests pass, you are good to go. If not, contact the package administrator Simon Adamov. Make sure to update your requirement files and export your environments after installation
 every time you add new imports while developing. Check the next section to find some guidance on the development process if you are new to Python and/or APN.
 
+### ecCodes for GRIB decoding
+
+Since this package uses cfgrib to decode GRIB data, ecCodes must be installed and the ecCodes and COSMO ecCodes definitions
+made available. The location of the definitions is stored in the environment variable `GRIB_DEFINITION_PATH` in the conda environment.
+ ecCodes definitions are installed with the ecCodes library by conda, the COSMO ecCodes definitions are cloned and installed 
+ separately. This is handled by `tools/setup_env.sh` and only needs to be done once, the settings are then stored in the conda 
+ environment! If you need a personalised version of ecCodes definitions, you can specify the path to your version 
+ in `GRIB_DEFINITION_PATH` (and `GRIB_SAMPLES_PATH` if needed) in `tools/setup_env.sh`.
+ Be aware that the version of the COSMO eccodes definitions need to match the version of the ecCodes library.
+ Please adapt both `requirements/requirements.yml` and `tools/setup_env.sh` if you need to change the ecCodes version.
+
 ### Roadmap to your first contribution
 
 Generally, the source code of your library is located in `src/<library_name>`. The blueprint will generate some example code in `mutable_number.py`, `utils.py` and `cli.py`. `cli.py` thereby serves as an entry
