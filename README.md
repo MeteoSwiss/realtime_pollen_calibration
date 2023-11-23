@@ -38,7 +38,7 @@ In the /notebook folder is a simple script that allows for plotting 2D-maps usin
 
 ## Start developing
 
-Once you created or cloned this repository, make sure the installation is running properly. Install the package dependencies with the provided script `setup_env.sh`.
+Once you created or cloned this repository, make sure the installation is running properly. Install the package dependencies with the provided script `setup_env.sh`. This script also handles the installation of ecCodes cosmo definitions (for more on ecCode refer to the dedicated section below), sets the fieldextra path and checks the cartopy installation (currently deactivated).
 Check available options with
 
 ```bash
@@ -82,9 +82,9 @@ every time you add new imports while developing. Check the next section to find 
 
 Since this package uses cfgrib to decode GRIB data, ecCodes must be installed and the ecCodes and COSMO ecCodes definitions
 made available. The location of the definitions is stored in the environment variable `GRIB_DEFINITION_PATH` in the conda environment.
- ecCodes definitions are installed with the ecCodes library by conda, the COSMO ecCodes definitions are cloned and installed 
- separately. This is handled by `tools/setup_env.sh` and only needs to be done once, the settings are then stored in the conda 
- environment! If you need a personalised version of ecCodes definitions, you can specify the path to your version 
+ ecCodes definitions are installed with the ecCodes library by conda, the COSMO ecCodes definitions are cloned and installed
+ separately. This is handled by `tools/setup_env.sh` and only needs to be done once, the settings are then stored in the conda
+ environment! If you need a personalised version of ecCodes definitions, you can specify the path to your version
  in `GRIB_DEFINITION_PATH` (and `GRIB_SAMPLES_PATH` if needed) in `tools/setup_env.sh`.
  Be aware that the version of the COSMO eccodes definitions need to match the version of the ecCodes library.
  Please adapt both `requirements/requirements.yml` and `tools/setup_env.sh` if you need to change the ecCodes version.

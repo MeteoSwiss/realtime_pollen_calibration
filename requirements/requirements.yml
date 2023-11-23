@@ -27,6 +27,7 @@ dependencies:
   - pylint>=2.15
   - pyprojroot
   - pytest>=7.2
+  - python-eccodes
   - rich>=12.6
   - rope>=1.6
   - rstcheck>=6.1

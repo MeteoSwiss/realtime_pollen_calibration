@@ -75,6 +75,32 @@ conda_eccodes=${CONDA_PREFIX}/share/eccodes-cosmo-resources_${definition_version
 git clone -b ${definition_version} https://github.com/COSMO-ORG/eccodes-cosmo-resources.git ${conda_eccodes} || exit
 ${CONDA} env config vars set GRIB_DEFINITION_PATH=${conda_eccodes}/definitions/:${CONDA_PREFIX}/share/eccodes/definitions
 
+
+# fieldextra path
+if [[ $(hostname -s) == *'tsa'* ]]; then
+    echo 'Setting FIELDEXTRA_PATH for tsa'
+    ${CONDA} env config vars set FIELDEXTRA_PATH=/project/s83c/fieldextra/tsa/bin/fieldextra_gnu_opt_omp
+
+elif [[ $(hostname -s) == *'daint'* ]]; then
+    echo 'Setting FIELDEXTRA_PATH for daint'
+    ${CONDA} env config vars set FIELDEXTRA_PATH=/project/s83c/fieldextra/daint/bin/fieldextra_gnu_opt_omp
+
+elif [[ $(hostname -s) == *'balfrin'* ]]; then
+    echo 'Setting FIELDEXTRA_PATH for balfrin'
+    ${CONDA} env config vars set FIELDEXTRA_PATH=/users/oprusers/osm/bin/fieldextra
+fi
+
+
+# # cartopy setup
+# if [[ $(cp requirements/siteconfig.py $CONDA_PREFIX/lib/$python_lib/site-packages/cartopy) ]]; then
+#     echo 'Cartopy configuration completed successfully.'
+# else
+#     echo -e "\e[31mEnable cartopy to modify cartopy.config by placing the env/siteconfig.py file into cartopy package source folder.\n\e[0m"\
+#         "\e[31mPlease make sure that you are in the parent directory of the iconarray folder while executing this setup script.\e[0m"
+#     exit $1
+# fi
+
+
 echo "Variables saved to environment: "
 ${CONDA} env config vars list
 
@@ -84,7 +110,3 @@ echo -e "\n "\
     "\n "\
     "\e[32m            conda activate ${ENV_NAME} \n \e[0m"\
     " "
-    
-    
-    
-
