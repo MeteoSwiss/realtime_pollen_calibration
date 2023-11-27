@@ -3,10 +3,13 @@
 This repository calculates the pollen input fields needed for the real-time pollen calibration in ICON-ART. It is very similar to the FORTRAN implementation used in COSMO-ART.
 More information about the Pollen module currently in the weather model COSMO can be found here:
 <https://service.meteoswiss.ch/confluence/x/dYQYBQ>
-And in this paper: (currently under review :)
+And in this paper: Adamov, S & Pauling, A (2023): A real-time calibration method for the numerical pollen forecast model COSMO-ART
+Aerobiologia, 39, 327-344. Available open access from https://link.springer.com/article/10.1007/s10453-023-09796-5
 
 This specific project also has a confluence page here:
 <https://service.meteoswiss.ch/confluence/x/M_ahBw>
+
+The package has been tested on Balfrin at CSCS only.
 
 ## Data Import
 
@@ -38,7 +41,7 @@ In the /notebook folder is a simple script that allows for plotting 2D-maps usin
 
 ## Start developing
 
-Once you created or cloned this repository, make sure the installation is running properly. Install the package dependencies with the provided script `setup_env.sh`.
+Once you created or cloned this repository, make sure the installation is running properly. Install the package dependencies with the provided script `setup_env.sh`. This script also handles the installation of ecCodes cosmo definitions (for more on ecCode refer to the dedicated section below), sets the fieldextra path and checks the cartopy installation (currently deactivated).
 Check available options with
 
 ```bash
@@ -77,6 +80,17 @@ pytest
 
 If the tests pass, you are good to go. If not, contact the package administrator Simon Adamov. Make sure to update your requirement files and export your environments after installation
 every time you add new imports while developing. Check the next section to find some guidance on the development process if you are new to Python and/or APN.
+
+### ecCodes for GRIB decoding
+
+Since this package uses cfgrib to decode GRIB data, ecCodes must be installed and the ecCodes and COSMO ecCodes definitions
+made available. The location of the definitions is stored in the environment variable `GRIB_DEFINITION_PATH` in the conda environment.
+ ecCodes definitions are installed with the ecCodes library by conda, the COSMO ecCodes definitions are cloned and installed
+ separately. This is handled by `tools/setup_env.sh` and only needs to be done once, the settings are then stored in the conda
+ environment! If you need a personalised version of ecCodes definitions, you can specify the path to your version
+ in `GRIB_DEFINITION_PATH` (and `GRIB_SAMPLES_PATH` if needed) in `tools/setup_env.sh`.
+ Be aware that the version of the COSMO eccodes definitions need to match the version of the ecCodes library.
+ Please adapt both `requirements/requirements.yml` and `tools/setup_env.sh` if you need to change the ecCodes version.
 
 ### Roadmap to your first contribution
 
