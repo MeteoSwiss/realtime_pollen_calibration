@@ -77,18 +77,9 @@ ${CONDA} env config vars set GRIB_DEFINITION_PATH=${conda_eccodes}/definitions/:
 
 
 # fieldextra path
-if [[ $(hostname -s) == *'tsa'* ]]; then
-    echo 'Setting FIELDEXTRA_PATH for tsa'
-    ${CONDA} env config vars set FIELDEXTRA_PATH=/project/s83c/fieldextra/tsa/bin/fieldextra_gnu_opt_omp
+echo 'Setting FIELDEXTRA_PATH for balfrin'
+${CONDA} env config vars set FIELDEXTRA_PATH=/users/oprusers/osm/bin/fieldextra
 
-elif [[ $(hostname -s) == *'daint'* ]]; then
-    echo 'Setting FIELDEXTRA_PATH for daint'
-    ${CONDA} env config vars set FIELDEXTRA_PATH=/project/s83c/fieldextra/daint/bin/fieldextra_gnu_opt_omp
-
-elif [[ $(hostname -s) == *'balfrin'* ]]; then
-    echo 'Setting FIELDEXTRA_PATH for balfrin'
-    ${CONDA} env config vars set FIELDEXTRA_PATH=/users/oprusers/osm/bin/fieldextra
-fi
 
 
 # # cartopy setup

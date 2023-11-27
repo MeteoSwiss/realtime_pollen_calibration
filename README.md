@@ -3,10 +3,13 @@
 This repository calculates the pollen input fields needed for the real-time pollen calibration in ICON-ART. It is very similar to the FORTRAN implementation used in COSMO-ART.
 More information about the Pollen module currently in the weather model COSMO can be found here:
 <https://service.meteoswiss.ch/confluence/x/dYQYBQ>
-And in this paper: (currently under review :)
+And in this paper: Adamov, S & Pauling, A (2023): A real-time calibration method for the numerical pollen forecast model COSMO-ART
+Aerobiologia, 39, 327-344. Available open access from https://link.springer.com/article/10.1007/s10453-023-09796-5
 
 This specific project also has a confluence page here:
 <https://service.meteoswiss.ch/confluence/x/M_ahBw>
+
+The package has been tested on Balfrin at CSCS only.
 
 ## Data Import
 

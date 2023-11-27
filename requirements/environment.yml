@@ -1,4 +1,4 @@
-name: RTcalib
+name: RTcal
 channels:
   - conda-forge
   - defaults
@@ -22,7 +22,7 @@ dependencies:
   - brotli-python=1.1.0
   - bzip2=1.0.8
   - c-ares=1.22.1
-  - ca-certificates=2023.11.17
+  - ca-certificates=2023.08.22
   - certifi=2023.11.17
   - cffi=1.16.0
   - cfgrib=0.9.10.4
@@ -60,13 +60,13 @@ dependencies:
   - hdf5=1.12.1
   - icu=73.2
   - identify=2.5.32
-  - idna=3.4
+  - idna=3.6
   - imagesize=1.4.1
   - importlib-metadata=4.13.0
   - importlib_resources=6.1.1
   - iniconfig=2.0.0
   - ipdb=0.13.13
-  - ipython=8.17.2
+  - ipython=8.18.0
   - isort=5.12.0
   - jasper=2.0.33
   - jedi=0.19.1
@@ -82,7 +82,7 @@ dependencies:
   - keyutils=1.6.1
   - krb5=1.21.2
   - lcms2=2.15
-  - ld_impl_linux-64=2.40
+  - ld_impl_linux-64=2.38
   - lerc=4.0.0
   - libaec=1.1.2
   - libarchive=3.7.2
@@ -92,7 +92,7 @@ dependencies:
   - libdeflate=1.17
   - libedit=3.1.20191231
   - libev=4.33
-  - libffi=3.4.2
+  - libffi=3.4.4
   - libgcc-ng=13.2.0
   - libgfortran-ng=13.2.0
   - libgfortran5=13.2.0
@@ -105,15 +105,13 @@ dependencies:
   - libmambapy=1.5.3
   - libnetcdf=4.8.1
   - libnghttp2=1.58.0
-  - libnsl=2.0.1
   - libopenblas=0.3.25
   - libpng=1.6.39
-  - libsolv=0.7.26
-  - libsqlite=3.44.1
+  - libsolv=0.7.27
   - libssh2=1.11.0
   - libstdcxx-ng=13.2.0
   - libtiff=4.5.0
-  - libuuid=2.38.1
+  - libuuid=1.41.5
   - libwebp-base=1.3.2
   - libxcb=1.13
   - libxml2=2.11.6
@@ -129,14 +127,14 @@ dependencies:
   - mccabe=0.7.0
   - mdurl=0.1.0
   - more-itertools=10.1.0
-  - mypy=1.7.0
+  - mypy=1.7.1
   - mypy_extensions=1.0.0
   - nbformat=5.9.2
   - ncurses=6.4
   - nodeenv=1.8.0
-  - numpy=1.26.0
+  - numpy=1.26.2
   - openjpeg=2.5.0
-  - openssl=3.1.4
+  - openssl=3.2.0
   - packaging=23.2
   - pandas=2.1.3
   - parso=0.8.3
@@ -196,7 +194,7 @@ dependencies:
   - ruamel.yaml=0.18.5
   - ruamel.yaml.clib=0.2.7
   - ruamel_yaml=0.15.80
-  - setuptools=68.2.2
+  - setuptools=68.0.0
   - shellingham=1.5.4
   - six=1.16.0
   - sniffio=1.3.0
@@ -210,8 +208,9 @@ dependencies:
   - sphinxcontrib-jsmath=1.0.1
   - sphinxcontrib-qthelp=1.0.6
   - sphinxcontrib-serializinghtml=1.1.9
+  - sqlite=3.41.2
   - stack_data=0.6.2
-  - tk=8.6.13
+  - tk=8.6.12
   - toml=0.10.2
   - tomli=2.0.1
   - tomlkit=0.12.3
@@ -221,7 +220,7 @@ dependencies:
   - truststore=0.8.0
   - typer=0.9.0
   - types-docutils=0.20.0.3
-  - types-setuptools=68.2.0.1
+  - types-setuptools=68.2.0.2
   - types-toml=0.10.8.7
   - typing-extensions=4.8.0
   - typing_extensions=4.8.0
@@ -231,7 +230,7 @@ dependencies:
   - virtualenv=20.24.7
   - watchgod=0.8.2
   - wcwidth=0.2.12
-  - wheel=0.41.3
+  - wheel=0.41.2
   - xarray=2023.11.0
   - xorg-fixesproto=5.0
   - xorg-inputproto=2.3.2
@@ -244,7 +243,7 @@ dependencies:
   - xorg-libxi=1.7.10
   - xorg-xextproto=7.3.0
   - xorg-xproto=7.0.31
-  - xz=5.2.6
+  - xz=5.4.2
   - yaml=0.2.5
   - yaml-cpp=0.8.0
   - zipp=3.17.0
@@ -252,14 +251,14 @@ dependencies:
   - zstandard=0.22.0
   - zstd=1.5.5
   - pip:
-    - copier==9.0.1
-    - dunamai==1.19.0
-    - flake8-pyproject==1.2.3
-    - funcy==2.0
-    - jinja2-ansible-filters==1.3.2
-    - mistune==2.0.5
-    - plumbum==1.8.2
-    - prompt-toolkit==3.0.36
-    - pyyaml-include==1.3.1
-    - questionary==2.0.1
-    - sphinx-mdinclude==0.5.3
+      - copier==9.0.1
+      - dunamai==1.19.0
+      - flake8-pyproject==1.2.3
+      - funcy==2.0
+      - jinja2-ansible-filters==1.3.2
+      - mistune==2.0.5
+      - plumbum==1.8.2
+      - prompt-toolkit==3.0.36
+      - pyyaml-include==1.3.1
+      - questionary==2.0.1
+      - sphinx-mdinclude==0.5.3
