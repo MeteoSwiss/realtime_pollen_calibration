@@ -13,6 +13,7 @@ dependencies:
   - cfgrib
   - codespell>=2.2
   - conda-build>=3.23
+  - eccodes==2.25.0
   - flake8>=6.0
   - flake8-black>=0.3
   - ipdb>=0.13
@@ -26,6 +27,7 @@ dependencies:
   - pylint>=2.15
   - pyprojroot
   - pytest>=7.2
+  - python-eccodes
   - rich>=12.6
   - rope>=1.6
   - rstcheck>=6.1
