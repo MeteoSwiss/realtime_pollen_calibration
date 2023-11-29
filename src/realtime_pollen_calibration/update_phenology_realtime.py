@@ -28,6 +28,7 @@ def update_phenology_realtime(file_obs, file_in, file_out, verbose=False):
         verbose: Optional additional debug prints.
 
     """
+
     ds = cfgrib.open_dataset(file_in, encode_cf=("time", "geography", "vertical"))
     ptype_present = utils.get_pollen_type(ds)
     if verbose:
