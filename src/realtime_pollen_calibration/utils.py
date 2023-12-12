@@ -30,7 +30,7 @@ pollen_types = ["ALNU", "BETU", "POAC", "CORY"]
 thr_con_24 = {"ALNU": 240, "BETU": 240, "POAC": 72, "CORY": 240}
 thr_con_120 = {"ALNU": 720, "BETU": 720, "POAC": 216, "CORY": 720}
 failsafe = {"ALNU": 1000, "BETU": 2500, "POAC": 6000, "CORY": 2500}
-jul_days_excl = {"ALNU": 14, "BETU": 40, "POAC": 3, "CORY": 46}
+jul_days_excl = {"ALNU": 14, "BETU": 40, "POAC": 46, "CORY": 3}
 
 
 def count_to_log_level(count: int) -> int:
@@ -414,19 +414,19 @@ def get_change_phenol(  # pylint: disable=R0912,R0914,R0915
                 f"and last 120H {sum_obs}",
             )
             print(
-                f"Cumulative temperature sum {ctsum_stns.values[0][0]} ",
-                f"and threshold (start): {tthrs_stns.values[0][0]}",
-                f" and saisn: {saisn_stns.values[0][0]}",
+                f"Cumulative temperature sum {ctsum_stns.values[0]} ",
+                f"and threshold (start): {tthrs_stns.values[0]}",
+                f" and saisn: {saisn_stns.values[0]}",
             )
             if pollen_type != "POAC":
-                print(f"Cumsum temp threshold end: {tthre_stns.values[0][0]}")
+                print(f"Cumsum temp threshold end: {tthre_stns.values[0]}")
             else:
-                print(f"Saisl: {saisl_stns.values[0][0]}")
-            print(f"Temperature at station {t_2m_stns.values[0][0]}, " f"date: {date}")
+                print(f"Saisl: {saisl_stns.values[0]}")
+            print(f"Temperature at station {t_2m_stns.values[0]}, " f"date: {date}")
             print("-----------------------------------------")
         # ADJUSTMENT OF SEASON START AND END AT THE BEGINNING OF THE SEASON
         if (
-            (sum_obs_24 >= thr_con_24[pollen_type])
+            (sum_obs_24 >= sum_obs_24)
             and (sum_obs >= thr_con_120[pollen_type])
             and ctsum_stns < tthrs_stns
         ):
@@ -545,15 +545,20 @@ def to_grib(inp: str, outp: str, dict_fields: dict) -> None:
                 break
             # clone record
             clone_id = eccodes.codes_clone(gid)
-            # get short_name
 
+            # get short_name
             short_name = eccodes.codes_get_string(clone_id, "shortName")
+
             # read values
             values = eccodes.codes_get_values(clone_id)
             eccodes.codes_set(
                 clone_id, "dataTime", eccodes.codes_get(clone_id, "dataTime") + 100
             )
             if short_name in dict_fields:
+                
+                #set values in dict_fields[short_name] to zero where values is zero (edge values)
+                #This is because COSMO-1E was slightly smaller than ICON-CH1
+                dict_fields[short_name][values == 0] = 0
                 eccodes.codes_set_values(clone_id, dict_fields[short_name].flatten())
             else:
                 eccodes.codes_set_values(clone_id, values)
