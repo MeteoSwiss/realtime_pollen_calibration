@@ -426,7 +426,7 @@ def get_change_phenol(  # pylint: disable=R0912,R0914,R0915
             print("-----------------------------------------")
         # ADJUSTMENT OF SEASON START AND END AT THE BEGINNING OF THE SEASON
         if (
-            (sum_obs_24 >= sum_obs_24)
+            (sum_obs_24 >= thr_con_24[pollen_type])
             and (sum_obs >= thr_con_120[pollen_type])
             and ctsum_stns < tthrs_stns
         ):
