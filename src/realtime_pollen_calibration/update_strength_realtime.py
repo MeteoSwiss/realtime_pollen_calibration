@@ -7,35 +7,120 @@
 """A module for the update of the pollen strength in real time."""
 
 # Third-party
-import cfgrib  # type: ignore
+import numpy as np
+import xarray as xr
+from datetime import datetime
+from eccodes import (
+    codes_get,
+    codes_get_array,
+    codes_grib_new_from_file,
+    codes_release,
+)
 
 # First-party
 from realtime_pollen_calibration import utils
 
 
 def update_strength_realtime(
-    file_obs, file_mod, file_in, file_out, verbose
+    file_obs_stns, file_mod_stns, file_POV, file_Const, file_out, verbose
 ):  # pylint: disable=R0801
     """Advance the tune field by one hour.
 
     Args:
-        file_obs: Location of ATAB file containing the pollen concentration
+        file_obs_stns: Location of ATAB file containing the pollen concentration
                 information at the stations.
-        file_mod: Location of ATAB file for the modelled concentrations
-        file_in: Location of GRIB file containing the following fields:
+        file_mod_stns: Location of ATAB file for the modelled concentrations at the stations.
+        file_POV: Location of GRIB file containing the following fields:
                 'tune' and 'saisn'. Lat-lon information of the grid must be
                 present in the file.
+        file_Const: Location of GRIB2 file containing Longitudes and Latitudes of the 
+                unstructured ICON grid.
         file_out: Location of the desired output file.
         verbose: Optional additional debug prints.
 
     """
-    ds = cfgrib.open_dataset(file_in, encode_cf=("time", "geography", "vertical"))
+    
+    fh_POV = open(file_POV, "rb")
+    fh_Const = open(file_Const, "rb")
+    
+    # read CLON, CLAT
+    while True:
+        # Get the next message
+        recConst = codes_grib_new_from_file(fh_Const)
+        if recConst is None:
+            break
+        
+        # Get the short name of the current field
+        short_name = codes_get(recConst, "shortName")
+        
+        # Extract longitude and latitude of the ICON grid
+        if short_name == "CLON":
+            CLON = codes_get_array(recConst, "values")
+        if short_name == "CLAT":
+            CLAT = codes_get_array(recConst, "values")
+        
+        # Delete the message
+        codes_release(recConst)
+    
+    # Close the GRIB file
+    fh_Const.close()
+    
+    # read POV and extract available fields
+    specs = ["ALNU", "BETU", "POAC", "CORY"]
+    fields= ["tune", "saisn"]
+    pol_fields = [x + y for x in specs for y in fields]
+    
+    calFields = {}
+    while True:
+        # Get the next message
+        recPOV = codes_grib_new_from_file(fh_POV)
+        if recPOV is None:
+            break
+        
+        # Get the short name of the current field
+        short_name = codes_get(recPOV, "shortName")
+        
+        # Extract and alter fields if they present
+        for pol_field in pol_fields:
+            if short_name == pol_field:
+                calFields[pol_field] = codes_get_array(recPOV, "values")
+            
+                #timestamp is needed. Take it from the T_2M field
+                dataDate = str(codes_get(recPOV, "dataDate"))
+                dataTime = str(str(codes_get(recPOV, "dataTime")).zfill(2))
+                dataDateTime = dataDate + dataTime
+            
+                # Convert the string to a datetime object
+                date_obj = datetime.strptime(dataDateTime, '%Y%m%d%H')
+                date_obj_fmt = date_obj.strftime('%Y-%m-%dT%H:00:00.000000000')
+                time_values = np.datetime64(date_obj_fmt)
+            
+        # Delete the message
+        codes_release(recPOV)
+    
+    # Close the GRIB files
+    fh_POV.close()
+    
+    # Dictionary to hold DataArrays for each variable
+    calFields_arrays = {}
+    
+    # Loop through variables to create DataArrays
+    for var_name, data in calFields.items():
+        data_array = xr.DataArray(data, coords={'index': np.arange(len(data))}, dims=['index'])
+        data_array.coords['latitude'] = (('index'), CLAT)
+        data_array.coords['longitude'] = (('index'), CLON)
+        data_array.coords['time'] = time_values
+        calFields_arrays[var_name] = data_array
+        
+    # Create an xarray Dataset with the DataArrays
+    ds = xr.Dataset(calFields_arrays)
+
     ptype_present = utils.get_pollen_type(ds)
     if verbose:
         print(f"Detected pollen types in the DataSet provided: {ptype_present}")
     dict_fields = {}
     for pollen_type in ptype_present:
-        obs_mod_data = utils.read_atab(pollen_type, file_obs, file_mod, verbose=verbose)
+        obs_mod_data = utils.read_atab(pollen_type, file_obs_stns, file_mod_stns, verbose=verbose)
         change_tune = utils.get_change_tune(
             pollen_type,
             obs_mod_data,
@@ -50,4 +135,4 @@ def update_strength_realtime(
             method="multiply",
         )
         dict_fields[pollen_type + "tune"] = tune_vec
-    utils.to_grib(file_in, file_out, dict_fields)
+    utils.to_grib(file_POV, file_out, dict_fields)

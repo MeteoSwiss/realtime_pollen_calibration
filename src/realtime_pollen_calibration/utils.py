@@ -334,8 +334,8 @@ def get_change_tune(  # pylint: disable=R0913
                 f"modeled: {sum_mod}",
             )
             print(
-                f"Current tune value {tune_stns.values[0][0]} ",
-                f"and saisn: {saisn_stns.values[0][0]}",
+                f"Current tune value {tune_stns.values[0]} ",
+                f"and saisn: {saisn_stns.values[0]}",
             )
             print("-----------------------------------------")
         if (saisn_stns > 0) and ((sum_obs <= 720) or (sum_mod <= 720)):
@@ -343,7 +343,7 @@ def get_change_tune(  # pylint: disable=R0913
                 print(
                     "Season started but low observation or modeled concentrations, "
                     "(tune)**(-1/24) = "
-                    f"{(tune_pol_default / tune_stns.values[0][0]) ** (1 / 24)}"
+                    f"{(tune_pol_default / tune_stns.values[0]) ** (1 / 24)}"
                 )
             change_tune[istation] = (tune_pol_default / tune_stns) ** (1 / 24)
         if (saisn_stns > 0) and (sum_obs > 720) and (sum_mod > 720):

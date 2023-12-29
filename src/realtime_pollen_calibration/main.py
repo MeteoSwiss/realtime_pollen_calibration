@@ -26,10 +26,11 @@ update_phenology_realtime.update_phenology_realtime(
     file_obs, file_POV, file_T_2M, file_Const, file_out, True
 )
 
-file_obs = data_path + "/data/atabs/alnu_pollen_measured_values_2022022207.atab"
-file_obs_mod = data_path + "/data/atabs/alnu_pollen_modelled_values_2022022207.atab"
-file_POV = data_path + "/data/grib2_files_cosmo1e/laf2022022207_ALNUtune"
-file_out = data_path + "/data/2022022208_ALNUtune"
+file_obs_stns = data_path + "/data/atabs/alnu_pollen_measured_values_2022022207.atab"
+file_mod_stns = data_path + "/data/atabs/alnu_pollen_modelled_values_2022022207.atab"
+file_POV   = data_path + "/data/grib2_files_ICON-CH1/ART_POV_iconR19B08-grid_0001_all_specs_values"
+file_Const = data_path + "/data/grib2_files_ICON-CH1/lfff00000000c"
+file_out   = data_path + "/data/grib2_files_ICON-CH1/POV_out_tune"
 update_strength_realtime.update_strength_realtime(
-    file_obs, file_obs_mod, file_POV, file_out, False
+    file_obs_stns, file_mod_stns, file_POV, file_Const, file_out, True 
 )
