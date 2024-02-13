@@ -327,6 +327,7 @@ def get_change_tune(  # pylint: disable=R0913
         )
         if verbose:
             print(
+                f"Current pollen type is: {pollen_type}, ",
                 f"Current station n°{istation}, ",
                 f"(lat: {obs_mod_data.coord_stns[istation][0]}, ",
                 f"lon: {obs_mod_data.coord_stns[istation][1]}), ",
@@ -552,7 +553,7 @@ def to_grib(inp: str, outp: str, dict_fields: dict) -> None:
             # read values
             values = eccodes.codes_get_values(clone_id)
             eccodes.codes_set(
-                clone_id, "dataTime", eccodes.codes_get(clone_id, "dataTime") + 100
+                clone_id, "dataTime", eccodes.codes_get(clone_id, "dataTime")
             )
             if short_name in dict_fields:
                 

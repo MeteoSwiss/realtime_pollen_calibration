@@ -15,8 +15,6 @@ from eccodes import (
     codes_get_array,
     codes_grib_new_from_file,
     codes_release,
-    codes_set_array,
-    codes_write,
 )
 
 # First-party
@@ -31,8 +29,7 @@ def update_phenology_realtime(file_obs, file_POV, file_T_2M, file_Const, file_ou
                 concentration information at the stations.
         file_POV: Location of ICON GRIB2 file containing the pollen fields:
                 'tthrs', 'tthre' (for POAC, 'saisl' instead),
-                'saisn' and 'ctsum'. Lat-lon information of the grid must be
-                present in the file.
+                'saisn' and 'ctsum'.
         file_T_2M: Location of GRIB2 file containing T_2M.
         file_Const: Location of GRIB2 file containing Longitudes and Latitudes of the 
                 unstructured ICON grid.
@@ -40,9 +37,6 @@ def update_phenology_realtime(file_obs, file_POV, file_T_2M, file_Const, file_ou
         verbose: Optional additional debug prints.
 
     """
-
-    #file_POV = "data/grib2_files_ICON-CH1/ART_POV_iconR19B08-grid_0001_all_specs_values"
-    #file_obs= "data/atabs/alnu_pollen_measured_values_2022021314.atab"
     
     fh_POV = open(file_POV, "rb")
     fh_Const = open(file_Const, "rb")

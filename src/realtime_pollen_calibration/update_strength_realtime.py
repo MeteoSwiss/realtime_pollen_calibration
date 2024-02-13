@@ -9,7 +9,7 @@
 # Third-party
 import numpy as np
 import xarray as xr
-from datetime import datetime
+from datetime import datetime, timedelta
 from eccodes import (
     codes_get,
     codes_get_array,
@@ -31,8 +31,7 @@ def update_strength_realtime(
                 information at the stations.
         file_mod_stns: Location of ATAB file for the modelled concentrations at the stations.
         file_POV: Location of GRIB file containing the following fields:
-                'tune' and 'saisn'. Lat-lon information of the grid must be
-                present in the file.
+                'tune' and 'saisn'.
         file_Const: Location of GRIB2 file containing Longitudes and Latitudes of the 
                 unstructured ICON grid.
         file_out: Location of the desired output file.
@@ -80,18 +79,18 @@ def update_strength_realtime(
         # Get the short name of the current field
         short_name = codes_get(recPOV, "shortName")
         
-        # Extract and alter fields if they present
+        # Extract pollen fields if they are present
         for pol_field in pol_fields:
             if short_name == pol_field:
                 calFields[pol_field] = codes_get_array(recPOV, "values")
             
-                #timestamp is needed. Take it from the T_2M field
+                #timestamp is needed
                 dataDate = str(codes_get(recPOV, "dataDate"))
                 dataTime = str(str(codes_get(recPOV, "dataTime")).zfill(2))
                 dataDateTime = dataDate + dataTime
             
                 # Convert the string to a datetime object
-                date_obj = datetime.strptime(dataDateTime, '%Y%m%d%H')
+                date_obj = datetime.strptime(dataDateTime, '%Y%m%d%H') + timedelta(hours=1)
                 date_obj_fmt = date_obj.strftime('%Y-%m-%dT%H:00:00.000000000')
                 time_values = np.datetime64(date_obj_fmt)
             
