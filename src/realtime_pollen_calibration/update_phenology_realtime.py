@@ -9,7 +9,7 @@
 # Third-party
 import numpy as np
 import xarray as xr
-from datetime import datetime
+from datetime import datetime, timedelta
 from eccodes import (
     codes_get,
     codes_get_array,
@@ -21,24 +21,25 @@ from eccodes import (
 from realtime_pollen_calibration import utils
 
 
-def update_phenology_realtime(file_obs, file_POV, file_T_2M, file_Const, file_out, verbose=False):
+def update_phenology_realtime(file_obs_stns, file_POV_in, file_T_2M, file_Const, file_POV_tmp, hour_incr, verbose=False):
     """Advance the temperature threshold fields by one hour.
 
     Args:
-        file_obs: Location of ATAB file containing the pollen
+        file_obs_stns: Location of ATAB file containing the pollen
                 concentration information at the stations.
-        file_POV: Location of ICON GRIB2 file containing the pollen fields:
+        file_POV_in: Location of ICON GRIB2 file containing the pollen fields:
                 'tthrs', 'tthre' (for POAC, 'saisl' instead),
                 'saisn' and 'ctsum'.
         file_T_2M: Location of GRIB2 file containing T_2M.
         file_Const: Location of GRIB2 file containing Longitudes and Latitudes of the 
                 unstructured ICON grid.
-        file_out: Location of the desired output file.
+        file_POV_tmp: Location of the desired output file.
+        hour_incr: number of hour increments in the output compared to input.
         verbose: Optional additional debug prints.
 
     """
     
-    fh_POV = open(file_POV, "rb")
+    fh_POV = open(file_POV_in, "rb")
     fh_Const = open(file_Const, "rb")
     fh_T_2M = open(file_T_2M, "rb")
     
@@ -107,11 +108,11 @@ def update_phenology_realtime(file_obs, file_POV, file_T_2M, file_Const, file_ou
         
             # timestamp is needed. Take it from the T_2M field
             dataDate = str(codes_get(recX, "dataDate"))
-            dataTime = str(str(codes_get(recX, "dataTime")).zfill(2))
-            dataDateTime = dataDate + dataTime
+            hour_old = str(str(codes_get(recX, "hour")).zfill(2))
+            dataDateHour = dataDate + hour_old
             
             # Convert the string to a datetime object
-            date_obj = datetime.strptime(dataDateTime, '%Y%m%d%H')
+            date_obj = datetime.strptime(dataDateHour, '%Y%m%d%H') + timedelta(hours=hour_incr)
             date_obj_fmt = date_obj.strftime('%Y-%m-%dT%H:00:00.000000000')
             time_values = np.datetime64(date_obj_fmt)
             
@@ -139,7 +140,7 @@ def update_phenology_realtime(file_obs, file_POV, file_T_2M, file_Const, file_ou
         print(f"Detected pollen types in the DataSet provided: {ptype_present}")
     dict_fields = {}
     for pollen_type in ptype_present:
-        obs_mod_data = utils.read_atab(pollen_type, file_obs, verbose=verbose)
+        obs_mod_data = utils.read_atab(pollen_type, file_obs_stns, verbose=verbose)
         change_phenology_fields = utils.get_change_phenol(
             pollen_type, obs_mod_data, ds, verbose
         )
@@ -160,4 +161,4 @@ def update_phenology_realtime(file_obs, file_POV, file_T_2M, file_Const, file_ou
                     obs_mod_data.coord_stns,
                     method="sum",
                 )
-    utils.to_grib(file_POV, file_out, dict_fields)
+    utils.to_grib(file_POV_in, file_POV_tmp, dict_fields, hour_incr)

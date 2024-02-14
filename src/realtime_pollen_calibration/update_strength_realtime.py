@@ -22,7 +22,7 @@ from realtime_pollen_calibration import utils
 
 
 def update_strength_realtime(
-    file_obs_stns, file_mod_stns, file_POV, file_Const, file_out, verbose
+    file_obs_stns, file_mod_stns, file_POV_tmp, file_Const, file_POV_out, hour_incr, verbose
 ):  # pylint: disable=R0801
     """Advance the tune field by one hour.
 
@@ -30,16 +30,17 @@ def update_strength_realtime(
         file_obs_stns: Location of ATAB file containing the pollen concentration
                 information at the stations.
         file_mod_stns: Location of ATAB file for the modelled concentrations at the stations.
-        file_POV: Location of GRIB file containing the following fields:
+        file_POV_tmp: Location of GRIB file containing the following fields:
                 'tune' and 'saisn'.
         file_Const: Location of GRIB2 file containing Longitudes and Latitudes of the 
                 unstructured ICON grid.
-        file_out: Location of the desired output file.
+        file_POV_out: Location of the desired output file.
+        hour_incr: number of hour increments in the output compared to input.
         verbose: Optional additional debug prints.
 
     """
     
-    fh_POV = open(file_POV, "rb")
+    fh_POV = open(file_POV_tmp, "rb")
     fh_Const = open(file_Const, "rb")
     
     # read CLON, CLAT
@@ -86,11 +87,11 @@ def update_strength_realtime(
             
                 #timestamp is needed
                 dataDate = str(codes_get(recPOV, "dataDate"))
-                dataTime = str(str(codes_get(recPOV, "dataTime")).zfill(2))
-                dataDateTime = dataDate + dataTime
-            
+                hour_old = str(str(codes_get(recPOV, "hour")).zfill(2))
+                dataDateHour = dataDate + hour_old
+
                 # Convert the string to a datetime object
-                date_obj = datetime.strptime(dataDateTime, '%Y%m%d%H') + timedelta(hours=1)
+                date_obj = datetime.strptime(dataDateHour, '%Y%m%d%H') + timedelta(hours=hour_incr)
                 date_obj_fmt = date_obj.strftime('%Y-%m-%dT%H:00:00.000000000')
                 time_values = np.datetime64(date_obj_fmt)
             
@@ -134,4 +135,4 @@ def update_strength_realtime(
             method="multiply",
         )
         dict_fields[pollen_type + "tune"] = tune_vec
-    utils.to_grib(file_POV, file_out, dict_fields)
+    utils.to_grib(file_POV_tmp, file_POV_out, dict_fields, hour_incr)

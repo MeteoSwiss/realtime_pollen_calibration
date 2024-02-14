@@ -8,6 +8,7 @@
 # Standard library
 import logging
 from collections import namedtuple
+from datetime import datetime, timedelta
 
 # Third-party
 import eccodes  # type: ignore
@@ -46,15 +47,15 @@ def count_to_log_level(count: int) -> int:
 
 
 def read_atab(
-    pollen_type: str, file_obs: str, file_mod: str = "", verbose: bool = False
+    pollen_type: str, file_obs_stns: str, file_mod_stns: str = "", verbose: bool = False
 ) -> ObsModData:
     """Read the pollen concentrations and the station locations from ATAB files.
 
     Args:
         pollen_type: String describing the pollen type analysed.
 
-        file_obs: Location of the observation ATAB file.
-        file_mod: Location of the model ATAB file. (Optional)
+        file_obs_stns: Location of the observation ATAB file.
+        file_mod_stns: Location of the model ATAB file. (Optional)
         verbose: Optional additional debug prints.
 
     Returns:
@@ -104,16 +105,16 @@ def read_atab(
             coord_stns = list(zip(lat_stns, lon_stns))
         return HeaderData(coord_stns, missing_value, stn_indicators, n_header)
 
-    headerdata = read_obs_header(file_obs)
+    headerdata = read_obs_header(file_obs_stns)
     data = pd.read_csv(
-        file_obs,
+        file_obs_stns,
         header=headerdata.n_header,
         delim_whitespace=True,
         parse_dates=[[1, 2, 3, 4, 5]],
     )
     data = data[data["PARAMETER"] == pollen_type].iloc[:, 2:].to_numpy()
-    if file_mod != "":
-        with open(file_mod, encoding="utf-8") as f:
+    if file_mod_stns != "":
+        with open(file_mod_stns, encoding="utf-8") as f:
             for n, line in enumerate(f):
                 if line.strip()[0:9] == "Indicator":
                     stn_indicators_mod = np.array(line.strip()[29:].split("         "))
@@ -122,7 +123,7 @@ def read_atab(
                     break
         istation_mod = get_mod_stn_index(headerdata.stn_indicators, stn_indicators_mod)
         data_mod = pd.read_csv(
-            file_mod,
+            file_mod_stns,
             header=n_header_mod,
             delim_whitespace=True,
             parse_dates=[[3, 4, 5, 6, 7]],
@@ -526,15 +527,16 @@ def get_change_phenol(  # pylint: disable=R0912,R0914,R0915
     return ChangePhenologyFields(change_tthrs, change_tthre, change_saisl)
 
 
-def to_grib(inp: str, outp: str, dict_fields: dict) -> None:
+def to_grib(inp: str, outp: str, dict_fields: dict, hour_incr: int) -> None:
     """Output fields to a GRIB file.
 
     Args:
         inp: Location of the GRIB file which must contain at least the same
-    fields as the ones in the dictionary that are to be outputted.
+            fields as the ones in the dictionary that are to be outputted.
         outp: Location of the desired GRIB file
         dict_fields: Dictionary containing the fields to be outputted as
             { name : value }
+        hour_incr: number of hour increments in the output compared to input.
 
     """
     # copy all the fields from input into output,
@@ -550,11 +552,21 @@ def to_grib(inp: str, outp: str, dict_fields: dict) -> None:
             # get short_name
             short_name = eccodes.codes_get_string(clone_id, "shortName")
 
+            # get time information, advance by hour_incr hours, set the new time information
+            dataDate = str(eccodes.codes_get(clone_id, "dataDate"))
+            hour_old = str(str(eccodes.codes_get(clone_id, "hour")).zfill(2))
+            dataDateHour = dataDate + hour_old
+
+            date_new = datetime.strptime(dataDateHour, '%Y%m%d%H') + timedelta(hours=hour_incr)
+            day_new  = date_new.date().strftime('%Y%m%d')
+            hour_new = date_new.time().strftime('%H')
+
+            eccodes.codes_set(clone_id, "dataDate", int(day_new))
+            eccodes.codes_set(clone_id, "hour", int(hour_new))
+
             # read values
             values = eccodes.codes_get_values(clone_id)
-            eccodes.codes_set(
-                clone_id, "dataTime", eccodes.codes_get(clone_id, "dataTime")
-            )
+
             if short_name in dict_fields:
                 
                 #set values in dict_fields[short_name] to zero where values is zero (edge values)
