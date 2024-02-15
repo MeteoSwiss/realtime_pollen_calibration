@@ -1,4 +1,5 @@
 """Test module ``realtime_pollen_calibration/utils.py``."""
+
 # Standard library
 import logging
 

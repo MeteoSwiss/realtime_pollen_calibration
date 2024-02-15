@@ -6,16 +6,13 @@
 
 """A module for the update of the pollen start and end of season in real time."""
 
+# Standard library
+from datetime import datetime, timedelta
+
 # Third-party
 import numpy as np
 import xarray as xr
-from datetime import datetime, timedelta
-from eccodes import (
-    codes_get,
-    codes_get_array,
-    codes_grib_new_from_file,
-    codes_release,
-)
+from eccodes import codes_get, codes_get_array, codes_grib_new_from_file, codes_release
 
 # First-party
 from realtime_pollen_calibration import utils

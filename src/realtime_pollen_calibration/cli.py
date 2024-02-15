@@ -2,12 +2,12 @@
 
 # Third-party
 import click
-from realtime_pollen_calibration.update_strength import update_strength_realtime
+
+# First-party
 from realtime_pollen_calibration.set_up import set_up_paths
 from realtime_pollen_calibration.update_phenology import update_phenology_realtime
-
+from realtime_pollen_calibration.update_strength import update_strength_realtime
 from realtime_pollen_calibration.utils import FilePaths
-
 
 # Local
 from . import __version__

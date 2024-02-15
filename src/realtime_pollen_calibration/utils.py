@@ -6,9 +6,9 @@
 
 """Utils for the command line tool."""
 # Standard library
-from dataclasses import dataclass
 import logging
 from collections import namedtuple
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 # Third-party
@@ -24,22 +24,22 @@ class FilePaths:
 
     mod_stations: str = ""
     "TODO: Add"
-    
+
     POV_in: str = ""
     """Location of ICON GRIB2 file containing the pollen fields:
                 'tthrs', 'tthre' (for POAC, 'saisl' instead),
                 'saisn' and 'ctsum'.
     """
-    
+
     T_2M: str = ""
     "Location of GRIB2 file containing T_2M."
-    
+
     constants: str = ""
     "Location of GRIB2 file containing Longitudes and Latitudes of the unstructured ICON grid."
-    
+
     POV_tmp: str = ""
     "Location of the desired output file."
-    
+
     POV_out: str = ""
     "TODO: Add"
 
