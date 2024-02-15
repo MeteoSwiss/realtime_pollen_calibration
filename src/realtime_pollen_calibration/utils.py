@@ -20,7 +20,9 @@ import pandas as pd  # type: ignore
 @dataclass
 class FilePaths:
     obs_stations: str = ""
-    "Location of ATAB file containing the pollen concentration information at the stations."
+    """Location of ATAB file containing the pollen
+        concentration information at the stations.
+    """
 
     mod_stations: str = ""
     "TODO: Add"
@@ -35,7 +37,9 @@ class FilePaths:
     "Location of GRIB2 file containing T_2M."
 
     constants: str = ""
-    "Location of GRIB2 file containing Longitudes and Latitudes of the unstructured ICON grid."
+    """Location of GRIB2 file containing Longitudes
+        and Latitudes of the unstructured ICON grid.
+    """
 
     POV_tmp: str = ""
     "Location of the desired output file."

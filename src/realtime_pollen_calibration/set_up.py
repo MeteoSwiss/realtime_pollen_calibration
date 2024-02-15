@@ -25,16 +25,19 @@ def set_up_paths(data_path: str, date: str):
     )
     file_paths.POV_in = (
         data_path
-        + f"/data/grib2_files_ICON-CH1/ART_POV_iconR19B08-grid_0001_{date}_update_phen_tune4"
+        + "/data/grib2_files_ICON-CH1/ART_POV_iconR19B08"
+        + f"-grid_0001_{date}_update_phen_tune4"
     )
     file_paths.T_2M = data_path + f"/data/grib2_files_ICON-CH1/iaf{date}"
     file_paths.constants = data_path + f"/data/grib2_files_ICON-CH1/lfff00000000c"
     file_paths.POV_tmp = (
         data_path
-        + f"/data/grib2_files_ICON-CH1/ART_POV_iconR19B08-grid_0001_{date}_update_phen_tune4_tmp"
+        + "/data/grib2_files_ICON-CH1/ART_POV_iconR19B08"
+        + f"-grid_0001_{date}_update_phen_tune4_tmp"
     )
     file_paths.POV_out = (
         data_path
-        + f"/data/grib2_files_ICON-CH1/ART_POV_iconR19B08-grid_0001_{date}_update_phen_tune5"
+        + "/data/grib2_files_ICON-CH1/ART_POV_iconR19B08"
+        + f"-grid_0001_{date}_update_phen_tune5"
     )
     return file_paths
