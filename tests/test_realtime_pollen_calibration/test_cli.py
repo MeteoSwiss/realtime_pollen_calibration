@@ -1,4 +1,5 @@
 """Test module ``realtime_pollen_calibration``."""
+
 # Third-party
 from click.testing import CliRunner
 

@@ -8,12 +8,45 @@
 # Standard library
 import logging
 from collections import namedtuple
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 # Third-party
 import eccodes  # type: ignore
 import numpy as np  # type: ignore
 import pandas as pd  # type: ignore
+
+
+@dataclass
+class FilePaths:
+    obs_stations: str = ""
+    """Location of ATAB file containing the pollen
+        concentration information at the stations.
+    """
+
+    mod_stations: str = ""
+    "TODO: Add"
+
+    POV_in: str = ""
+    """Location of ICON GRIB2 file containing the pollen fields:
+                'tthrs', 'tthre' (for POAC, 'saisl' instead),
+                'saisn' and 'ctsum'.
+    """
+
+    T_2M: str = ""
+    "Location of GRIB2 file containing T_2M."
+
+    constants: str = ""
+    """Location of GRIB2 file containing Longitudes
+        and Latitudes of the unstructured ICON grid.
+    """
+
+    POV_tmp: str = ""
+    "Location of the desired output file."
+
+    POV_out: str = ""
+    "TODO: Add"
+
 
 ObsModData = namedtuple(
     "ObsModData",
@@ -557,9 +590,11 @@ def to_grib(inp: str, outp: str, dict_fields: dict, hour_incr: int) -> None:
             hour_old = str(str(eccodes.codes_get(clone_id, "hour")).zfill(2))
             dataDateHour = dataDate + hour_old
 
-            date_new = datetime.strptime(dataDateHour, '%Y%m%d%H') + timedelta(hours=hour_incr)
-            day_new  = date_new.date().strftime('%Y%m%d')
-            hour_new = date_new.time().strftime('%H')
+            date_new = datetime.strptime(dataDateHour, "%Y%m%d%H") + timedelta(
+                hours=hour_incr
+            )
+            day_new = date_new.date().strftime("%Y%m%d")
+            hour_new = date_new.time().strftime("%H")
 
             eccodes.codes_set(clone_id, "dataDate", int(day_new))
             eccodes.codes_set(clone_id, "hour", int(hour_new))
@@ -568,9 +603,9 @@ def to_grib(inp: str, outp: str, dict_fields: dict, hour_incr: int) -> None:
             values = eccodes.codes_get_values(clone_id)
 
             if short_name in dict_fields:
-                
-                #set values in dict_fields[short_name] to zero where values is zero (edge values)
-                #This is because COSMO-1E was slightly smaller than ICON-CH1
+
+                # set values in dict_fields[short_name] to zero where values is zero (edge values)
+                # This is because COSMO-1E was slightly smaller than ICON-CH1
                 dict_fields[short_name][values == 0] = 0
                 eccodes.codes_set_values(clone_id, dict_fields[short_name].flatten())
             else:

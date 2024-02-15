@@ -1,4 +1,5 @@
 """Mutable number."""
+
 # Standard library
 from typing import List
 
