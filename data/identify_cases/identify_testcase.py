@@ -1,6 +1,5 @@
 """Loop through GRIB-files to identify test cases."""
 
-
 # Standard library
 import glob
 import sys

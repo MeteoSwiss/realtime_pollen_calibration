@@ -39,6 +39,35 @@ For each species there are 3 pairs
 
 In the /notebook folder is a simple script that allows for plotting 2D-maps using xarray and iconarray.
 
+## Preparation
+
+This project has been created from the
+[MeteoSwiss Python blueprint](https://github.com/MeteoSwiss-APN/mch-python-blueprint)
+for the CSCS.
+The recommended way to manage Python versions is with `Conda`
+(https://docs.conda.io/en/latest/).
+On CSCS machines it is recommended to install the leaner `Miniconda`
+(https://docs.conda.io/en/latest/miniconda.html),
+which offers enough functionality for most of our use cases.
+If you don't want to do this step manually, you may use the script
+`tools/setup_miniconda.sh`.
+The default installation path of this script is the current working directory,
+you might want to change that with the `-p` option to a common location for all
+environments, like e.g. `$SCRATCH`. If you want the script to immediately
+initialize conda (executing `conda init` and thereby adding a few commands at the
+end of your `.bashrc`) after installation, add the `-u` option:
+
+```bash
+tmpl/tools/setup_miniconda.sh -p $SCRATCH -u
+```
+
+In case you ever need to uninstall miniconda, do the following:
+
+```bash
+conda init --reverse --all
+rm -rf $SCRATCH/miniconda
+```
+
 ## Start developing
 
 Once you created or cloned this repository, make sure the installation is running properly. Install the package dependencies with the provided script `setup_env.sh`. This script also handles the installation of ecCodes cosmo definitions (for more on ecCode refer to the dedicated section below), sets the fieldextra path and checks the cartopy installation (currently deactivated).
@@ -47,9 +76,7 @@ Check available options with
 ```bash
 tools/setup_env.sh -h
 ```
-
-We distinguish development installations which are editable and have additional dependencies on formatters and linters from productive installations which are non-editable
-and have no additional dependencies. Moreover we distinguish pinned installations based on exported (reproducible) environments and free installations where the installation
+We distinguish pinned installations based on exported (reproducible) environments and free installations where the installation
 is based on top-level dependencies listed in `requirements/requirements.yml`. If you start developing, you might want to do an unpinned installation and export the environment:
 
 ```bash
@@ -62,7 +89,7 @@ tools/setup_env.sh -u -e -n <package_env_name>
 environment `conda install -c conda-forge mamba`. If you install mamba in another (maybe dedicated) environment, environments installed with mamba will be located
 in `<miniconda_root_dir>/envs/mamba/envs`, which is not very practical.
 
-The package itself is installed with `pip`:
+The package itself is installed with `pip`. For development, install in editable mode:
 
 ```bash
 conda activate <package_env_name>
@@ -107,8 +134,7 @@ cd <package-root-dir>
 pytest
 ```
 
-Note that neither pytest, nor pre-commit, nor any of the linters invoked by the pre-commit hooks will be available in the production environment, so make sure you have a development environment
-installed and activated. If you use the blueprint as is, pre-commit will not be triggered locally but only if you push to the main branch
+If you use the tools provided by the blueprint as is, pre-commit will not be triggered locally but only if you push to the main branch
 (or push to a PR to the main branch). If you consider it useful, you can set up pre-commit to run locally before every commit by initializing it once. In the root directory of
 your package, type:
 
@@ -119,8 +145,8 @@ pre-commit install
 If you run `pre-commit` without installing it before (line above), it will fail and the only way to recover it, is to do a forced reinstallation (`conda install --force-reinstall pre-commit`).
 You can also just run pre-commit selectively, whenever you want by typing (`pre-commit run --all-files`). Note that mypy and pylint take a bit of time, so it is really
 up to you, if you want to use pre-commit locally or not. In any case, after running pytest, you can commit and the linters will run at the latest on the GitHub actions server,
-when you push your changes to the main branch. Note that pytest is currently not invoked by pre-commit, so it will not run automatically. Automated testing should be implemented
-in a Jenkins pipeline (template for a plan available in `jenkins/`. See the next section for more details.
+when you push your changes to the main branch. Note that pytest is currently not invoked by pre-commit, so it will not run automatically. Automated testing can be set up with
+GitHub Actions or be implemented in a Jenkins pipeline (template for a plan available in `jenkins/`. See the next section for more details.
 
 ## Development tools
 
@@ -136,13 +162,13 @@ machines, which is only possible with a Jenkins pipeline (GitHub actions is runn
 ### Pre-commit on GitHub actions
 
 `.github/workflows/pre-commit.yml` contains a hook that will trigger the creation of your environment (unpinned) on the GitHub actions server and
-then run pytest as well as various formatters and linters through pre-commit. This hook is only triggered upon pushes to the main branch (in general: don't do that)
+then run various formatters and linters through pre-commit. This hook is only triggered upon pushes to the main branch (in general: don't do that)
 and in pull requests to the main branch.
 
 ### Jenkins
 
-Two jenkins plans are available in the `jenkins/` folder. On the one hand `jenkins/Jenkinsfile` controls the nightly (weekly, monthly, ...) builds, on the other hand
-`jenkins/JenkinsJobPR` controls the pipeline invoked with the command `launch jenkins` in pull requests on GitHub. Your jenkins pipeline will not be set up
+A jenkinsfile is available in the `jenkins/` folder. It can be used for a multibranch jenkins project, which builds
+both commits on branches and PRs. Your jenkins pipeline will not be set up
 automatically. If you need to run your tests on CSCS machines, contact DevOps to help you with the setup of the pipelines. Otherwise, you can ignore the jenkinsfiles
 and exclusively run your tests and checks on GitHub actions.
 

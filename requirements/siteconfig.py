@@ -1,4 +1,5 @@
 """Defines important PATHs for cartopy to use the right version."""
+
 # Standard library
 import os.path
 

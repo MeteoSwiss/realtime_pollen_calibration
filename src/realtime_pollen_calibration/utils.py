@@ -8,11 +8,46 @@
 # Standard library
 import logging
 from collections import namedtuple
+from dataclasses import dataclass
+from datetime import datetime, timedelta
 
 # Third-party
 import eccodes  # type: ignore
 import numpy as np  # type: ignore
 import pandas as pd  # type: ignore
+
+
+@dataclass
+class Config:
+
+    POV_infile: str = ""
+    """ICON GRIB2 file including path containing the pollen fields:
+                'tthrs', 'tthre' (for POAC, 'saisl' instead),
+                'saisn' and 'ctsum'.
+    """
+
+    POV_outfile: str = ""
+    """ICON GRIB2 file including path of the desired output file."""
+
+    T2M_file: str = ""
+    """"ICON GRIB2 file including path containing T_2M."""
+
+    const_file: str = ""
+    """ICON GRIB2 file including path containing Longitudes (CLON)
+        and Latitudes (CLAT) of the unstructured ICON grid.
+    """
+
+    station_obs_file: str = ""
+    """ATAB file including path containing the measured 
+       pollen concentrations at the stations.
+    """
+
+    station_mod_file: str = ""
+    """ATAB file including path containing the modelled
+       pollen concentrations at the stations.
+    """
+
+    hour_incr: int = 1
 
 ObsModData = namedtuple(
     "ObsModData",
@@ -30,7 +65,7 @@ pollen_types = ["ALNU", "BETU", "POAC", "CORY"]
 thr_con_24 = {"ALNU": 240, "BETU": 240, "POAC": 72, "CORY": 240}
 thr_con_120 = {"ALNU": 720, "BETU": 720, "POAC": 216, "CORY": 720}
 failsafe = {"ALNU": 1000, "BETU": 2500, "POAC": 6000, "CORY": 2500}
-jul_days_excl = {"ALNU": 14, "BETU": 40, "POAC": 3, "CORY": 46}
+jul_days_excl = {"ALNU": 14, "BETU": 40, "POAC": 46, "CORY": 3}
 
 
 def count_to_log_level(count: int) -> int:
@@ -46,15 +81,14 @@ def count_to_log_level(count: int) -> int:
 
 
 def read_atab(
-    pollen_type: str, file_obs: str, file_mod: str = "", verbose: bool = False
+    pollen_type: str, file_obs_stns: str, file_mod_stns: str = "", verbose: bool = False
 ) -> ObsModData:
     """Read the pollen concentrations and the station locations from ATAB files.
 
     Args:
         pollen_type: String describing the pollen type analysed.
-
-        file_obs: Location of the observation ATAB file.
-        file_mod: Location of the model ATAB file. (Optional)
+        file_obs_stns: Location of the observation ATAB file.
+        file_mod_stns: Location of the model ATAB file. (Optional)
         verbose: Optional additional debug prints.
 
     Returns:
@@ -83,9 +117,9 @@ def read_atab(
 
         Returns:
             coord_stns: List of (lat, lon) tuples of the stations' coordinates.
-            missing_value: Value considered as a missing measurement.
+            missing_value: Value considered as a missing value.
             stn_indicators: Used for correspondence between
-                    observed and modelled data.
+            observed and modelled data.
 
         """
         with open(file_data, encoding="utf-8") as f:
@@ -104,16 +138,16 @@ def read_atab(
             coord_stns = list(zip(lat_stns, lon_stns))
         return HeaderData(coord_stns, missing_value, stn_indicators, n_header)
 
-    headerdata = read_obs_header(file_obs)
+    headerdata = read_obs_header(file_obs_stns)
     data = pd.read_csv(
-        file_obs,
+        file_obs_stns,
         header=headerdata.n_header,
         delim_whitespace=True,
         parse_dates=[[1, 2, 3, 4, 5]],
     )
     data = data[data["PARAMETER"] == pollen_type].iloc[:, 2:].to_numpy()
-    if file_mod != "":
-        with open(file_mod, encoding="utf-8") as f:
+    if file_mod_stns != "":
+        with open(file_mod_stns, encoding="utf-8") as f:
             for n, line in enumerate(f):
                 if line.strip()[0:9] == "Indicator":
                     stn_indicators_mod = np.array(line.strip()[29:].split("         "))
@@ -122,7 +156,7 @@ def read_atab(
                     break
         istation_mod = get_mod_stn_index(headerdata.stn_indicators, stn_indicators_mod)
         data_mod = pd.read_csv(
-            file_mod,
+            file_mod_stns,
             header=n_header_mod,
             delim_whitespace=True,
             parse_dates=[[3, 4, 5, 6, 7]],
@@ -147,7 +181,7 @@ def treat_missing(
 
     Args:
         array: Array containing the concentration values.
-        missing_value: Value considered as a missing measurement.
+        missing_value: Value considered as a missing value.
         tune_pol_default: Default value to which all values of a station
                 are set if more than 10% of the observations are missing.
         verbose: Optional additional debug prints.
@@ -327,6 +361,7 @@ def get_change_tune(  # pylint: disable=R0913
         )
         if verbose:
             print(
+                f"Current pollen type is: {pollen_type}, ",
                 f"Current station n°{istation}, ",
                 f"(lat: {obs_mod_data.coord_stns[istation][0]}, ",
                 f"lon: {obs_mod_data.coord_stns[istation][1]}), ",
@@ -334,8 +369,8 @@ def get_change_tune(  # pylint: disable=R0913
                 f"modeled: {sum_mod}",
             )
             print(
-                f"Current tune value {tune_stns.values[0][0]} ",
-                f"and saisn: {saisn_stns.values[0][0]}",
+                f"Current tune value {tune_stns.values[0]} ",
+                f"and saisn: {saisn_stns.values[0]}",
             )
             print("-----------------------------------------")
         if (saisn_stns > 0) and ((sum_obs <= 720) or (sum_mod <= 720)):
@@ -343,7 +378,7 @@ def get_change_tune(  # pylint: disable=R0913
                 print(
                     "Season started but low observation or modeled concentrations, "
                     "(tune)**(-1/24) = "
-                    f"{(tune_pol_default / tune_stns.values[0][0]) ** (1 / 24)}"
+                    f"{(tune_pol_default / tune_stns.values[0]) ** (1 / 24)}"
                 )
             change_tune[istation] = (tune_pol_default / tune_stns) ** (1 / 24)
         if (saisn_stns > 0) and (sum_obs > 720) and (sum_mod > 720):
@@ -414,15 +449,15 @@ def get_change_phenol(  # pylint: disable=R0912,R0914,R0915
                 f"and last 120H {sum_obs}",
             )
             print(
-                f"Cumulative temperature sum {ctsum_stns.values[0][0]} ",
-                f"and threshold (start): {tthrs_stns.values[0][0]}",
-                f" and saisn: {saisn_stns.values[0][0]}",
+                f"Cumulative temperature sum {ctsum_stns.values[0]} ",
+                f"and threshold (start): {tthrs_stns.values[0]}",
+                f" and saisn: {saisn_stns.values[0]}",
             )
             if pollen_type != "POAC":
-                print(f"Cumsum temp threshold end: {tthre_stns.values[0][0]}")
+                print(f"Cumsum temp threshold end: {tthre_stns.values[0]}")
             else:
-                print(f"Saisl: {saisl_stns.values[0][0]}")
-            print(f"Temperature at station {t_2m_stns.values[0][0]}, " f"date: {date}")
+                print(f"Saisl: {saisl_stns.values[0]}")
+            print(f"Temperature at station {t_2m_stns.values[0]}, " f"date: {date}")
             print("-----------------------------------------")
         # ADJUSTMENT OF SEASON START AND END AT THE BEGINNING OF THE SEASON
         if (
@@ -525,15 +560,16 @@ def get_change_phenol(  # pylint: disable=R0912,R0914,R0915
     return ChangePhenologyFields(change_tthrs, change_tthre, change_saisl)
 
 
-def to_grib(inp: str, outp: str, dict_fields: dict) -> None:
+def to_grib(inp: str, outp: str, dict_fields: dict, hour_incr: int) -> None:
     """Output fields to a GRIB file.
 
     Args:
         inp: Location of the GRIB file which must contain at least the same
-    fields as the ones in the dictionary that are to be outputted.
+            fields as the ones in the dictionary that are to be outputted.
         outp: Location of the desired GRIB file
         dict_fields: Dictionary containing the fields to be outputted as
             { name : value }
+        hour_incr: number of hour increments in the output compared to input.
 
     """
     # copy all the fields from input into output,
@@ -545,15 +581,32 @@ def to_grib(inp: str, outp: str, dict_fields: dict) -> None:
                 break
             # clone record
             clone_id = eccodes.codes_clone(gid)
-            # get short_name
 
+            # get short_name
             short_name = eccodes.codes_get_string(clone_id, "shortName")
+
+            # get time information, advance by hour_incr hours, set the new time information
+            dataDate = str(eccodes.codes_get(clone_id, "dataDate"))
+            hour_old = str(str(eccodes.codes_get(clone_id, "hour")).zfill(2))
+            dataDateHour = dataDate + hour_old
+
+            date_new = datetime.strptime(dataDateHour, "%Y%m%d%H") + timedelta(
+                hours=hour_incr
+            )
+            day_new = date_new.date().strftime("%Y%m%d")
+            hour_new = date_new.time().strftime("%H")
+
+            eccodes.codes_set(clone_id, "dataDate", int(day_new))
+            eccodes.codes_set(clone_id, "hour", int(hour_new))
+
             # read values
             values = eccodes.codes_get_values(clone_id)
-            eccodes.codes_set(
-                clone_id, "dataTime", eccodes.codes_get(clone_id, "dataTime") + 100
-            )
+
             if short_name in dict_fields:
+
+                # set values in dict_fields[short_name] to zero where values is zero (edge values)
+                # This is because COSMO-1E was slightly smaller than ICON-CH1
+                dict_fields[short_name][values == 0] = 0
                 eccodes.codes_set_values(clone_id, dict_fields[short_name].flatten())
             else:
                 eccodes.codes_set_values(clone_id, values)
