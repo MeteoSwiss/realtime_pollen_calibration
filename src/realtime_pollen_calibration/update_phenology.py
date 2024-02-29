@@ -4,7 +4,7 @@
 
 # SPDX-License-Identifier: BSD-3-Clause
 
-"""A module for the update of the pollen start and end of season in real time."""
+"""A module for the update of start and end of the pollen season."""
 
 # Standard library
 from datetime import datetime, timedelta
@@ -19,20 +19,23 @@ from realtime_pollen_calibration import utils
 
 
 def update_phenology_realtime(
-    file_paths: utils.FilePaths, hour_incr: int, verbose: bool = False
+    config_obj: utils.Config, verbose: bool = False
 ):
-    """Advance the temperature threshold fields by one hour.
+    """Update the temperature threshold fields and POACsaisl.
 
     Args:
-        TODO: Fix docstring
-        hour_incr: number of hour increments in the output compared to input.
+        config_obj: Configured data structure of class Config. 
         verbose: Optional additional debug prints.
-
+    
+    Returns:
+        File in GRIB2 format containing the updated temperature threshold fields
+        and the length of the grass pollen season (POACsaisl).
+    
     """
 
-    fh_POV = open(file_paths.POV_in, "rb")
-    fh_Const = open(file_paths.constants, "rb")
-    fh_T_2M = open(file_paths.T_2M, "rb")
+    fh_POV = open(config_obj.POV_infile, "rb")
+    fh_Const = open(config_obj.const_file, "rb")
+    fh_T_2M = open(config_obj.T2M_file, "rb")
 
     # read CLON, CLAT
     while True:
@@ -103,7 +106,7 @@ def update_phenology_realtime(
 
             # Convert the string to a datetime object
             date_obj = datetime.strptime(dataDateHour, "%Y%m%d%H") + timedelta(
-                hours=hour_incr
+                hours=config_obj.hour_incr
             )
             date_obj_fmt = date_obj.strftime("%Y-%m-%dT%H:00:00.000000000")
             time_values = np.datetime64(date_obj_fmt)
@@ -135,7 +138,7 @@ def update_phenology_realtime(
     dict_fields = {}
     for pollen_type in ptype_present:
         obs_mod_data = utils.read_atab(
-            pollen_type, file_paths.obs_stations, verbose=verbose
+            pollen_type, config_obj.station_obs_file, verbose=verbose
         )
         change_phenology_fields = utils.get_change_phenol(
             pollen_type, obs_mod_data, ds, verbose
@@ -157,4 +160,4 @@ def update_phenology_realtime(
                     obs_mod_data.coord_stns,
                     method="sum",
                 )
-    utils.to_grib(file_paths.POV_in, file_paths.POV_tmp, dict_fields, hour_incr)
+    utils.to_grib(config_obj.POV_infile, config_obj.POV_outfile, dict_fields, config_obj.hour_incr)

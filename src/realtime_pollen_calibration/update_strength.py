@@ -4,7 +4,7 @@
 
 # SPDX-License-Identifier: BSD-3-Clause
 
-"""A module for the update of the pollen strength in real time."""
+"""A module for the update of the pollen emission strength."""
 
 # Standard library
 from datetime import datetime, timedelta
@@ -16,23 +16,25 @@ from eccodes import codes_get, codes_get_array, codes_grib_new_from_file, codes_
 
 # First-party
 from realtime_pollen_calibration import utils
-from realtime_pollen_calibration.utils import FilePaths
+from realtime_pollen_calibration.utils import Config
 
 
 def update_strength_realtime(
-    file_paths: FilePaths, hour_incr, verbose
+    config_obj: utils.Config, verbose
 ):  # pylint: disable=R0801
-    """Advance the tune field by one hour.
+    """Update the tune field.
 
     Args:
-        TODO: Fix docstring
-        hour_incr: number of hour increments in the output compared to input.
+        config_obj: Configured data structure of class Config. 
         verbose: Optional additional debug prints.
+    
+    Returns:
+        File in GRIB2 format containing the updated temperature tune fields.
 
     """
 
-    fh_POV = open(file_paths.POV_tmp, "rb")
-    fh_Const = open(file_paths.constants, "rb")
+    fh_POV = open(config_obj.POV_infile, "rb")
+    fh_Const = open(config_obj.const_file, "rb")
 
     # read CLON, CLAT
     while True:
@@ -83,7 +85,7 @@ def update_strength_realtime(
 
                 # Convert the string to a datetime object
                 date_obj = datetime.strptime(dataDateHour, "%Y%m%d%H") + timedelta(
-                    hours=hour_incr
+                    hours=config_obj.hour_incr
                 )
                 date_obj_fmt = date_obj.strftime("%Y-%m-%dT%H:00:00.000000000")
                 time_values = np.datetime64(date_obj_fmt)
@@ -117,8 +119,8 @@ def update_strength_realtime(
     for pollen_type in ptype_present:
         obs_mod_data = utils.read_atab(
             pollen_type,
-            file_paths.obs_stations,
-            file_paths.mod_stations,
+            config_obj.station_obs_file,
+            config_obj.station_mod_file,
             verbose=verbose,
         )
         change_tune = utils.get_change_tune(
@@ -135,4 +137,4 @@ def update_strength_realtime(
             method="multiply",
         )
         dict_fields[pollen_type + "tune"] = tune_vec
-    utils.to_grib(file_paths.POV_tmp, file_paths.POV_out, dict_fields, hour_incr)
+    utils.to_grib(config_obj.POV_infile, config_obj.POV_outfile, dict_fields, config_obj.hour_incr)    

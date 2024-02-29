@@ -4,14 +4,13 @@
 import click
 
 # First-party
-from realtime_pollen_calibration.set_up import set_up_paths
+from realtime_pollen_calibration.set_up import set_up_config
 from realtime_pollen_calibration.update_phenology import update_phenology_realtime
 from realtime_pollen_calibration.update_strength import update_strength_realtime
-from realtime_pollen_calibration.utils import FilePaths
+from realtime_pollen_calibration.utils import Config
 
 # Local
 from . import __version__
-
 
 # pylint: disable-next=W0613  # unused-argument (param)
 def print_version(ctx, param, value: bool) -> None:
@@ -34,66 +33,33 @@ def main():
     pass
 
 
-@main.command("update_strength")
-@click.argument(
-    "data_path",
-    type=click.Path(exists=True, readable=True, dir_okay=True),
-)
-@click.argument("date_string", type=str)
-def update_strength(data_path: str, date_string: str):
-    """TODO 1
-
-    Args:
-        data_path (str): _description_
-        date_string (str): _description_
-
-    """
-    file_paths: FilePaths = set_up_paths(data_path, date_string)
-
-    hour_incr = 1
-    update_strength_realtime(
-        file_paths,
-        hour_incr,
-        True,
-    )
-
-
 @main.command("update_phenology")
-@click.argument("data_path", type=click.Path(exists=True, readable=True, dir_okay=True))
-@click.argument("date_string", type=str)
-def update_phenology(data_path: str, date_string: str):
-    """TODO  2
+@click.argument("config_file", type=click.Path(exists=True, readable=True))
+def update_phenology(config_file):
+    """Configures and calls update_phenology_realtime
 
     Args:
-        data_path (str): _description_
-        date_string (str): _description_
+    
+        config_file (str): yaml configuration file 
 
     """
-    file_paths: FilePaths = set_up_paths(data_path, date_string)
+    config_obj: Config = set_up_config(config_file)
+    
+    update_phenology_realtime(config_obj, True)
 
-    hour_incr = 0
-    update_phenology_realtime(file_paths, hour_incr, True)
 
+@main.command("update_strength")
+@click.argument("config_file", type=click.Path(exists=True, readable=True))
 
-@main.command("full_update")
-@click.argument("data_path", type=click.Path(exists=True, readable=True, dir_okay=True))
-@click.argument("date_string", type=str)
-def update_phenology(data_path: str, date_string: str):
-    """TODO 3
+def update_strength(config_file):
+    """Configures and calls update_strength_realtime
 
     Args:
-        data_path (str): _description_
-        date_string (str): _description_
+    
+        config_file (str): yaml configuration file 
 
     """
-    file_paths: FilePaths = set_up_paths(data_path, date_string)
+    config_obj: Config = set_up_config(config_file)
 
-    hour_incr = 0
-    update_phenology_realtime(file_paths, hour_incr, True)
+    update_strength_realtime(config_obj, True)
 
-    hour_incr = 1
-    update_strength_realtime(
-        file_paths,
-        hour_incr,
-        True,
-    )

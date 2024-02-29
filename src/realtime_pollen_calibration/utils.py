@@ -18,35 +18,36 @@ import pandas as pd  # type: ignore
 
 
 @dataclass
-class FilePaths:
-    obs_stations: str = ""
-    """Location of ATAB file containing the pollen
-        concentration information at the stations.
-    """
+class Config:
 
-    mod_stations: str = ""
-    "TODO: Add"
-
-    POV_in: str = ""
-    """Location of ICON GRIB2 file containing the pollen fields:
+    POV_infile: str = ""
+    """ICON GRIB2 file including path containing the pollen fields:
                 'tthrs', 'tthre' (for POAC, 'saisl' instead),
                 'saisn' and 'ctsum'.
     """
 
-    T_2M: str = ""
-    "Location of GRIB2 file containing T_2M."
+    POV_outfile: str = ""
+    """ICON GRIB2 file including path of the desired output file."""
 
-    constants: str = ""
-    """Location of GRIB2 file containing Longitudes
-        and Latitudes of the unstructured ICON grid.
+    T2M_file: str = ""
+    """"ICON GRIB2 file including path containing T_2M."""
+
+    const_file: str = ""
+    """ICON GRIB2 file including path containing Longitudes (CLON)
+        and Latitudes (CLAT) of the unstructured ICON grid.
     """
 
-    POV_tmp: str = ""
-    "Location of the desired output file."
+    station_obs_file: str = ""
+    """ATAB file including path containing the measured 
+       pollen concentrations at the stations.
+    """
 
-    POV_out: str = ""
-    "TODO: Add"
+    station_mod_file: str = ""
+    """ATAB file including path containing the modelled
+       pollen concentrations at the stations.
+    """
 
+    hour_incr: int = 1
 
 ObsModData = namedtuple(
     "ObsModData",
@@ -86,7 +87,6 @@ def read_atab(
 
     Args:
         pollen_type: String describing the pollen type analysed.
-
         file_obs_stns: Location of the observation ATAB file.
         file_mod_stns: Location of the model ATAB file. (Optional)
         verbose: Optional additional debug prints.
@@ -117,9 +117,9 @@ def read_atab(
 
         Returns:
             coord_stns: List of (lat, lon) tuples of the stations' coordinates.
-            missing_value: Value considered as a missing measurement.
+            missing_value: Value considered as a missing value.
             stn_indicators: Used for correspondence between
-                    observed and modelled data.
+            observed and modelled data.
 
         """
         with open(file_data, encoding="utf-8") as f:
@@ -181,7 +181,7 @@ def treat_missing(
 
     Args:
         array: Array containing the concentration values.
-        missing_value: Value considered as a missing measurement.
+        missing_value: Value considered as a missing value.
         tune_pol_default: Default value to which all values of a station
                 are set if more than 10% of the observations are missing.
         verbose: Optional additional debug prints.

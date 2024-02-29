@@ -1,43 +1,40 @@
-"""TODO."""
+"""Setup the configuration."""
+
+# Third-party
+import yaml
 
 # First-party
-from realtime_pollen_calibration.utils import FilePaths
+from realtime_pollen_calibration.utils import Config
 
 
-def set_up_paths(data_path: str, date: str):
-    """TODO
+def set_up_config(config_file: str):
+    """Sets the configuration (path and time increment in hours)
 
     Args:
-        data_path (str): _description_
-        date (str): _description_
+        config_file (str): yaml configuration file 
 
     Returns:
-        _type_: _description_
+        Configured data structure of class Config.
 
     """
+    
+    with open(config_file, "r", encoding="utf-8") as fh_config_file:
+        data = yaml.safe_load(fh_config_file)
 
-    file_paths = FilePaths()
-    file_paths.obs_stations = (
-        data_path + f"/data/atabs/cory_alnu_pollen_measured_values_{date}.atab"
-    )
-    file_paths.mod_stations = (
-        data_path + f"/data/atabs/cory_alnu_pollen_modelled_values_{date}.atab"
-    )
-    file_paths.POV_in = (
-        data_path
-        + "/data/grib2_files_ICON-CH1/ART_POV_iconR19B08"
-        + f"-grid_0001_{date}_update_phen_tune4"
-    )
-    file_paths.T_2M = data_path + f"/data/grib2_files_ICON-CH1/iaf{date}"
-    file_paths.constants = data_path + f"/data/grib2_files_ICON-CH1/lfff00000000c"
-    file_paths.POV_tmp = (
-        data_path
-        + "/data/grib2_files_ICON-CH1/ART_POV_iconR19B08"
-        + f"-grid_0001_{date}_update_phen_tune4_tmp"
-    )
-    file_paths.POV_out = (
-        data_path
-        + "/data/grib2_files_ICON-CH1/ART_POV_iconR19B08"
-        + f"-grid_0001_{date}_update_phen_tune5"
-    )
-    return file_paths
+    config = Config()
+
+    config.station_obs_file = data["station_obs_file"]
+
+    config.station_mod_file = data["station_mod_file"]
+
+    config.POV_infile = data["POV_infile"]
+
+    config.const_file = data["const_file"]
+
+    config.T2M_file= data["T2M_file"]
+
+    config.POV_outfile = data["POV_outfile"]
+
+    config.hour_incr = data["hour_incr"]
+    
+    return config
