@@ -12,109 +12,73 @@ from datetime import datetime, timedelta
 # Third-party
 import numpy as np
 import xarray as xr
-from eccodes import codes_get, codes_get_array, codes_grib_new_from_file, codes_release
+from eccodes import (  # type: ignore
+    codes_get,
+    codes_get_array,
+    codes_grib_new_from_file,
+    codes_release,
+)
 
 # First-party
 from realtime_pollen_calibration import utils
-from realtime_pollen_calibration.utils import Config
 
 
-def update_strength_realtime(
-    config_obj: utils.Config, verbose
-):  # pylint: disable=R0801
-    """Update the tune field.
+def read_pov_file(pov_infile, pol_fields, config_obj):
+    cal_fields = {}
+    with open(pov_infile, "rb") as fh:
+        while True:
+            # Get the next message
+            rec = codes_grib_new_from_file(fh)
+            if rec is None:
+                break
 
-    Args:
-        config_obj: Configured data structure of class Config. 
-        verbose: Optional additional debug prints.
-    
-    Returns:
-        File in GRIB2 format containing the updated temperature tune fields.
+            # Get the short name of the current field
+            short_name = codes_get(rec, "shortName")
 
-    """
+            # Extract field if present
+            if short_name in pol_fields:
+                cal_fields[short_name] = codes_get_array(rec, "values")
 
-    fh_POV = open(config_obj.POV_infile, "rb")
-    fh_Const = open(config_obj.const_file, "rb")
+                data_date = str(codes_get(rec, "dataDate"))
+                hour = str(codes_get(rec, "hour")).zfill(2)
+                data_date_hour = data_date + hour
 
-    # read CLON, CLAT
-    while True:
-        # Get the next message
-        recConst = codes_grib_new_from_file(fh_Const)
-        if recConst is None:
-            break
-
-        # Get the short name of the current field
-        short_name = codes_get(recConst, "shortName")
-
-        # Extract longitude and latitude of the ICON grid
-        if short_name == "CLON":
-            CLON = codes_get_array(recConst, "values")
-        if short_name == "CLAT":
-            CLAT = codes_get_array(recConst, "values")
-
-        # Delete the message
-        codes_release(recConst)
-
-    # Close the GRIB file
-    fh_Const.close()
-
-    # read POV and extract available fields
-    specs = ["ALNU", "BETU", "POAC", "CORY"]
-    fields = ["tune", "saisn"]
-    pol_fields = [x + y for x in specs for y in fields]
-
-    calFields = {}
-    while True:
-        # Get the next message
-        recPOV = codes_grib_new_from_file(fh_POV)
-        if recPOV is None:
-            break
-
-        # Get the short name of the current field
-        short_name = codes_get(recPOV, "shortName")
-
-        # Extract pollen fields if they are present
-        for pol_field in pol_fields:
-            if short_name == pol_field:
-                calFields[pol_field] = codes_get_array(recPOV, "values")
-
-                # timestamp is needed
-                dataDate = str(codes_get(recPOV, "dataDate"))
-                hour_old = str(str(codes_get(recPOV, "hour")).zfill(2))
-                dataDateHour = dataDate + hour_old
-
-                # Convert the string to a datetime object
-                date_obj = datetime.strptime(dataDateHour, "%Y%m%d%H") + timedelta(
+                date_obj = datetime.strptime(data_date_hour, "%Y%m%d%H") + timedelta(
                     hours=config_obj.hour_incr
                 )
                 date_obj_fmt = date_obj.strftime("%Y-%m-%dT%H:00:00.000000000")
                 time_values = np.datetime64(date_obj_fmt)
 
-        # Delete the message
-        codes_release(recPOV)
+            codes_release(rec)
+    return cal_fields, time_values
 
-    # Close the GRIB files
-    fh_POV.close()
 
-    # Dictionary to hold DataArrays for each variable
-    calFields_arrays = {}
+def update_strength_realtime(config_obj: utils.Config, verbose: bool = False):
+    """Update the tune field.
 
-    # Loop through variables to create DataArrays
-    for var_name, data in calFields.items():
-        data_array = xr.DataArray(
-            data, coords={"index": np.arange(len(data))}, dims=["index"]
-        )
-        data_array.coords["latitude"] = (("index"), CLAT)
-        data_array.coords["longitude"] = (("index"), CLON)
-        data_array.coords["time"] = time_values
-        calFields_arrays[var_name] = data_array
+    Args:
+        config_obj: Configured data structure of class Config.
+        verbose: Optional additional debug prints.
 
-    # Create an xarray Dataset with the DataArrays
-    ds = xr.Dataset(calFields_arrays)
+    Returns:
+        File in GRIB2 format containing the updated temperature tune fields.
 
+    """
+    clon, clat = utils.read_clon_clat(config_obj.const_file)
+    specs = ["ALNU", "BETU", "POAC", "CORY"]
+    fields = ["tune", "saisn"]
+    pol_fields = [x + y for x in specs for y in fields]
+    cal_fields, time_values = read_pov_file(
+        config_obj.pov_infile, pol_fields, config_obj
+    )
+    cal_fields_arrays = utils.create_data_arrays(cal_fields, clon, clat, time_values)
+
+    ds = xr.Dataset(cal_fields_arrays)
     ptype_present = utils.get_pollen_type(ds)
+
     if verbose:
         print(f"Detected pollen types in the DataSet provided: {ptype_present}")
+
     dict_fields = {}
     for pollen_type in ptype_present:
         obs_mod_data = utils.read_atab(
@@ -137,4 +101,7 @@ def update_strength_realtime(
             method="multiply",
         )
         dict_fields[pollen_type + "tune"] = tune_vec
-    utils.to_grib(config_obj.POV_infile, config_obj.POV_outfile, dict_fields, config_obj.hour_incr)    
+
+    utils.to_grib(
+        config_obj.pov_infile, config_obj.pov_outfile, dict_fields, config_obj.hour_incr
+    )

@@ -5,7 +5,7 @@ dependencies:
   - python>=3.10,<3.11
   - pip>=22.3
   # runtime
-  - click>=8.1  # for sample code
+  - click>=8.1
   # development
   - anaconda-client>=1.11
   - black>=22.10
@@ -43,3 +43,4 @@ dependencies:
     - sphinx-mdinclude>=0.5
     - pydantic>=1.10,<2.0
     - rstcheck_core>=1.0
+    - pyyaml-include>=1.3

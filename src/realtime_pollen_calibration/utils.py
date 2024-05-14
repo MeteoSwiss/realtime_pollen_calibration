@@ -15,30 +15,31 @@ from datetime import datetime, timedelta
 import eccodes  # type: ignore
 import numpy as np  # type: ignore
 import pandas as pd  # type: ignore
+import xarray as xr  # type: ignore
 
 
 @dataclass
 class Config:
 
-    POV_infile: str = ""
+    pov_infile: str = ""
     """ICON GRIB2 file including path containing the pollen fields:
                 'tthrs', 'tthre' (for POAC, 'saisl' instead),
-                'saisn' and 'ctsum'.
+                'saisn', 'ctsum' and 'tune'.
     """
 
-    POV_outfile: str = ""
+    pov_outfile: str = ""
     """ICON GRIB2 file including path of the desired output file."""
 
-    T2M_file: str = ""
+    t2m_file: str = ""
     """"ICON GRIB2 file including path containing T_2M."""
 
     const_file: str = ""
-    """ICON GRIB2 file including path containing Longitudes (CLON)
+    """ICON GRIB2 file including path containing Longitudes (clon)
         and Latitudes (CLAT) of the unstructured ICON grid.
     """
 
     station_obs_file: str = ""
-    """ATAB file including path containing the measured 
+    """ATAB file including path containing the measured
        pollen concentrations at the stations.
     """
 
@@ -48,6 +49,7 @@ class Config:
     """
 
     hour_incr: int = 1
+
 
 ObsModData = namedtuple(
     "ObsModData",
@@ -80,10 +82,31 @@ def count_to_log_level(count: int) -> int:
         return logging.DEBUG
 
 
+def read_clon_clat(const_file):
+    with open(const_file, "rb") as fh:
+        clon, clat = None, None
+        while True:
+            # Get the next message
+            rec = eccodes.codes_grib_new_from_file(fh)
+            if rec is None:
+                break
+            short_name = eccodes.codes_get(rec, "shortName")
+
+            # Extract longitude and latitude of the ICON grid
+            if short_name == "CLON":
+                clon = eccodes.codes_get_array(rec, "values")
+            elif short_name == "CLAT":
+                clat = eccodes.codes_get_array(rec, "values")
+
+            # Delete the message
+            eccodes.codes_release(rec)
+    return clon, clat
+
+
 def read_atab(
     pollen_type: str, file_obs_stns: str, file_mod_stns: str = "", verbose: bool = False
 ) -> ObsModData:
-    """Read the pollen concentrations and the station locations from ATAB files.
+    """Read the pollen concentrations and the station locations from the ATAB files.
 
     Args:
         pollen_type: String describing the pollen type analysed.
@@ -171,6 +194,22 @@ def read_atab(
     )
 
 
+def create_data_arrays(cal_fields, clon, clat, time_values):
+    # Dictionary to hold DataArrays for each variable
+    cal_fields_arrays = {}
+
+    # Loop through variables to create DataArrays
+    for var_name, data in cal_fields.items():
+        data_array = xr.DataArray(
+            data, coords={"index": np.arange(len(data))}, dims=["index"]
+        )
+        data_array.coords["latitude"] = (("index"), clat)
+        data_array.coords["longitude"] = (("index"), clon)
+        data_array.coords["time"] = time_values
+        cal_fields_arrays[var_name] = data_array
+    return cal_fields_arrays
+
+
 def treat_missing(
     array,
     missing_value: float = -9999.0,
@@ -251,7 +290,7 @@ def interpolate(  # pylint: disable=R0913,R0914
         ds: xarray.DataSet.
         field: Name of the field to be interpolated on.
         coord_stns: List of (lat, lon) tuples of the stations' coordinates.
-        method: Either 'multiply' (strength) or add (phenology)
+        method: Either 'multiply' (strength) or 'add' (phenology)
         verbose: Optional additional debug prints.
 
     Returns:
@@ -575,7 +614,7 @@ def to_grib(inp: str, outp: str, dict_fields: dict, hour_incr: int) -> None:
     # copy all the fields from input into output,
     # besides the ones in the dictionary given as input
     with open(inp, "rb") as fin, open(outp, "wb") as fout:
-        while 1:
+        while True:
             gid = eccodes.codes_grib_new_from_file(fin)
             if gid is None:
                 break
@@ -585,12 +624,13 @@ def to_grib(inp: str, outp: str, dict_fields: dict, hour_incr: int) -> None:
             # get short_name
             short_name = eccodes.codes_get_string(clone_id, "shortName")
 
-            # get time information, advance by hour_incr hours, set the new time information
-            dataDate = str(eccodes.codes_get(clone_id, "dataDate"))
+            # get time information, advance by hour_incr hours and
+            # set the new time information
+            data_date = str(eccodes.codes_get(clone_id, "dataDate"))
             hour_old = str(str(eccodes.codes_get(clone_id, "hour")).zfill(2))
-            dataDateHour = dataDate + hour_old
+            data_date_hour = data_date + hour_old
 
-            date_new = datetime.strptime(dataDateHour, "%Y%m%d%H") + timedelta(
+            date_new = datetime.strptime(data_date_hour, "%Y%m%d%H") + timedelta(
                 hours=hour_incr
             )
             day_new = date_new.date().strftime("%Y%m%d")
@@ -604,7 +644,8 @@ def to_grib(inp: str, outp: str, dict_fields: dict, hour_incr: int) -> None:
 
             if short_name in dict_fields:
 
-                # set values in dict_fields[short_name] to zero where values is zero (edge values)
+                # set values in dict_fields[short_name] to zero where
+                # values are zero (edge values)
                 # This is because COSMO-1E was slightly smaller than ICON-CH1
                 dict_fields[short_name][values == 0] = 0
                 eccodes.codes_set_values(clone_id, dict_fields[short_name].flatten())
@@ -614,8 +655,6 @@ def to_grib(inp: str, outp: str, dict_fields: dict, hour_incr: int) -> None:
             eccodes.codes_write(clone_id, fout)
             eccodes.codes_release(clone_id)
             eccodes.codes_release(gid)
-        fin.close()
-        fout.close()
 
 
 def get_pollen_type(ds) -> list:

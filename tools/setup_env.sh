@@ -9,7 +9,7 @@ if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
 fi
 
 # Default env names
-DEFAULT_ENV_NAME="RTcalib"
+DEFAULT_ENV_NAME="RTcal"
 
 # Default options
 ENV_NAME="${DEFAULT_ENV_NAME}"
@@ -81,17 +81,6 @@ ${CONDA} env config vars set GRIB_DEFINITION_PATH=${conda_eccodes}/definitions/:
 # fieldextra path
 echo 'Setting FIELDEXTRA_PATH for balfrin'
 ${CONDA} env config vars set FIELDEXTRA_PATH=/users/oprusers/osm/bin/fieldextra
-
-
-
-# # cartopy setup
-# if [[ $(cp requirements/siteconfig.py $CONDA_PREFIX/lib/$python_lib/site-packages/cartopy) ]]; then
-#     echo 'Cartopy configuration completed successfully.'
-# else
-#     echo -e "\e[31mEnable cartopy to modify cartopy.config by placing the env/siteconfig.py file into cartopy package source folder.\n\e[0m"\
-#         "\e[31mPlease make sure that you are in the parent directory of the iconarray folder while executing this setup script.\e[0m"
-#     exit $1
-# fi
 
 
 echo "Variables saved to environment: "

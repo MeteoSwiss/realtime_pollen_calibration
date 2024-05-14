@@ -1,4 +1,5 @@
 """Entry point for module call."""
+
 # Standard library
 import gc
 

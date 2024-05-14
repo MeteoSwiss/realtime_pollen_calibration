@@ -1,7 +1,8 @@
-POV_infile : /users/paa/09_RTcalib/data/gridded/ART_POV_iconR19B08-grid_0001_2024020118
-POV_outfile : /users/paa/09_RTcalib/data/gridded/ART_POV_iconR19B08-grid_0001_out
-T2M_file : /scratch/mch/paa/wd/24013000_icon_CORY_ALNU_test_i1e_start_C-1E_calib/lm_coarse/iaf2024013000
-const_file : /oprusers/osm/opr.aare/data/ICON_INPUT/ICON-CH1-EPS/lfff00000000c
-station_obs_file : /users/paa/09_RTcalib/data/stations/pollen_measured_2024020118.atab
-station_mod_file : /users/paa/09_RTcalib/data/stations/pollen_modelled_2024020118.atab
+pov_infile : /store_new/mch/msopr/paa/RTcal_testdata/ART_POV_iconR19B08-grid_0001_BETU_POAC_2024042910
+# pov_infile : /store_new/mch/msopr/paa/RTcal_testdata/ART_POV_iconR19B08-grid_0001.gb2
+pov_outfile : ART_POV_iconR19B08-grid_0001_tune
+t2m_file : /store_new/mch/msopr/paa/RTcal_testdata/T_2M_KENDA-CH1_2024020118.gb2
+const_file : /store_new/mch/msopr/paa/RTcal_testdata/CLON_CLAT_ICON-CH1.gb2
+station_obs_file : /store_new/mch/msopr/paa/RTcal_testdata/pollen_measured_2024020118.atab
+station_mod_file : /store_new/mch/msopr/paa/RTcal_testdata/pollen_modelled_2024020118.atab
 hour_incr : 1

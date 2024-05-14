@@ -24,20 +24,23 @@ def test_count_to_log_level():
 #    note that for this computation there are some approximations, i.e.
 #    AT one station 1/d_station >> 1/d_other_station and thus all the other
 #    terms in the interpolation are neglected.
+#    This test compares the implemented method for interpolation with the
+#    results from the fortran implementation in COSMO with (=reference)
 
 
 def test_interpolation():
     # Specify the test case
     ds = cfgrib.open_dataset(
-        str(here()) + "/data/grib2_files_cosmo1e/laf2022022207_ALNUtune",
+        str(here()) + "/RTcal_testdata/laf2022022207_ALNUtune",
         encode_cf=("time", "geography", "vertical"),
     )
     ds2 = cfgrib.open_dataset(
-        str(here()) + "/data/grib2_files_cosmo1e/laf2022022208_ALNUtune",
+        str(here()) + "/RTcal_testdata/laf2022022208_ALNUtune",
         encode_cf=("time", "geography", "vertical"),
     )
     obs_mod_data = utils.read_atab(
-        "ALNU", str(here()) + "/data/atabs/alnu_pollen_measured_values_2022022207.atab"
+        "ALNU",
+        str(here()) + "/RTcal_testdata/alnu_pollen_measured_values_2022022207.atab",
     )
     ######################
     # Specify the test

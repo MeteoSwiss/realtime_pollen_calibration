@@ -9,5 +9,5 @@ import realtime_pollen_calibration
 Before running, make sure to activate your project environment:
 
 ```bash
-conda activate realtime-pollen-calibration
+conda activate RTcal
 ```

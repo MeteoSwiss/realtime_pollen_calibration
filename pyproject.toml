@@ -7,8 +7,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "realtime-pollen-calibration"
-version = "0.1.0"
-description = "Simon Adamov's Realtime Pollen Calibration"
+version = "0.2.0"
+description = "Simon Adamov's Realtime Pollen Calibration, ICON extension by Andreas Pauling"
 readme = "README.md"
 keywords = [
     "Realtime Pollen Calibration",
@@ -23,11 +23,12 @@ classifiers = [
 requires-python = ">=3.9"
 authors = [
     {name="Simon Adamov", email="simon.adamov@meteoswiss.ch"},
+    {name="Andreas Pauling", email="andreas.pauling@meteoswiss.ch"},
 ]
 
 [project.urls]
-source = "MeteoSwiss-APN/realtime-pollen-calibration"
-documentation = "https://github.io/sadamov/realtime-pollen-calibration"
+source = "MeteoSwiss/realtime-pollen-calibration"
+documentation = "https://github.com/MeteoSwiss/realtime_pollen_calibration"
 
 [project.scripts]
 # Format: <command> = "<package>.<module>:<function>"

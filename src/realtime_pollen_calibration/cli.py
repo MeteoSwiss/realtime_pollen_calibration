@@ -12,6 +12,7 @@ from realtime_pollen_calibration.utils import Config
 # Local
 from . import __version__
 
+
 # pylint: disable-next=W0613  # unused-argument (param)
 def print_version(ctx, param, value: bool) -> None:
     """Print the version number and exit."""
@@ -36,30 +37,26 @@ def main():
 @main.command("update_phenology")
 @click.argument("config_file", type=click.Path(exists=True, readable=True))
 def update_phenology(config_file):
-    """Configures and calls update_phenology_realtime
+    """Configure and call update_phenology_realtime.
 
     Args:
-    
-        config_file (str): yaml configuration file 
+        config_file (str): yaml configuration file
 
     """
     config_obj: Config = set_up_config(config_file)
-    
+
     update_phenology_realtime(config_obj, True)
 
 
 @main.command("update_strength")
 @click.argument("config_file", type=click.Path(exists=True, readable=True))
-
 def update_strength(config_file):
-    """Configures and calls update_strength_realtime
+    """Configure and call update_strength_realtime.
 
     Args:
-    
-        config_file (str): yaml configuration file 
+        config_file (str): yaml configuration file
 
     """
     config_obj: Config = set_up_config(config_file)
 
     update_strength_realtime(config_obj, True)
-
