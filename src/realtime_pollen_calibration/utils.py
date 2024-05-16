@@ -145,6 +145,10 @@ def read_atab(
             observed and modelled data.
 
         """
+        lat_stns = np.array([])
+        lon_stns = np.array([])
+        missing_value = None
+        stn_indicators = None
         with open(file_data, encoding="utf-8") as f:
             for n, line in enumerate(f):
                 if line.strip()[0:8] == "Latitude":
@@ -170,6 +174,7 @@ def read_atab(
     )
     data = data[data["PARAMETER"] == pollen_type].iloc[:, 2:].to_numpy()
     if file_mod_stns != "":
+        stn_indicators_mod = None
         with open(file_mod_stns, encoding="utf-8") as f:
             for n, line in enumerate(f):
                 if line.strip()[0:9] == "Indicator":
@@ -299,6 +304,7 @@ def interpolate(  # pylint: disable=R0913,R0914
     with different threshold (minima and maxima) for different species.
 
     """
+    vec = None
     nstns = len(coord_stns)
     pollen_type = field[:4]
     if method == "multiply":

@@ -24,6 +24,7 @@ from realtime_pollen_calibration import utils
 
 
 def read_pov_file(pov_infile, pol_fields, config_obj):
+    time_values = None
     cal_fields = {}
     with open(pov_infile, "rb") as fh:
         while True:

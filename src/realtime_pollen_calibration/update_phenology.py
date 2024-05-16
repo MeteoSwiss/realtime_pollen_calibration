@@ -45,6 +45,7 @@ def read_pov_file(pov_infile, pol_fields):
 
 
 def read_t2m_file(t2m_file, config_obj):
+    time_values = None
     cal_fields = {}
     with open(t2m_file, "rb") as fh:
         while True:
