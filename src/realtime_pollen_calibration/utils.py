@@ -626,18 +626,17 @@ def to_grib(inp: str, outp: str, dict_fields: dict, hour_incr: int) -> None:
 
             # get time information, advance by hour_incr hours and
             # set the new time information
-            data_date = str(eccodes.codes_get(clone_id, "dataDate"))
-            hour_old = str(str(eccodes.codes_get(clone_id, "hour")).zfill(2))
-            data_date_hour = data_date + hour_old
-
+            data_date_hour = str(eccodes.codes_get(clone_id, "dataDate")) + str(
+                str(eccodes.codes_get(clone_id, "hour")).zfill(2)
+            )
             date_new = datetime.strptime(data_date_hour, "%Y%m%d%H") + timedelta(
                 hours=hour_incr
             )
-            day_new = date_new.date().strftime("%Y%m%d")
-            hour_new = date_new.time().strftime("%H")
 
-            eccodes.codes_set(clone_id, "dataDate", int(day_new))
-            eccodes.codes_set(clone_id, "hour", int(hour_new))
+            eccodes.codes_set(
+                clone_id, "dataDate", int(date_new.date().strftime("%Y%m%d"))
+            )
+            eccodes.codes_set(clone_id, "hour", int(date_new.time().strftime("%H")))
 
             # read values
             values = eccodes.codes_get_values(clone_id)

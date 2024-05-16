@@ -64,14 +64,18 @@ def update_strength_realtime(config_obj: utils.Config, verbose: bool = False):
         File in GRIB2 format containing the updated temperature tune fields.
 
     """
-    clon, clat = utils.read_clon_clat(config_obj.const_file)
     specs = ["ALNU", "BETU", "POAC", "CORY"]
     fields = ["tune", "saisn"]
     pol_fields = [x + y for x in specs for y in fields]
     cal_fields, time_values = read_pov_file(
         config_obj.pov_infile, pol_fields, config_obj
     )
-    cal_fields_arrays = utils.create_data_arrays(cal_fields, clon, clat, time_values)
+    cal_fields_arrays = utils.create_data_arrays(
+        cal_fields,
+        utils.read_clon_clat(config_obj.const_file)[0],
+        utils.read_clon_clat(config_obj.const_file)[1],
+        time_values,
+    )
 
     ds = xr.Dataset(cal_fields_arrays)
     ptype_present = utils.get_pollen_type(ds)

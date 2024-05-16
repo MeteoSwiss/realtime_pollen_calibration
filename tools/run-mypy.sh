@@ -28,5 +28,5 @@ paths=(
 )
 for path in "${paths[@]}"; do
     ${VERBOSE} && echo "mypy \"${path}\""
-    mypy "${path}" || exit
+    mypy --check-untyped-defs "${path}" || exit
 done

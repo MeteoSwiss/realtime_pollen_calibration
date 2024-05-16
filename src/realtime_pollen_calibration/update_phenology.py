@@ -84,7 +84,6 @@ def update_phenology_realtime(config_obj: utils.Config, verbose: bool = False):
         and the length of the grass pollen season (POACsaisl).
 
     """
-    clon, clat = utils.read_clon_clat(config_obj.const_file)
     pol_fields = ["ALNU", "BETU", "POAC", "CORY"]
     pol_fields = [
         x + y for x in pol_fields for y in ["tthrs", "tthre", "saisn", "ctsum"]
@@ -93,17 +92,21 @@ def update_phenology_realtime(config_obj: utils.Config, verbose: bool = False):
     cal_fields = read_pov_file(config_obj.pov_infile, pol_fields)
     t2m_fields, time_values = read_t2m_file(config_obj.t2m_file, config_obj)
     cal_fields.update(t2m_fields)
-    cal_fields_arrays = utils.create_data_arrays(cal_fields, clon, clat, time_values)
+    cal_fields_arrays = utils.create_data_arrays(
+        cal_fields,
+        utils.read_clon_clat(config_obj.const_file)[0],
+        utils.read_clon_clat(config_obj.const_file)[1],
+        time_values,
+    )
 
     # Create an xarray Dataset with the DataArrays
     ds = xr.Dataset(cal_fields_arrays)
-    ptype_present = utils.get_pollen_type(ds)
 
     if verbose:
-        print(f"Detected pollen types in the DataSet provided: {ptype_present}")
+        print(f"Detected pollen types in the DataSet: {utils.get_pollen_type(ds)}")
 
     dict_fields = {}
-    for pollen_type in ptype_present:
+    for pollen_type in utils.get_pollen_type(ds):
         obs_mod_data = utils.read_atab(
             pollen_type, config_obj.station_obs_file, verbose=verbose
         )
