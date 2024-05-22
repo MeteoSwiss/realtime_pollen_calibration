@@ -16,7 +16,7 @@ The test data also includes the scripts that were used to generate the test data
 
 This project has been created from the
 [MeteoSwiss Python blueprint](https://github.com/MeteoSwiss-APN/mch-python-blueprint)
-for the CSCS.
+for the CSCS infrastructure.
 The recommended way to manage Python versions is with `Conda`
 (https://docs.conda.io/en/latest/).
 On CSCS machines it is recommended to install the leaner `Miniconda`
@@ -31,7 +31,7 @@ initialize conda (executing `conda init` and thereby adding a few commands at th
 end of your `.bashrc`) after installation, add the `-u` option:
 
 ```bash
-tmpl/tools/setup_miniconda.sh -p $SCRATCH -u
+tools/setup_miniconda.sh -p $SCRATCH -u
 ```
 
 In case you ever need to uninstall miniconda, do the following:
@@ -90,9 +90,9 @@ For decoding GRIB2 input data, ecCodes must be installed and the ecCodes and COS
 
 The package includes two functionalities: one for updating the phenological fields and the other to update the strength of the pollen emission (tuning factor). Both can be executed independently.
 
-The module `update_phenology` uses observed pollen concentrations to check whether the current ICON phenology matches the real world. In case of a mismatch the temperature sum thresholds are adapted to move forward or postpone the modelled pollen season. Technically speaking, the fields `tthrs` and `tthre` (for POAC, `saisl` instead) are adapted by using the GRIB2 fields  `T_2M`, `saisn` and `ctsum` and the observed pollen concentrations of the last 120 hours at hourly resolution in ATAB format.
+The module `update_phenology` uses observed pollen concentrations to check whether the current ICON phenology matches the real world. In case of a mismatch the temperature sum thresholds are adapted to move forward or postpone the modelled pollen season. Technically speaking, the fields `tthrs` and `tthre` (for POAC, `saisl` instead) are adapted by using the GRIB2 fields  `T_2M`, `saisn` and `ctsum` and the observed pollen concentrations of the last 120 hours at hourly resolution in ATAB format (missing data supported).
 
-The module `update_strength` uses both observed and modelled pollen concentrations to check whether the current ICON concentrations match the real world. In case of a mismatch the tuning field is adapted accordingly. Technically speaking, the field `tune` is adapted by using the GRIB2 field `saisn` and the observed and modelled pollen concentrations of the last 120 hours at hourly resolution in ATAB format.
+The module `update_strength` uses both observed and modelled pollen concentrations to check whether the current ICON concentrations match the real world. In case of a mismatch the tuning field is adapted accordingly. Technically speaking, the field `tune` is adapted by using the GRIB2 field `saisn` and the observed and modelled pollen concentrations of the last 120 hours at hourly resolution in ATAB format (missing data supported).
 
 For further details of the realtime pollen calibration concept one may refer to the paper above.
 
@@ -115,16 +115,15 @@ hour_incr : 1
 `POV_infile`: This GRIB2 file must include the fields specified above. It is used as template for `POV_outfile`
 `POV_outfile`: Same as `POV_infile` but with adapted values.
 `T2M_file`: This GRIB2 file must include T_2M (only used if the module `update_phenology` is called).
-`const_file`: This GRIB2 file must contain CLON and CLAT of the unstructured grid used in `POV_infile` and `T_2M`
+`const_file`: This GRIB2 file must contain CLON and CLAT of the unstructured grid used in `POV_infile` and `T_2M`.
 `station_obs_file`: Observed pollen concentrations of the last 120 hours (missing values allowed) in ATAB format.
 `station_mod_file`: Modelled pollen concentrations of the last 120 hours (missing values allowed) in ATAB format. Same stations as in `station_obs_file` (only used if the module `update_strength` is called).
-`hour_incr`: Increment of the timestamp of the outfile relative to the infile in hours (defaults to 1; negative values also supported)
+`hour_incr`: Increment of the timestamp of the outfile relative to the infile in hours (defaults to 1; negative values also supported).
 
 
 ### How to run the package
 
-Run
- The two modules are called this way:
+The two modules are called this way:
 ```bash
 cd <root directory of the installed package>
 conda activate <package_env_name>
@@ -161,10 +160,9 @@ pre-commit install
 ```
 
 If you run `pre-commit` without installing it before (line above), it will fail and the only way to recover it, is to do a forced reinstallation (`conda install --force-reinstall pre-commit`).
-You can also just run pre-commit selectively, whenever you want by typing (`pre-commit run --all-files`). Note that mypy and pylint take a bit of time, so it is really
-up to you, if you want to use pre-commit locally or not. In any case, after running pytest, you can commit and the linters will run at the latest on the GitHub actions server, when you push your changes to the main branch. Note that pytest is currently not invoked by pre-commit, so it will not run automatically. Automated testing can be set up with GitHub Actions or be implemented in a Jenkins pipeline (template for a plan available in `jenkins/`. See the next section for more details.
+You can also just run pre-commit selectively, whenever you want by typing (`pre-commit run --all-files`). We recommend to commit after pytest and pre-commit are successful. After pushing to the main branch (or into a branch with a PR to the main branch), the linters will run on the GitHub actions server. Note that pytest is currently not invoked by pre-commit, so it will not run automatically. Automated testing can be set up with GitHub Actions or be implemented in a Jenkins pipeline (template for a plan available in `jenkins/`. See the next section for more details.
 
-## Development tools  THIS CHATPER NEEDS TO BE ADAPTED
+## Development tools
 
 As this package was created with the SEN Python blueprint, it comes with a stack of development tools, which are described in more detail on
 (<https://meteoswiss-apn.github.io/mch-python-blueprint/>). Here, we give a brief overview on what is implemented.
@@ -172,8 +170,7 @@ As this package was created with the SEN Python blueprint, it comes with a stack
 ### Testing and coding standards
 
 Testing your code and compliance with the most important Python standards is a requirement for Python software written in SEN. To make the life of package
-administrators easier, the most important checks are run automatically on GitHub actions. If your code goes into production, it must additionally be tested on CSCS
-machines, which is only possible with a Jenkins pipeline (GitHub actions is running on a GitHub server).
+administrators easier, the most important checks are run automatically on GitHub actions.
 
 ### Pre-commit on GitHub actions
 
