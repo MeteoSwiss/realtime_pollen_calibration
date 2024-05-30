@@ -19,14 +19,13 @@ EXPORT=false
 CONDA=conda
 HELP=false
 
-help_msg="Usage: $(basename "${0}") [-n NAME] [-p VER] [-u] [-e] [-m] [-h]
+help_msg="Usage: $(basename "${0}") [-n NAME] [-p VER] [-u] [-e] [-h]
 
 Options:
  -n NAME    Env name [default: ${DEFAULT_ENV_NAME}
  -p VER     Python version [default: ${PYVERSION}]
  -u         Use unpinned requirements (minimal version restrictions)
  -e         Export environment files (requires -u)
- -m         Use mamba instead of conda
  -h         Print this help message and exit
 "
 
@@ -37,7 +36,6 @@ while getopts n:p:defhimu flag; do
         p) PYVERSION=${OPTARG};;
         e) EXPORT=true;;
         h) HELP=true;;
-        m) CONDA=mamba;;
         u) PINNED=false;;
         ?) echo -e "\n${help_msg}" >&2; exit 1;;
     esac
@@ -49,8 +47,8 @@ if ${HELP}; then
 fi
 
 echo "Setting up environment for installation"
-eval "$(conda shell.bash hook)" || exit  # NOT ${CONDA} (doesn't work with mamba)
-conda activate || exit # NOT ${CONDA} (doesn't work with mamba)
+eval "$(conda shell.bash hook)" || exit
+conda activate || exit
 
 # Create new env; pass -f to overwriting any existing one
 echo "Creating ${CONDA} environment"

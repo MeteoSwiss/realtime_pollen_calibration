@@ -64,9 +64,20 @@ ChangePhenologyFields = namedtuple(
 )
 
 pollen_types = ["ALNU", "BETU", "POAC", "CORY"]
+
+# thr_con_24 and thr_con_120 are thresholds for sums of hourly observed
+# pollen observations used to make sure that pollen calibration is only
+# performed if pollen concentrations were high enough to ensure robust
+# results of the pollen calibration.
 thr_con_24 = {"ALNU": 240, "BETU": 240, "POAC": 72, "CORY": 240}
 thr_con_120 = {"ALNU": 720, "BETU": 720, "POAC": 216, "CORY": 720}
+
+# failsafe is a limiter for the change applied to the phenological fields
+# tthrs and tthre (and saisl for POAC instead of tthre).
 failsafe = {"ALNU": 1000, "BETU": 2500, "POAC": 6000, "CORY": 2500}
+
+# jul_days_excl is the number of days since Dec. 1 to be excluded
+# in the calculation of the temperature sum
 jul_days_excl = {"ALNU": 14, "BETU": 40, "POAC": 46, "CORY": 3}
 
 

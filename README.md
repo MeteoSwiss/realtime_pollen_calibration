@@ -57,9 +57,6 @@ tools/setup_env.sh -u -e -n <package_env_name>
 
 *Hint*: If you are the package administrator, it is a good idea to understand what this script does, you can do everything manually with `conda` instructions.
 
-*Hint*: Use the flag `-m` to speed up the installation using mamba. Of course you will have to install mamba first (we recommend to install mamba into your base environment `conda install -c conda-forge mamba`). If you install mamba in another (maybe dedicated) environment, environments installed with mamba will be located
-in `<miniconda_root_dir>/envs/mamba/envs`, which is not very practical.
-
 The package itself is installed with `pip`. For development, install in editable mode:
 
 ```bash
@@ -94,6 +91,8 @@ The module `update_phenology` uses observed pollen concentrations to check wheth
 
 The module `update_strength` uses both observed and modelled pollen concentrations to check whether the current ICON concentrations match the real world. In case of a mismatch the tuning field is adapted accordingly. Technically speaking, the field `tune` is adapted by using the GRIB2 field `saisn` and the observed and modelled pollen concentrations of the last 120 hours at hourly resolution in ATAB format (missing data supported).
 
+Missing fields result in an error and thus no update of the fields. The input fields remain unchanged. If not all station data (observed or modelled) is available, the extraction will still take place and the update of the fields will be tried. However, input fields will remain unchanged if more than 10% of the data is missing.
+
 For further details of the realtime pollen calibration concept one may refer to the paper above.
 
 
@@ -104,41 +103,40 @@ For further details of the realtime pollen calibration concept one may refer to 
 The implementation includes a command line interface based on the click package. The configuration is done by editing the config.yaml file where the input/output is specified. There is the option to configure the increment of the timestamp of the outfile relative to the infile in hours. The config.yaml should include the following entries (see also the config.yaml provided):
 
 ```bash
-POV_infile : /store_new/mch/msopr/paa/RTcal_testdata/ART_POV_iconR19B08-grid_0001.gb2
-POV_outfile : ART_POV_iconR19B08-grid_0001_tune
-T2M_file : /store_new/mch/msopr/paa/RTcal_testdata/T_2M_KENDA-CH1_2024020118.gb2
-const_file : /store_new/mch/msopr/paa/RTcal_testdata/CLON_CLAT_ICON-CH1.gb2
-station_obs_file : /store_new/mch/msopr/paa/RTcal_testdata/pollen_measured_2024020118.atab
-station_mod_file : /store_new/mch/msopr/paa/RTcal_testdata/pollen_modelled_2024020118.atab
+POV_infile : <path>/ART_POV_iconR19B08-grid_0001.gb2
+POV_outfile : <path>/ART_POV_iconR19B08-grid_0001_tune
+T2M_file : <path>/T_2M_KENDA-CH1_2024020118.gb2
+const_file : <path>/CLON_CLAT_ICON-CH1.gb2
+station_obs_file : <path>/pollen_measured_2024020118.atab
+station_mod_file : <path>/pollen_modelled_2024020118.atab
 hour_incr : 1
 ```
-`POV_infile`: This GRIB2 file must include the fields specified above. It is used as template for `POV_outfile`
+`POV_infile`: This GRIB2 file must include the fields `tthrs`, `tthre` (for POAC, `saisl` instead), `saisn` and `ctsum` if the module `update_phenology` is called. If the module `update_strength` is called `POV_infile` must include the fields `saisn` and `tune`. `POV_infile` is used as template for `POV_outfile`, i.e. the whole file is copied to `POV_outfile` with adapted values. Date and time information of `POV_infile` does not have to be correct, ICON just throws warnings.
 `POV_outfile`: Same as `POV_infile` but with adapted values.
 `T2M_file`: This GRIB2 file must include T_2M (only used if the module `update_phenology` is called).
 `const_file`: This GRIB2 file must contain CLON and CLAT of the unstructured grid used in `POV_infile` and `T_2M`.
-`station_obs_file`: Observed pollen concentrations of the last 120 hours (missing values allowed) in ATAB format.
-`station_mod_file`: Modelled pollen concentrations of the last 120 hours (missing values allowed) in ATAB format. Same stations as in `station_obs_file` (only used if the module `update_strength` is called).
-`hour_incr`: Increment of the timestamp of the outfile relative to the infile in hours (defaults to 1; negative values also supported).
+`station_obs_file`: Observed hourly pollen concentrations (ATAB format) of the latest 120 hours relative to the target date of `POV_outfile`. The timestamps of the data in this file may vary depending on data availability, time of extraction etc. Missing values are allowed.
+`station_mod_file`: Modelled hourly pollen concentrations (ATAB format) of the latest 120 hours relative to the target date of `POV_outfile`. The timestamps of the data in this file may vary depending on data availability, time of extraction etc. Missing values are allowed. Same stations as in `station_obs_file` (only used if the module `update_strength` is called).
+`hour_incr`: Increment of the timestamp of the outfile relative to the infile in hours (defaults to 1; negative values also supported). This parameter should be adapted if the calibration is done for a subsequent run more than one hour ahead.
 
 
 ### How to run the package
 
 The two modules are called this way:
 ```bash
-cd <root directory of the installed package>
 conda activate <package_env_name>
-python src/realtime_pollen_calibration/run.py update_phenology config.yaml
-python src/realtime_pollen_calibration/run.py update_strength config.yaml
+realtime-pollen-calibration update_phenology <path_to_config>/config.yaml
+realtime-pollen-calibration update_strength <path_to_config>/config.yaml
 ```
 Help functionalities are also available:
 
 ```bash
-python src/realtime_pollen_calibration/run.py --help
-python src/realtime_pollen_calibration/run.py update_phenology --help
-python src/realtime_pollen_calibration/run.py update_strength --help
+realtime_pollen_calibration --help
+realtime_pollen_calibration update_phenology --help
+realtime_pollen_calibration update_strength --help
 ```
 
-The implementation assumes hourly resolution of the modelled and observed pollen concentrations (ATAB files). Hence, updating the tuning field once per hour is recommended. The phenology model of ICON makes one step per day at 12 UTC. Hence, we recommend to update the phenological fields also once per day some time before 12 UTC so that the updated fields can be used by the phenology model of ICON at 12 UTC.
+The implementation assumes hourly resolution of the modelled and observed pollen concentrations (ATAB files). Hence, updating the tuning field once per hour is recommended. The phenology model of ICON is called once per day at 12 UTC model time. Hence, we recommend to update the phenological fields (i.e. `tthrs` and `tthre` (for POAC, `saisl` instead of `tthre`)) also once per day some time before 12 UTC (model time) so that the updated fields can be used by ICON.
 
 
 ### Unit test

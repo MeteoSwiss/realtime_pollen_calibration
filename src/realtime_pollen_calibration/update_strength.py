@@ -24,6 +24,17 @@ from realtime_pollen_calibration import utils
 
 
 def read_pov_file(pov_infile, pol_fields, config_obj):
+    """Read fields from pov_infile as defined in config.yaml.
+
+    Args:
+        pov_infile: GRIB2 file containing pollen fields.
+        pol_fields: Names of the pollen fields.
+        config_obj: Object containing the configuration set in config.yaml
+
+    Returns:
+        Fields needed for the pollen calibration and the new timestamp.
+
+    """
     time_values = None
     cal_fields = {}
     with open(pov_infile, "rb") as fh:
