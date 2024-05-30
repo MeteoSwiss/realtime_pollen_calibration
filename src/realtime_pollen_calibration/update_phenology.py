@@ -9,7 +9,6 @@
 # Standard library
 from datetime import datetime, timedelta
 
-# Third-party
 import numpy as np
 import xarray as xr
 from eccodes import (  # type: ignore

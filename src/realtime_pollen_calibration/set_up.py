@@ -1,6 +1,5 @@
 """Setup the configuration."""
 
-# Third-party
 import yaml
 
 # First-party

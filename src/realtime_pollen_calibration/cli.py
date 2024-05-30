@@ -1,6 +1,5 @@
 """Command line interface of realtime_pollen_calibration."""
 
-# Third-party
 import click
 
 # First-party

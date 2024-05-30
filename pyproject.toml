@@ -48,7 +48,7 @@ addopts = [
 [tool.black]
 
 [tool.isort]
-default_section = "THIRDPARTY"
+default_section = "THIRD-PARTY"
 profile = "black"
 # Headings
 import_heading_stdlib = "Standard library"
@@ -67,7 +67,7 @@ known_first_party = [
     "realtime_pollen_calibration",
 ]
 # Explicitly define the sections
-sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
+sections = ["FUTURE", "STDLIB", "THIRD-PARTY", "FIRSTPARTY", "LOCALFOLDER"]
 
 [tool.mypy]
 

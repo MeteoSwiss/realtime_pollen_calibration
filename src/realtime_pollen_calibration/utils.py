@@ -11,7 +11,6 @@ from collections import namedtuple
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
-# Third-party
 import eccodes  # type: ignore
 import numpy as np  # type: ignore
 import pandas as pd  # type: ignore

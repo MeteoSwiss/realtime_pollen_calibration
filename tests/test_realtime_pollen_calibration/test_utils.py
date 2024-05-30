@@ -3,7 +3,6 @@
 # Standard library
 import logging
 
-# Third-party
 import cfgrib  # type: ignore
 import numpy as np
 from pyprojroot import here  # type: ignore
