@@ -48,7 +48,7 @@ addopts = [
 [tool.black]
 
 [tool.isort]
-default_section = "THIRDPARTY"
+default_section = "THIRD-PARTY"
 profile = "black"
 # Headings
 import_heading_stdlib = "Standard library"
