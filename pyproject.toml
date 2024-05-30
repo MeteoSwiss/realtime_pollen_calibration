@@ -66,6 +66,8 @@ known_first_party = [
     # Add first-party modules that may be misclassified by isort
     "realtime_pollen_calibration",
 ]
+# Explicitly define the sections
+sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
 
 [tool.mypy]
 
