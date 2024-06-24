@@ -100,7 +100,7 @@ For further details of the realtime pollen calibration concept one may refer to 
 
 ### How to configure the package
 
-The implementation includes a command line interface based on the click package. The configuration is done by editing the config.yaml file where the input/output is specified. There is the option to configure the increment of the timestamp of the outfile relative to the infile in hours. The config.yaml should include the following entries (samplefile names):
+The implementation includes a command line interface based on the click package. The configuration is done by editing the config.yaml file where the input/output is specified. There is the option to configure the increment of the timestamp of the outfile relative to the infile in hours. The config.yaml should include the following entries (sample file names):
 
 ```bash
 POV_infile : <path>/ART_POV_iconR19B08-grid_0001.gb2
