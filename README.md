@@ -100,7 +100,7 @@ For further details of the realtime pollen calibration concept one may refer to 
 
 ### How to configure the package
 
-The implementation includes a command line interface based on the click package. The configuration is done by editing the config.yaml file where the input/output is specified. There is the option to configure the increment of the timestamp of the outfile relative to the infile in hours. The config.yaml should include the following entries (see also the config.yaml provided):
+The implementation includes a command line interface based on the click package. The configuration is done by editing the config.yaml file where the input/output is specified. There is the option to configure the increment of the timestamp of the outfile relative to the infile in hours. The config.yaml should include the following entries (samplefile names):
 
 ```bash
 POV_infile : <path>/ART_POV_iconR19B08-grid_0001.gb2
@@ -136,7 +136,8 @@ realtime_pollen_calibration update_phenology --help
 realtime_pollen_calibration update_strength --help
 ```
 
-The implementation assumes hourly resolution of the modelled and observed pollen concentrations (ATAB files). Hence, updating the tuning field once per hour is recommended. The phenology model of ICON is called once per day at 12 UTC model time. Hence, we recommend to update the phenological fields (i.e. `tthrs` and `tthre` (for POAC, `saisl` instead of `tthre`)) also once per day some time before 12 UTC (model time) so that the updated fields can be used by ICON.
+The implementation assumes hourly resolution of the modelled and observed pollen concentrations (ATAB files). Hence, updating the tuning field  `tune`) once per hour is recommended (i.e. running `realtime-pollen-calibration update_strength <path_to_config>/config.yaml`).
+Updating the phenological fields (i.e. `tthrs` and `tthre` (for POAC, `saisl` instead of `tthre`)) should be done once per day (i.e. running `realtime-pollen-calibration update_phenology <path_to_config>/config.yaml`).
 
 
 ### Unit test
