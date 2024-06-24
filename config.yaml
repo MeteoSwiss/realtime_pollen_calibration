@@ -1,8 +1,0 @@
-pov_infile : /users/paa/09_RTcalib/RTcal_testdata/ART_POV_iconR19B08-grid_0001_BETU_POAC_2024042910
-# pov_infile : /users/paa/09_RTcalib/RTcal_testdata/ART_POV_iconR19B08-grid_0001.gb2
-pov_outfile : ART_POV_iconR19B08-grid_0001_tune
-t2m_file : /users/paa/09_RTcalib/RTcal_testdata/T_2M_KENDA-CH1_2024020118.gb2
-const_file : /users/paa/09_RTcalib/RTcal_testdata/CLON_CLAT_ICON-CH1.gb2
-station_obs_file : /users/paa/09_RTcalib/RTcal_testdata/pollen_measured_2024020118.atab
-station_mod_file : /users/paa/09_RTcalib/RTcal_testdata/pollen_modelled_2024020118.atab
-hour_incr : 1
