@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-datapath=/users/paa/09_RTcalib/RTcal_testdata
+datapath=/users/paa/RTcal_testdata
 localpath=$PWD
 
 # copy Testdata for RT pollen calibration in to local directory
@@ -21,7 +21,8 @@ hour_incr : 1
 EOF
 
 # activate conda env
-source $CONDA_PREFIX/etc/profile.d/conda.sh
+conda_root=$(conda info --base)
+source $conda_root/etc/profile.d/conda.sh
 conda init bash --no-user --install --system
 conda activate RTcal
 

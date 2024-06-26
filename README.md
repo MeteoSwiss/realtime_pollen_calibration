@@ -70,8 +70,9 @@ Once your package is installed, run the tests by typing:
 
 ```
 conda activate <package_env_name>
-tools/get_data.sh
 pytest
+conda deactivate
+tools/get_data.sh
 ```
 
 If the tests pass, you are good to go. If not, contact the package administrators. Make sure to update your requirement files and export your environments after installation every time you add new imports while developing. Check the next section to find some guidance on the development process if you are new to Python and/or SEN.
