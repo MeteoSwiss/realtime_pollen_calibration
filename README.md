@@ -70,6 +70,7 @@ Once your package is installed, run the tests by typing:
 
 ```
 conda activate <package_env_name>
+tools/get_data.sh
 pytest
 ```
 
