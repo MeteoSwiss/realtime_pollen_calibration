@@ -62,6 +62,7 @@ The package itself is installed with `pip`. For development, install in editable
 ```bash
 conda activate <package_env_name>
 pip install --editable .
+conda deactivate
 ```
 
 *Warning:* Make sure you use the right pip, i.e. the one from the installed conda environment (`which pip` should point to something like `path/to/miniconda/envs/<package_env_name>/bin/pip`).
