@@ -113,11 +113,11 @@ hour_incr : 1
 ```
 `pov_infile`: This GRIB2 file must include the fields `tthrs`, `tthre` (for POAC, `saisl` instead), `saisn` and `ctsum` if the module `update_phenology` is called. If the module `update_strength` is called `pov_infile` must include the fields `saisn` and `tune`. `pov_infile` is used as template for `pov_outfile`, i.e. the whole file is copied to `pov_outfile` with adapted values. Date and time information of `pov_infile` does not have to be correct, ICON just throws warnings.
 
-`pov_outfile`: Same as `pov_infile` but with adapted values.  
-`t2m_file`: This GRIB2 file must include T_2M valid for 12h UTC of the current day (only used if the module `update_phenology` is called).   
-`const_file`: This GRIB2 file must contain CLON and CLAT of the unstructured grid used in `pov_infile` and `t2m_file`.  
-`station_obs_file`: Observed hourly pollen concentrations (ATAB format) of the latest 120 hours relative to the target date of `pov_outfile`. The timestamps of the data in this file may vary depending on data availability, time of extraction etc. Missing values are allowed.  
-`station_mod_file`: Modelled hourly pollen concentrations (ATAB format) of the latest 120 hours relative to the target date of `pov_outfile`. The timestamps of the data in this file may vary depending on data availability, time of extraction etc. Missing values are allowed. Same stations as in `station_obs_file` (only used if the module `update_strength` is called).  
+`pov_outfile`: Same as `pov_infile` but with adapted values.
+`t2m_file`: This GRIB2 file must include T_2M valid for 12h UTC of the current day (only used if the module `update_phenology` is called).
+`const_file`: This GRIB2 file must contain CLON and CLAT of the unstructured grid used in `pov_infile` and `t2m_file`.
+`station_obs_file`: Observed hourly pollen concentrations (ATAB format) of the latest 120 hours relative to the target date of `pov_outfile`. The timestamps of the data in this file may vary depending on data availability, time of extraction etc. Missing values are allowed.
+`station_mod_file`: Modelled hourly pollen concentrations (ATAB format) of the latest 120 hours relative to the target date of `pov_outfile`. The timestamps of the data in this file may vary depending on data availability, time of extraction etc. Missing values are allowed. Same stations as in `station_obs_file` (only used if the module `update_strength` is called).
 `hour_incr`: Increment of the timestamp of the outfile relative to the infile in hours (defaults to 1; negative values also supported). This parameter should be adapted if the calibration is done for a subsequent run more than one hour ahead.
 
 
