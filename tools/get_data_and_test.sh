@@ -13,7 +13,7 @@ scp -r $datapath $localpath
 cat <<EOF > $localpath/config.yaml
 pov_infile : $localpath/RTcal_testdata/ART_POV_iconR19B08-grid_0001_BETU_POAC_2024042910
 pov_outfile : $localpath/ART_POV_iconR19B08-grid_0001_tune
-t2m_file : $localpath/RTcal_testdata/T_2M_KENDA-CH1_2024020118.gb2
+t2m_file : $localpath/RTcal_testdata/T_2M_KENDA-CH1_2024020112.gb2
 const_file : $localpath/RTcal_testdata/CLON_CLAT_ICON-CH1.gb2
 station_obs_file : $localpath/RTcal_testdata/pollen_measured_2024020118.atab
 station_mod_file : $localpath/RTcal_testdata/pollen_modelled_2024020118.atab
