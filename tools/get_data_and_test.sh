@@ -1,10 +1,10 @@
 #!/bin/bash -e
 
-datapath=/users/paa/RTcal_testdata
+datapath=balfrin:/users/paa/RTcal_testdata
 localpath=$PWD
 
 # copy Testdata for RT pollen calibration in to local directory
-cp -r $datapath $localpath
+scp -r $datapath $localpath
 
 # temporarily: do a full test. Needs to be incorporated in the python
 # test framework

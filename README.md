@@ -62,6 +62,7 @@ The package itself is installed with `pip`. For development, install in editable
 ```bash
 conda activate <package_env_name>
 pip install --editable .
+conda deactivate
 ```
 
 *Warning:* Make sure you use the right pip, i.e. the one from the installed conda environment (`which pip` should point to something like `path/to/miniconda/envs/<package_env_name>/bin/pip`).
@@ -69,10 +70,7 @@ pip install --editable .
 Once your package is installed, run the tests by typing:
 
 ```
-conda activate <package_env_name>
-pytest
-conda deactivate
-tools/get_data.sh
+tools/get_data_and_test.sh
 ```
 
 If the tests pass, you are good to go. If not, contact the package administrators. Make sure to update your requirement files and export your environments after installation every time you add new imports while developing. Check the next section to find some guidance on the development process if you are new to Python and/or SEN.
