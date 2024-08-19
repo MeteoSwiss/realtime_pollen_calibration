@@ -32,7 +32,7 @@ conda activate RTcal
 LOG_FILE="update_phenology.log"
 
 # Run update_phenology and save both stdout and stderr in the log file
-realtime-pollen-calibration update_phenology $localpath/config.yaml > "$localpath/$LOG_FILE" 2>&1 
+realtime-pollen-calibration update_phenology $localpath/config.yaml > "$localpath/$LOG_FILE" 2>&1
 
 # Check the exit status and tell the user
 if [ $? -ne 0 ]; then
