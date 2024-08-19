@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash
 
 datapath=balfrin:/users/paa/RTcal_testdata
 localpath=$PWD
@@ -26,9 +26,33 @@ source $conda_root/etc/profile.d/conda.sh
 conda init bash --no-user --install --system
 conda activate RTcal
 
-# run the test
-realtime-pollen-calibration update_phenology $localpath/config.yaml
-realtime-pollen-calibration update_strength $localpath/config.yaml
+# run the test, capture exit status and log information
+
+# Define the log file
+LOG_FILE="update_phenology.log"
+
+# Run update_phenology and save both stdout and stderr in the log file
+realtime-pollen-calibration update_phenology $localpath/config.yaml > "$localpath/$LOG_FILE" 2>&1 
+
+# Check the exit status and tell the user
+if [ $? -ne 0 ]; then
+    echo "WARNING: Module update_phenology failed with exit status > 0. Check the log file for details: $localpath/$LOG_FILE"
+else
+    echo "Module update_phenology successful. Log information is available in: $localpath/$LOG_FILE"
+fi
+
+# Define the log file
+LOG_FILE="update_strength.log"
+
+# Run update_strength and save both stdout and stderr in the log file
+realtime-pollen-calibration update_strength $localpath/config.yaml > "$localpath/$LOG_FILE" 2>&1
+
+# Check the exit status and tell the user
+if [ $? -ne 0 ]; then
+    echo "WARNING: Module update_strength failed with exit status > 0. Check the log file for details: $localpath/$LOG_FILE"
+else
+    echo "Module update_strength successful. Log information is available in: $localpath/$LOG_FILE"
+fi
 
 # clean up
 # remove output and config file
