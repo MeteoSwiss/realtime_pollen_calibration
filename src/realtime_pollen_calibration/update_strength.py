@@ -64,7 +64,7 @@ def read_pov_file(pov_infile, pol_fields, config_obj):
     return cal_fields, time_values
 
 
-def update_strength_realtime(config_obj: utils.Config, verbose: bool = False):
+def update_strength_realtime(config_obj: utils.Config, verbose: bool = True):
     """Update the tune field.
 
     Args:

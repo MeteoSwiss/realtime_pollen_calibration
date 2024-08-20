@@ -83,7 +83,7 @@ def read_t2m_file(t2m_file, config_obj):
     return cal_fields, time_values
 
 
-def update_phenology_realtime(config_obj: utils.Config, verbose: bool = False):
+def update_phenology_realtime(config_obj: utils.Config, verbose: bool = True):
     """Update the temperature threshold fields and POACsaisl.
 
     Args:

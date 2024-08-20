@@ -7,6 +7,7 @@
 """Utils for the command line tool."""
 # Standard library
 import logging
+import sys
 from collections import namedtuple
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -114,8 +115,9 @@ def read_clon_clat(const_file):
 
 
 def read_atab(
-    pollen_type: str, file_obs_stns: str, file_mod_stns: str = "", verbose: bool = False
+    pollen_type: str, file_obs_stns: str, file_mod_stns: str = "", verbose: bool = True
 ) -> ObsModData:
+    # pylint: disable=too-many-locals
     """Read the pollen concentrations and the station locations from the ATAB files.
 
     Args:
@@ -179,14 +181,17 @@ def read_atab(
     data = pd.read_csv(
         file_obs_stns,
         header=headerdata.n_header,
-        delim_whitespace=True,
+        sep=r"\s+",
         parse_dates=[[1, 2, 3, 4, 5]],
     )
     data = data[data["PARAMETER"] == pollen_type].iloc[:, 2:].to_numpy()
     if file_mod_stns != "":
         stn_indicators_mod = None
+        missing_value = None
         with open(file_mod_stns, encoding="utf-8") as f:
             for n, line in enumerate(f):
+                if line.strip()[0:18] == "Missing_value_code":
+                    missing_value = float(line.strip()[20:])
                 if line.strip()[0:9] == "Indicator":
                     stn_indicators_mod = np.array(line.strip()[29:].split("         "))
                 if line.strip()[0:9] == "PARAMETER":
@@ -196,14 +201,26 @@ def read_atab(
         data_mod = pd.read_csv(
             file_mod_stns,
             header=n_header_mod,
-            delim_whitespace=True,
+            sep=r"\s+",
             parse_dates=[[3, 4, 5, 6, 7]],
         )
         data_mod = data_mod[data_mod["PARAMETER"] == pollen_type].iloc[:, 4:].to_numpy()
+        if missing_value in data_mod:
+            print(
+                "There is at least one missing value",
+                f"in the model data file {file_mod_stns}.\n",
+                "Please check the reason (fieldextra retrieval namelist?).",
+                "No pollen calibration update is performed until this is fixed! ",
+                "Pollen in ICON will still work, but calibration fields get ",
+                "more and more outdated.",
+            )
+            sys.exit(1)
     else:
         data_mod = 0
         istation_mod = 0
-    data = treat_missing(data, headerdata.missing_value, verbose=verbose)
+    data = treat_missing(
+        data, headerdata.missing_value, headerdata.stn_indicators, verbose=verbose
+    )
     return ObsModData(
         data, headerdata.coord_stns, headerdata.missing_value, data_mod, istation_mod
     )
@@ -228,16 +245,14 @@ def create_data_arrays(cal_fields, clon, clat, time_values):
 def treat_missing(
     array,
     missing_value: float = -9999.0,
-    tune_pol_default: float = 1.0,
-    verbose: bool = False,
+    stn_indicators: str = "",
+    verbose: bool = True,
 ):
     """Treat the missing values of the input array.
 
     Args:
         array: Array containing the concentration values.
         missing_value: Value considered as a missing value.
-        tune_pol_default: Default value to which all values of a station
-                are set if more than 10% of the observations are missing.
         verbose: Optional additional debug prints.
 
     Returns:
@@ -251,27 +266,32 @@ def treat_missing(
         skip_missing_stn[istation] = np.count_nonzero(array_missing[:, istation])
         if verbose:
             print(
-                f"Station n°{istation} has",
+                f"Station {stn_indicators[istation]} has",
                 f"{skip_missing_stn[istation]} missing values",
             )
         if skip_missing_stn[istation] > 0:
             if (
                 np.count_nonzero(np.abs(array[:, istation] - missing_value) < 0.01)
                 / len(array[:, istation])
-                < 0.1
+                < 0.5
             ):
                 idx1 = np.where(np.abs(array[:, istation] - missing_value) > 0.01)
                 idx2 = np.where(np.abs(array[:, istation] - missing_value) < 0.01)
                 if verbose:
                     print(
-                        "Less than 10% of the data is missing, ",
+                        "Less than 50% of the data is missing, ",
                         f"mean of the rest is: {np.mean(array[idx1, istation])}",
                     )
                 array[idx2, istation] = np.mean(array[idx1, istation])
             else:
-                if verbose:
-                    print("More than 10% of the data is missing")
-                array[:, istation] = tune_pol_default
+                print(
+                    f"Station {stn_indicators[istation]} has more than 50% missing ",
+                    "data. Please check the reason (Does jretrievedwh still work?).\n",
+                    "No pollen calibration update is performed until this is fixed! ",
+                    "Pollen in ICON will still work, but calibration fields get ",
+                    "more and more outdated.",
+                )
+                sys.exit(1)
     return array
 
 
@@ -427,7 +447,6 @@ def get_change_tune(  # pylint: disable=R0913
                 f"Current tune value {tune_stns.values[0]} ",
                 f"and saisn: {saisn_stns.values[0]}",
             )
-            print("-----------------------------------------")
         if (saisn_stns > 0) and ((sum_obs <= 720) or (sum_mod <= 720)):
             if verbose:
                 print(
@@ -497,6 +516,7 @@ def get_change_phenol(  # pylint: disable=R0912,R0914,R0915
         sum_obs = np.sum(obs_mod_data.data_obs[:, istation])
         if verbose:
             print(
+                f"Current pollen type is: {pollen_type}, ",
                 f"Current station n°{istation}, ",
                 f"(lat: {obs_mod_data.coord_stns[istation][0]}, ",
                 f"lon: {obs_mod_data.coord_stns[istation][1]}), ",
