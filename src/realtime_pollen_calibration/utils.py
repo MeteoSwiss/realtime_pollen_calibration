@@ -635,6 +635,37 @@ def get_change_phenol(  # pylint: disable=R0912,R0914,R0915
     return ChangePhenologyFields(change_tthrs, change_tthre, change_saisl)
 
 
+def check_mandatory_fields(cal_fields, pol_fields, pov_infile):
+    """Check if all mandatory fields for all species read are present.
+
+    Args:
+        cal_fields: Dictionary of calibration fields.
+        pol_fields: Names of the pollen fields.
+        pov_infile: GRIB2 file containing pollen fields.
+
+    Exits:
+        If any mandatory fields are missing.
+
+    """
+    species_read = {key[:4] for key in cal_fields.keys()}
+
+    req_fields = [fld for fld in pol_fields if fld[:4] in species_read]
+
+    missing_fields = [fld for fld in req_fields if fld not in cal_fields.keys()]
+
+    if missing_fields:
+        print(
+            f"The mandatory field(s): {missing_fields}\n",
+            f"is/are missing in {pov_infile}\n"
+            "No pollen calibration is done until this is fixed!\n"
+            "Pollen are still calculated but this should be fixed "
+            "within a few days.",
+        )
+        sys.exit(1)
+    else:
+        print("All mandatory fields have been read from pov_infile.")
+
+
 def to_grib(inp: str, outp: str, dict_fields: dict, hour_incr: int) -> None:
     """Output fields to a GRIB file.
 

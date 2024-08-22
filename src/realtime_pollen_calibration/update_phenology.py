@@ -7,6 +7,7 @@
 """A module for the update of start and end of the pollen season."""
 
 # Standard library
+import sys
 from datetime import datetime, timedelta
 
 import numpy as np
@@ -28,7 +29,6 @@ def read_pov_file(pov_infile, pol_fields):
     Args:
         pov_infile: GRIB2 file containing pollen fields.
         pol_fields: Names of the pollen fields.
-        config_obj: Object containing the configuration
 
     Returns:
         Fields for the pollen calibration.
@@ -51,6 +51,10 @@ def read_pov_file(pov_infile, pol_fields):
 
             # Delete the message
             codes_release(rec)
+
+    # Check if all mandatory fields for all species read are present. If not, exit.
+    utils.check_mandatory_fields(cal_fields, pol_fields, pov_infile)
+
     return cal_fields
 
 
@@ -80,6 +84,16 @@ def read_t2m_file(t2m_file, config_obj):
                 date_obj_fmt = date_obj.strftime("%Y-%m-%dT%H:00:00.000000000")
                 time_values = np.datetime64(date_obj_fmt)
             codes_release(rec)
+    if "T_2M" not in cal_fields:
+        print(
+            f"The mandatory field T_2M could not be read from {t2m_file}\n"
+            "No update of the phenology is done until this is fixed!\n"
+            "Pollen are still calculated but this should be fixed "
+            "within a few days."
+        )
+        sys.exit(1)
+    else:
+        print("T_2M field has been read from t2m_file.")
     return cal_fields, time_values
 
 
