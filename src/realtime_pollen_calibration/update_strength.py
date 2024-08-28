@@ -61,10 +61,14 @@ def read_pov_file(pov_infile, pol_fields, config_obj):
                 time_values = np.datetime64(date_obj_fmt)
 
             codes_release(rec)
+
+    # Check if all mandatory fields for all species read are present. If not, exit.
+    utils.check_mandatory_fields(cal_fields, pol_fields, pov_infile)
+
     return cal_fields, time_values
 
 
-def update_strength_realtime(config_obj: utils.Config, verbose: bool = False):
+def update_strength_realtime(config_obj: utils.Config, verbose: bool = True):
     """Update the tune field.
 
     Args:
