@@ -7,8 +7,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "realtime-pollen-calibration"
-version = "0.1.0"
-description = "Simon Adamov's Realtime Pollen Calibration"
+version = "0.2.0"
+description = "Simon Adamov's Realtime Pollen Calibration, ICON extension by Andreas Pauling"
 readme = "README.md"
 keywords = [
     "Realtime Pollen Calibration",
@@ -18,20 +18,21 @@ classifiers = [
     "Intended Audience :: Developers",
     "Natural Language :: English",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
 ]
 requires-python = ">=3.9"
 authors = [
     {name="Simon Adamov", email="simon.adamov@meteoswiss.ch"},
+    {name="Andreas Pauling", email="andreas.pauling@meteoswiss.ch"},
 ]
 
 [project.urls]
-source = "MeteoSwiss-APN/realtime-pollen-calibration"
-documentation = "https://github.io/sadamov/realtime-pollen-calibration"
+source = "MeteoSwiss/realtime-pollen-calibration"
+documentation = "https://github.com/MeteoSwiss/realtime_pollen_calibration"
 
 [project.scripts]
 # Format: <command> = "<package>.<module>:<function>"
-# realtime-pollen-calibration = "realtime_pollen_calibration.cli:main"
+realtime-pollen-calibration = "realtime_pollen_calibration.cli:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -47,11 +48,8 @@ addopts = [
 [tool.black]
 
 [tool.isort]
-default_section = "THIRDPARTY"
-force_grid_wrap = false
-force_single_line = true
-line_length = 88
-order_by_type = false
+default_section = "THIRD-PARTY"
+profile = "black"
 # Headings
 import_heading_stdlib = "Standard library"
 import_heading_thirdparty = "Third-party"
@@ -59,15 +57,17 @@ import_heading_firstparty = "First-party"
 import_heading_localfolder = "Local"
 # Known modules to avoid misclassification
 known_standard_library = [
-    # Add standard library modules that are misclassified by isort
+    # Add standard library modules that may be misclassified by isort
 ]
 known_third_party = [
-    # Add third-party modules that are misclassified by isort
+    # Add third-party modules that may be misclassified by isort
 ]
 known_first_party = [
-    # Add first-party modules that are misclassified by isort
+    # Add first-party modules that may be misclassified by isort
     "realtime_pollen_calibration",
 ]
+# Explicitly define the sections
+sections = ["FUTURE", "STDLIB", "THIRD-PARTY", "FIRSTPARTY", "LOCALFOLDER"]
 
 [tool.mypy]
 
@@ -157,3 +157,4 @@ ignore_directives = [
 
 [tool.codespell]
 ignore-words-list = "inout"
+skip = "requirements/*"

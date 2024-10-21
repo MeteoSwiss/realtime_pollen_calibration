@@ -1,13 +1,18 @@
 """Command line interface of realtime_pollen_calibration."""
-# Third-party
+
 import click
+
+# First-party
+from realtime_pollen_calibration.set_up import set_up_config
+from realtime_pollen_calibration.update_phenology import update_phenology_realtime
+from realtime_pollen_calibration.update_strength import update_strength_realtime
+from realtime_pollen_calibration.utils import Config
 
 # Local
 from . import __version__
-from .mutable_number import MutableNumber
 
 
-# pylint: disable=W0613  # unused-argument (param)
+# pylint: disable-next=W0613  # unused-argument (param)
 def print_version(ctx, param, value: bool) -> None:
     """Print the version number and exit."""
     if value:
@@ -15,26 +20,6 @@ def print_version(ctx, param, value: bool) -> None:
         ctx.exit(0)
 
 
-# pylint: disable=W0613  # unused-argument (args, kwargs)
-@click.pass_context
-def print_number(ctx, *args, **kwargs) -> None:
-    """Print the current number."""
-    number = ctx.obj["number"].get()
-    click.echo(f"{number:g}")
-
-
-@click.group(
-    context_settings={"help_option_names": ["-h", "--help"]},
-    no_args_is_help=True,
-    invoke_without_command=True,
-    chain=True,
-    result_callback=print_number,
-)
-@click.argument(
-    "number",
-    type=float,
-    nargs=1,
-)
 @click.option(
     "--version",
     "-V",
@@ -43,54 +28,34 @@ def print_number(ctx, *args, **kwargs) -> None:
     expose_value=False,
     callback=print_version,
 )
-@click.option(
-    "--verbose",
-    "-v",
-    count=True,
-    help="Increase verbosity (specify multiple times for more).",
-)
-@click.pass_context
-def main(ctx, number: float, **kwargs) -> None:
-    """Console script for test_cli_project."""
-    if ctx.obj is None:
-        ctx.obj = {}
-    ctx.obj["number"] = MutableNumber(number)
-    ctx.obj.update(kwargs)
+@click.group()
+def main():
+    pass
 
 
-def print_operation(ctx, operator: str, value: float) -> None:
-    if ctx.obj["verbose"]:
-        number = ctx.obj["number"]
-        click.echo(f"{number.get(-2):g} {operator} {value:g} = {number.get():g}")
+@main.command("update_phenology")
+@click.argument("config_file", type=click.Path(exists=True, readable=True))
+def update_phenology(config_file):
+    """Configure and call update_phenology_realtime.
+
+    Args:
+        config_file (str): yaml configuration file
+
+    """
+    config_obj: Config = set_up_config(config_file)
+
+    update_phenology_realtime(config_obj, True)
 
 
-@main.command("plus", help="addition")
-@click.argument("addend", type=float, nargs=1)
-@click.pass_context
-def plus(ctx, addend: float) -> None:
-    ctx.obj["number"].add(addend)
-    print_operation(ctx, "+", addend)
+@main.command("update_strength")
+@click.argument("config_file", type=click.Path(exists=True, readable=True))
+def update_strength(config_file):
+    """Configure and call update_strength_realtime.
 
+    Args:
+        config_file (str): yaml configuration file
 
-@main.command("minus", help="subtraction")
-@click.argument("subtrahend", type=float, nargs=1)
-@click.pass_context
-def minus(ctx, subtrahend: float) -> None:
-    ctx.obj["number"].subtract(subtrahend)
-    print_operation(ctx, "-", subtrahend)
+    """
+    config_obj: Config = set_up_config(config_file)
 
-
-@main.command("times", help="multiplication")
-@click.argument("factor", type=float, nargs=1)
-@click.pass_context
-def times(ctx, factor: float) -> None:
-    ctx.obj["number"].multiply(factor)
-    print_operation(ctx, "*", factor)
-
-
-@main.command("by", help="division")
-@click.argument("divisor", type=float, nargs=1)
-@click.pass_context
-def by(ctx, divisor: float) -> None:
-    ctx.obj["number"].divide(divisor)
-    print_operation(ctx, "/", divisor)
+    update_strength_realtime(config_obj, True)

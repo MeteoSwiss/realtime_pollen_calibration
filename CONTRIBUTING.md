@@ -8,7 +8,7 @@ You can contribute in many ways.
 
 ### Report Bugs
 
-Report bugs as [GitHub issues](https://github.com/MeteoSwiss-APN/realtime-pollen-calibration/issues).
+Report bugs as [GitHub issues](https://github.com/MeteoSwiss/realtime_pollen_calibration/issues).
 
 If you are reporting a bug, please include
 
@@ -18,11 +18,11 @@ If you are reporting a bug, please include
 
 ### Fix Bugs
 
-Look through the [GitHub issues](https://github.com/MeteoSwiss-APN/realtime-pollen-calibration/issues) for bugs. Anything tagged with "bug" and "help wanted" is open to whoever wants to implement it.
+Look through the [GitHub issues](https://github.com/MeteoSwiss/realtime_pollen_calibration/issues) for bugs. Anything tagged with "bug" and "help wanted" is open to whoever wants to implement it.
 
 ### Implement Features
 
-Look through the  [GitHub issues](https://github.com/MeteoSwiss-APN/realtime-pollen-calibration/issues) for features. Anything tagged with "enhancement" and "help wanted" is open to whoever wants to implement it.
+Look through the  [GitHub issues](https://github.com/MeteoSwiss/realtime_pollen_calibration/issues) for features. Anything tagged with "enhancement" and "help wanted" is open to whoever wants to implement it.
 
 ### Write Documentation
 
@@ -30,7 +30,7 @@ Realtime Pollen Calibration could always use more documentation, whether as part
 
 ### Submit Feedback
 
-The best way to send feedback is to file a [GitHub issue]( https://github.com/MeteoSwiss-APN/realtime-pollen-calibration/issues).
+The best way to send feedback is to file a [GitHub issue](https://github.com/MeteoSwiss/realtime_pollen_calibration/issues).
 
 If you are proposing a feature,
 
@@ -42,7 +42,7 @@ If you are proposing a feature,
 
 Ready to contribute? Here's how to set up `realtime-pollen-calibration` for local development.
 
-1. Fork the [`realtime-pollen-calibration` repo](https://github.com/ on GitHub.
+1. Fork the [`realtime-pollen-calibration` repo](https://github.com/) on GitHub.
 2. Clone your fork locally:
 
     ```bash
@@ -56,15 +56,13 @@ Ready to contribute? Here's how to set up `realtime-pollen-calibration` for loca
     ./tools/setup_env.sh
     ```
 
-    This will create a conda environment named `realtime-pollen-calibration` (change with `-n`) and install the following:
+    This will create a conda environment named `realtime-pollen-calibration` (change with `-n`) and install the pinned runtime and development dependencies in `requirements/environment.yml`.
 
-    - Pinned runtime and development dependencies in `requirements/environment.yml`
-    - The `realtime-pollen-calibration` package itself in editable mode.
-
-    Activate the environment:
+    Install the package itself in editable mode.
 
     ```bash
     conda activate realtime-pollen-calibration
+    pip install --editable .
     ```
 
     Use `-u` to get the newest package versions (unpinned dependencies in `requirements/requirements.yml`), and additionally `-e` to update the environment files.
@@ -105,7 +103,7 @@ Before you submit a pull request, check that it meets these guidelines:
 
 1. The pull request should include tests.
 2. If the pull request adds functionality, the docs should be updated. Put your new functionality into a function with a docstring, and add the feature to the list in `README.md`.
-3. The pull request should work for Python 3.6 and 3.7, and for PyPy. Make sure that the tests pass for all supported Python versions.
+3. The pull request should work for Python 3.9, and for PyPy. Make sure that the tests pass for all supported Python versions.
 
 ## Tips
 
@@ -175,11 +173,3 @@ Alternatively, use the provided script
 to create a environment from unpinned (`-u`) runtime and development dependencies and export (`-e`) it (consider throwing in `-m` for good measure to speed things up with `mamba`).
 
 _Note that the separation of unpinned runtime and development dependencies into separate files (`requirements.yml` and `dev-requirements.yml`, respectively) has been given up because when creating an environment from multiple YAML files (with `conda env create` and `conda env update`), only the version restrictions in the last file are guaranteed to be respected, so when installing devevelopment dependencies from `dev-requirements.yml` into an environment created from `requirements.yml`, the solver does not take version restrictions in the latter file into account anymore, potentially resulting in inconsistent production and development environments. Given the negligible overhead (in terms of memory etc.) of installing development dependencies in production environments, they are only separated from the runtime dependencies in `requirements.yml` by a comment._
-
-## How to provide executable scripts
-
-By default, a single executable script called realtime-pollen-calibration is provided. It is created when the package is installed. When you call it, the main function (`cli`) in `src/realtime_pollen_calibration/cli.py` is called.
-
-When the package is installed, a executable script named `realtime-pollen-calibration` is created in the bin folder of the active conda environment. Upon calling this script in the shell, the `main` function in `src/realtime_pollen_calibration/cli.py` is executed.
-
-The scripts, their names and entry points are specified in `pyproject.toml` in the `[project.scripts]` section. Just add additional entries to provide more scripts to the users of your package.
