@@ -1,10 +1,11 @@
 #!/bin/bash
 
-datapath=balfrin:/users/paa/RTcal_testdata
+datapath=balfrin:/store_new/mch/msopr/osm/MISC/GIT_DATA/python/pollen_calibration
 localpath=$PWD
 
 # copy Testdata for RT pollen calibration in to local directory
 scp -r $datapath $localpath
+mv ./pollen_calibration ./RTcal_testdata
 
 # temporarily: do a full test. Needs to be incorporated in the python
 # test framework
