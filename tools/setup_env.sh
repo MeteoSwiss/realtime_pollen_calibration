@@ -1,15 +1,13 @@
 #!/bin/bash
 #
 # Create conda environment with pinned or unpinned requirements
-
-
-if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
-  echo "Please simply call the script instead of sourcing it!"
-  return
-fi
+#
+# - 2022-08 (D. Regenass) Write original script
+# - 2022-09 (S. Ruedisuehli) Refactor; add some options
+#
 
 # Default env names
-DEFAULT_ENV_NAME="RTcal"
+DEFAULT_ENV_NAME="realtime_pollen_calibration"
 
 # Default options
 ENV_NAME="${DEFAULT_ENV_NAME}"
@@ -19,13 +17,14 @@ EXPORT=false
 CONDA=conda
 HELP=false
 
-help_msg="Usage: $(basename "${0}") [-n NAME] [-p VER] [-u] [-e] [-h]
+help_msg="Usage: $(basename "${0}") [-n NAME] [-p VER] [-u] [-e] [-m] [-h]
 
 Options:
  -n NAME    Env name [default: ${DEFAULT_ENV_NAME}
  -p VER     Python version [default: ${PYVERSION}]
  -u         Use unpinned requirements (minimal version restrictions)
  -e         Export environment files (requires -u)
+ -m         Use mamba instead of conda
  -h         Print this help message and exit
 "
 
@@ -36,6 +35,7 @@ while getopts n:p:defhimu flag; do
         p) PYVERSION=${OPTARG};;
         e) EXPORT=true;;
         h) HELP=true;;
+        m) CONDA=mamba;;
         u) PINNED=false;;
         ?) echo -e "\n${help_msg}" >&2; exit 1;;
     esac
@@ -47,8 +47,8 @@ if ${HELP}; then
 fi
 
 echo "Setting up environment for installation"
-eval "$(conda shell.bash hook)" || exit
-conda activate || exit
+eval "$(conda shell.bash hook)" || exit  # NOT ${CONDA} (doesn't work with mamba)
+conda activate || exit # NOT ${CONDA} (doesn't work with mamba)
 
 # Create new env; pass -f to overwriting any existing one
 echo "Creating ${CONDA} environment"
@@ -74,12 +74,6 @@ conda activate ${ENV_NAME}
 conda_eccodes=${CONDA_PREFIX}/share/eccodes-cosmo-resources_${definition_version}
 git clone -b ${definition_version} https://github.com/COSMO-ORG/eccodes-cosmo-resources.git ${conda_eccodes} || exit
 ${CONDA} env config vars set GRIB_DEFINITION_PATH=${conda_eccodes}/definitions/:${CONDA_PREFIX}/share/eccodes/definitions
-
-
-# fieldextra path
-echo 'Setting FIELDEXTRA_PATH for balfrin'
-${CONDA} env config vars set FIELDEXTRA_PATH=/users/oprusers/osm/bin/fieldextra
-
 
 echo "Variables saved to environment: "
 ${CONDA} env config vars list
