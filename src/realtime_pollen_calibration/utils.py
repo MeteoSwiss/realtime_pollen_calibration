@@ -69,8 +69,8 @@ pollen_types = ["ALNU", "BETU", "POAC", "CORY"]
 # pollen observations used to make sure that pollen calibration is only
 # performed if pollen concentrations were high enough to ensure robust
 # results of the pollen calibration.
-thr_con_24 = {"ALNU": 240, "BETU": 240, "POAC": 72, "CORY": 240}
-thr_con_120 = {"ALNU": 720, "BETU": 720, "POAC": 216, "CORY": 720}
+thr_con_24 = {"ALNU": 120, "BETU": 240, "POAC": 72, "CORY": 120}
+thr_con_120 = {"ALNU": 360, "BETU": 720, "POAC": 216, "CORY": 360}
 
 # failsafe is a limiter for the change applied to the phenological fields
 # tthrs and tthre (and saisl for POAC instead of tthre).
@@ -549,7 +549,7 @@ def get_change_phenol(  # pylint: disable=R0912,R0914,R0915
             (0 <= sum_obs_24 < thr_con_24[pollen_type])
             and (0 <= sum_obs < thr_con_120[pollen_type])
             and (tthrs_stns < ctsum_stns)
-            and (0 < saisn_stns < 10)
+            and (0 < saisn_stns < 5)
         ):
             if pollen_type != "POAC" and ctsum_stns < tthre_stns:
                 change_tthre[istation] = t_2m_stns * (date - jul_days_excl[pollen_type])
