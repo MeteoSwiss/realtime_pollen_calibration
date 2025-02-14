@@ -69,15 +69,25 @@ pollen_types = ["ALNU", "BETU", "POAC", "CORY"]
 # pollen observations used to make sure that pollen calibration is only
 # performed if pollen concentrations were high enough to ensure robust
 # results of the pollen calibration.
-thr_con_24 = {"ALNU": 240, "BETU": 240, "POAC": 72, "CORY": 240}
-thr_con_120 = {"ALNU": 720, "BETU": 720, "POAC": 216, "CORY": 720}
+# TODO: these numbers should go into the config file # pylint: disable=fixme
+thr_con_24 = {"ALNU": 120, "BETU": 240, "POAC": 72, "CORY": 120}
+thr_con_120 = {"ALNU": 360, "BETU": 720, "POAC": 216, "CORY": 360}
 
 # failsafe is a limiter for the change applied to the phenological fields
-# tthrs and tthre (and saisl for POAC instead of tthre).
+# tthrs and tthre (and saisl for POAC instead of tthre). The purpose is
+# to ensure the adaptation of tthrs and tthre is not too large.
+# TODO: these numbers should go into the config file # pylint: disable=fixme
 failsafe = {"ALNU": 1000, "BETU": 2500, "POAC": 6000, "CORY": 2500}
 
 # jul_days_excl is the number of days since Dec. 1 to be excluded
-# in the calculation of the temperature sum
+# in the calculation of the temperature sum.
+# These numbers have been determined using an optimization procedure
+# minimizing the mean absolute error (= difference between the observed
+# and the modelled start of flowering).
+# The methods used are described in Pauling et al. (2014): Toward
+# optimized temperature sum parameterizations for forecasting the
+# start of the pollen season, Aerobiologia, 30, 10.1007/s10453-013-9308-0
+# TODO: these numbers should go into the config file # pylint: disable=fixme
 jul_days_excl = {"ALNU": 14, "BETU": 40, "POAC": 46, "CORY": 3}
 
 
@@ -338,6 +348,9 @@ def interpolate(  # pylint: disable=R0913,R0914
     nstns = len(coord_stns)
     pollen_type = field[:4]
     if method == "multiply":
+        # max_param and min_param are limiters for the change applied to the
+        # tuning factor. The purpose is to ensure the adaptations are not too large.
+        # TODO: these numbers should go into the config file # pylint: disable=fixme
         max_param = {"ALNU": 3.389, "BETU": 4.046, "POAC": 1.875, "CORY": 7.738}
         min_param = {"ALNU": 0.235, "BETU": 0.222, "POAC": 0.405, "CORY": 0.216}
     else:
@@ -447,7 +460,10 @@ def get_change_tune(  # pylint: disable=R0913
                 f"Current tune value {tune_stns.values[0]} ",
                 f"and saisn: {saisn_stns.values[0]}",
             )
-        if (saisn_stns > 0) and ((sum_obs <= 720) or (sum_mod <= 720)):
+        if saisn_stns > 0 and (
+            sum_obs <= thr_con_120[pollen_type] or sum_mod <= thr_con_120[pollen_type]
+        ):
+
             if verbose:
                 print(
                     "Season started but low observation or modeled concentrations, "
@@ -455,7 +471,11 @@ def get_change_tune(  # pylint: disable=R0913
                     f"{(tune_pol_default / tune_stns.values[0]) ** (1 / 24)}"
                 )
             change_tune[istation] = (tune_pol_default / tune_stns) ** (1 / 24)
-        if (saisn_stns > 0) and (sum_obs > 720) and (sum_mod > 720):
+        if (
+            saisn_stns > 0
+            and sum_obs > thr_con_120[pollen_type]
+            and sum_mod > thr_con_120[pollen_type]
+        ):
             if verbose:
                 print(
                     "Season started and high observation ", "and modeled concentrations"
@@ -549,7 +569,8 @@ def get_change_phenol(  # pylint: disable=R0912,R0914,R0915
             (0 <= sum_obs_24 < thr_con_24[pollen_type])
             and (0 <= sum_obs < thr_con_120[pollen_type])
             and (tthrs_stns < ctsum_stns)
-            and (0 < saisn_stns < 10)
+            and (0 < saisn_stns < 5)  # restrict adaptation to the first 5 days of the
+            # season. TODO: move the number to the config file # pylint: disable=fixme
         ):
             if pollen_type != "POAC" and ctsum_stns < tthre_stns:
                 change_tthre[istation] = t_2m_stns * (date - jul_days_excl[pollen_type])
