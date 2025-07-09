@@ -1,4 +1,7 @@
-# Realtime Pollen Calibration
+===============
+Realtime Pollen Calibration
+===============
+
 
 This repository contains the framework to update pollen input fields needed in ICON-ART (phenological and tuning input fields). It is very similar to the FORTRAN implementation used in COSMO-ART and is designed for the operational use at MeteoSwiss. Detailed information about the Pollen module and its operational setup can be found here:
 <https://meteoswiss.atlassian.net/wiki/spaces/APN/pages/1914937/Setup+pollen+in+ICON>
@@ -6,76 +9,19 @@ The concept of the methodology is described in this paper: Adamov, S & Pauling, 
 
 The package has been tested on Balfrin at CSCS only.
 
-## Test Case Data Import
+Test Case Data Import
+-------------------------------
+
+Fix this section once test data imported by pytest
 
 Test data for Hazel (CORY), Alder (ALNU), birch (BETU) and grass (POAC) pollen on the ICON-CH1 grid can be obtained by executing get_data.sh in the project root folder of the package. Please note that Ambrosia (AMBR) is not implemented.
 The test data also includes the scripts that were used to generate the test data (fieldextra namelists and dwh_jretrieve commands). The intention is to document the data set provided and to facilitate the generation of a new test data set.
 
 
-## Preparation
+ecCodes for GRIB decoding
+-------------------------------
 
-This project has been created from the
-[MeteoSwiss Python blueprint](https://github.com/MeteoSwiss-APN/mch-python-blueprint)
-for the CSCS infrastructure.
-The recommended way to manage Python versions is with `Conda`
-(https://docs.conda.io/en/latest/).
-On CSCS machines it is recommended to install the leaner `Miniconda`
-(https://docs.conda.io/en/latest/miniconda.html),
-which offers enough functionality for most of our use cases.
-If you don't want to do this step manually, you may use the script
-`tools/setup_miniconda.sh`.
-The default installation path of this script is the current working directory,
-you might want to change that with the `-p` option to a common location for all
-environments, like e.g. `$SCRATCH`. If you want the script to immediately
-initialize conda (executing `conda init` and thereby adding a few commands at the
-end of your `.bashrc`) after installation, add the `-u` option:
-
-```bash
-tools/setup_miniconda.sh -p $SCRATCH -u
-```
-
-In case you ever need to uninstall miniconda, do the following:
-
-```bash
-conda init --reverse --all
-rm -rf $SCRATCH/miniconda
-```
-
-## Ho to install the package
-
-Once you created or cloned this repository, make sure the installation is running properly. Install the package dependencies with the provided script `setup_env.sh`. This script also handles the installation of ecCodes cosmo definitions (for more on ecCode refer to the dedicated section below) and sets the fieldextra path.
-Check available options with
-
-```bash
-tools/setup_env.sh -h
-```
-We distinguish pinned installations based on exported (reproducible) environments and free installations where the installation is based on top-level dependencies listed in `requirements/requirements.yml`. If you start developing, you might want to do an unpinned installation and export the environment:
-
-```bash
-tools/setup_env.sh -u -e -n <package_env_name>
-```
-
-*Hint*: If you are the package administrator, it is a good idea to understand what this script does, you can do everything manually with `conda` instructions.
-
-The package itself is installed with `pip`. For development, install in editable mode:
-
-```bash
-conda activate <package_env_name>
-pip install --editable .
-conda deactivate
-```
-
-*Warning:* Make sure you use the right pip, i.e. the one from the installed conda environment (`which pip` should point to something like `path/to/miniconda/envs/<package_env_name>/bin/pip`).
-
-Once your package is installed, run the tests by typing:
-
-```
-tools/get_data_and_test.sh
-```
-
-If the tests pass, you are good to go. If not, contact the package administrators. Make sure to update your requirement files and export your environments after installation every time you add new imports while developing. Check the next section to find some guidance on the development process if you are new to Python and/or SEN.
-
-### ecCodes for GRIB decoding
+Review this section, based on installation of eccodes
 
 For decoding GRIB2 input data, ecCodes must be installed and the ecCodes and COSMO ecCodes definitions made available. The location of the definitions is stored in the environment variable `GRIB_DEFINITION_PATH` in the conda environment.
  ecCodes definitions are installed with the ecCodes library by conda, the COSMO ecCodes definitions are cloned and installed separately. This is handled by `tools/setup_env.sh` and only needs to be done once, the settings are then stored in the conda environment! If you want to use a personalised version of ecCodes definitions, you can specify the path to your version in `GRIB_DEFINITION_PATH` (and `GRIB_SAMPLES_PATH` if needed) in `tools/setup_env.sh`.
@@ -83,7 +29,9 @@ For decoding GRIB2 input data, ecCodes must be installed and the ecCodes and COS
  Please adapt both `requirements/requirements.yml` and `tools/setup_env.sh` if you need to change the ecCodes version.
 
 
+ 
 ## Features
+-------------------------------
 
 The package includes two functionalities: one for updating the phenological fields and the other to update the strength of the pollen emission (tuning factor). Both can be executed independently.
 
@@ -95,10 +43,8 @@ Missing fields result in an error and thus no update of the fields. The input fi
 
 For further details of the realtime pollen calibration concept one may refer to the paper above.
 
-
-
-
-### How to configure the package
+How to configure the package
+-------------------------------
 
 The implementation includes a command line interface based on the click package. The configuration is done by editing the config.yaml file where the input/output is specified. There is the option to configure the increment of the timestamp of the outfile relative to the infile in hours. The config.yaml should include the following entries (sample file names):
 
@@ -121,7 +67,10 @@ hour_incr : 1
 `hour_incr`: Increment of the timestamp of the outfile relative to the infile in hours (defaults to 1; negative values also supported). This parameter should be adapted if the calibration is done for a subsequent run more than one hour ahead.
 
 
-### How to run the package
+How to run the package
+-------------------------------
+
+Review this section
 
 The two modules are called this way:
 ```bash
@@ -141,52 +90,75 @@ The implementation assumes hourly resolution of the modelled and observed pollen
 Updating the phenological fields (i.e. `tthrs` and `tthre` (for POAC, `saisl` instead of `tthre`)) should be done once per day (i.e. running `realtime-pollen-calibration update_phenology <path_to_config>/config.yaml`).
 
 
-### Unit test
+Development Setup with Mchbuild
+-------------------------------
 
-Generally, the source code of your library is located in `src/<library_name>`. In addition, there is a unit test for the interpolation routine in `tests/<library_name>/`, which can be triggered with `pytest` from the command line. Once you implemented a new feature including a meaningful test, you are likely willing to commit it. Before committing go to the root directory of your package and run pytest.
+Ensure you have mchbuild installed globally for your CSCS user. If not run the following:
 
-```bash
-conda activate <package_env_name>
-cd <package-root-dir>
-pytest
-```
+.. code-block:: console
 
-If you use the tools provided by the blueprint as is, pre-commit will not be triggered locally but only if you push to the main branch
-(or push to a PR to the main branch). If you consider it useful, you can set up pre-commit to run locally before every commit by initializing it once. In the root directory of
-your package, type:
+    cd ~
+    python -m venv mchbuild
+    source mchbuild/bin/activate
+    pip install mchbuild
+    echo "append_path ~/mchbuild/bin" >> ~/.bashrc
 
-```bash
-pre-commit install
-```
+.. code-block:: console
 
-If you run `pre-commit` without installing it before (line above), it will fail and the only way to recover it, is to do a forced reinstallation (`conda install --force-reinstall pre-commit`).
-You can also just run pre-commit selectively, whenever you want by typing (`pre-commit run --all-files`). We recommend to commit after pytest and pre-commit are successful. After pushing to the main branch (or into a branch with a PR to the main branch), the linters will run on the GitHub actions server. Note that pytest is currently not invoked by pre-commit, so it will not run automatically. Automated testing can be set up with GitHub Actions or be implemented in a Jenkins pipeline (template for a plan available in `jenkins/`. See the next section for more details.
+    $ cd realtime-pollen-calibration
+    $ mchbuild conda.build
+    $ mchbuild conda.test
+    $ mchbuild conda.run
 
-## Development tools
-
-As this package was created with the SEN Python blueprint, it comes with a stack of development tools, which are described in more detail on
-(<https://meteoswiss-apn.github.io/mch-python-blueprint/>). Here, we give a brief overview on what is implemented.
-
-### Testing and coding standards
-
-Testing your code and compliance with the most important Python standards is a requirement for Python software written in SEN. To make the life of package
-administrators easier, the most important checks are run automatically on GitHub actions.
-
-### Pre-commit on GitHub actions
-
-`.github/workflows/pre-commit.yml` contains a hook that will trigger the creation of your environment (unpinned) on the GitHub actions server and
-then run various formatters and linters through pre-commit. This hook is only triggered upon pushes to the main branch (in general: don't do that)
-and in pull requests to the main branch.
-
-### Jenkins
-
-A jenkinsfile is available in the `jenkins/` folder. It can be used for a multibranch jenkins project, which builds
-both commits on branches and PRs. Your jenkins pipeline will not be set up
-automatically. If you need to run your tests on CSCS machines, contact DevOps to help you with the setup of the pipelines. Otherwise, you can ignore the jenkinsfiles
-and exclusively run your tests and checks on GitHub actions.
+Try it out at and stop it with Ctrl-C. More information can be found in :file:`.mch-ci.yml` and https://meteoswiss.atlassian.net/wiki/x/YoM-Jg?atlOrigin=eyJpIjoiNDgxYmJjMDhmNDViNGIyNmI1OGU4NzY4NTFhNzViZWEiLCJwIjoiYyJ9.
 
 
+Development Setup with Poetry
+-----------------------------
 
-## Credits
+Building the Project
+''''''''''''''''''''
 
-This package was created with [`copier`](https://github.com/copier-org/copier) and the [`MeteoSwiss-APN/mch-python-blueprint`](https://meteoswiss-apn.github.io/mch-python-blueprint/) project template.
+Create a conda environment with the correct Python version and poetry:
+
+.. code-block:: console
+
+    cd realtime-pollen-calibration
+    conda create -n realtime-pollen-calibration python=3.10 poetry
+    conda activate
+
+.. code-block:: console
+
+    $ conda activate realtime-pollen-calibration
+    $ poetry install
+
+Run Tests
+'''''''''
+
+.. code-block:: console
+
+    $ poetry run pytest
+
+Run Quality Tools
+'''''''''''''''''
+
+.. code-block:: console
+
+    $ poetry run pylint realtime_pollen_calibration
+    $ poetry run mypy realtime_pollen_calibration
+
+Generate Documentation
+''''''''''''''''''''''
+
+.. code-block:: console
+
+    $ poetry run sphinx-build doc doc/_build
+
+Then open the index.html file generated in *realtime-pollen-calibration/doc/_build/*.
+
+Run the App
+'''''''''''
+
+.. code-block:: console
+
+    $ poetry run realtime-pollen-calibration greeting "ms/mr developer"

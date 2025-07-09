@@ -2,14 +2,15 @@
 
 # Standard library
 import logging
+import os
 
 import cfgrib  # type: ignore
 import numpy as np
-from pyprojroot import here  # type: ignore
 
 # First-party
 from realtime_pollen_calibration import utils
 
+test_data = os.path.dirname(os.path.abspath(__file__))
 
 def test_count_to_log_level():
     assert utils.count_to_log_level(0) == logging.ERROR
@@ -30,16 +31,16 @@ def test_count_to_log_level():
 def test_interpolation():
     # Specify the test case
     ds = cfgrib.open_dataset(
-        str(here()) + "/RTcal_testdata/laf2022022207_ALNUtune",
+        test_data + "/RTcal_testdata/laf2022022207_ALNUtune",
         encode_cf=("time", "geography", "vertical"),
     )
     ds2 = cfgrib.open_dataset(
-        str(here()) + "/RTcal_testdata/laf2022022208_ALNUtune",
+        test_data + "/RTcal_testdata/laf2022022208_ALNUtune",
         encode_cf=("time", "geography", "vertical"),
     )
     obs_mod_data = utils.read_atab(
         "ALNU",
-        str(here()) + "/RTcal_testdata/alnu_pollen_measured_values_2022022207.atab",
+        test_data + "/RTcal_testdata/alnu_pollen_measured_values_2022022207.atab",
     )
     ######################
     # Specify the test
