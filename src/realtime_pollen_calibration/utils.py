@@ -188,13 +188,13 @@ def read_atab(
         return HeaderData(coord_stns, missing_value, stn_indicators, n_header)
 
     headerdata = read_obs_header(file_obs_stns)
-    data = pd.read_csv(
+    data_obs = pd.read_csv(
         file_obs_stns,
         header=headerdata.n_header,
         sep=r"\s+",
         parse_dates=[[1, 2, 3, 4, 5]],
     )
-    data = data[data["PARAMETER"] == pollen_type].iloc[:, 2:].to_numpy()
+    data_obs = data_obs[data_obs["PARAMETER"] == pollen_type].iloc[:, 2:].to_numpy()
     if file_mod_stns != "":
         stn_indicators_mod = None
         missing_value = None
@@ -207,7 +207,6 @@ def read_atab(
                 if line.strip()[0:9] == "PARAMETER":
                     n_header_mod = n
                     break
-        istation_mod = get_mod_stn_index(headerdata.stn_indicators, stn_indicators_mod)
         data_mod = pd.read_csv(
             file_mod_stns,
             header=n_header_mod,
@@ -228,11 +227,15 @@ def read_atab(
     else:
         data_mod = 0
         istation_mod = 0
-    data = treat_missing(
-        data, headerdata.missing_value, headerdata.stn_indicators, verbose=verbose
+    data_obs, headerdata = treat_missing(
+        data_obs, headerdata, headerdata.missing_value, headerdata.stn_indicators, verbose=verbose
     )
+    # Calculating the station correspondence indices of obs/mod data.
+    if file_mod_stns != "":    
+        istation_mod = get_mod_stn_index(headerdata.stn_indicators, stn_indicators_mod)
+
     return ObsModData(
-        data, headerdata.coord_stns, headerdata.missing_value, data_mod, istation_mod
+        data_obs, headerdata.coord_stns, headerdata.missing_value, data_mod, istation_mod
     )
 
 
@@ -254,6 +257,7 @@ def create_data_arrays(cal_fields, clon, clat, time_values):
 
 def treat_missing(
     array,
+    headerdata,
     missing_value: float = -9999.0,
     stn_indicators: str = "",
     verbose: bool = True,
@@ -262,17 +266,22 @@ def treat_missing(
 
     Args:
         array: Array containing the concentration values.
+        headerdata: HeaderData containing ATAB header info.
         missing_value: Value considered as a missing value.
         verbose: Optional additional debug prints.
 
     Returns:
-        array: Modified array with removed missing values.
+        array: Modified array with replaced missing values or removed stations.
+        headerdata: Updated metadata on the stations matching the changes in array.
 
     """
     array_missing = array == missing_value
     nstns = array.shape[1]
     skip_missing_stn = np.zeros(nstns)
-    for istation in range(nstns):
+    
+    stns_missing = 0
+    istation = 0
+    while istation < nstns:
         skip_missing_stn[istation] = np.count_nonzero(array_missing[:, istation])
         if verbose:
             print(
@@ -295,14 +304,44 @@ def treat_missing(
                 array[idx2, istation] = np.mean(array[idx1, istation])
             else:
                 print(
-                    f"Station {stn_indicators[istation]} has more than 50% missing ",
-                    "data. Please check the reason (Does jretrievedwh still work?).\n",
-                    "No pollen calibration update is performed until this is fixed! ",
-                    "Pollen in ICON will still work, but calibration fields get ",
-                    "more and more outdated.",
+                    f"Station {stn_indicators[istation]} has more than 50% missing\n",
+                    "data and is REMOVED from this pollen calibration run.\n",
+                    "Please check the reason (Does jretrievedwh still work?).\n",
+                    "If this occurs only at few stations (2-4) the impact on the pollen\n",
+                    "calibration is minimal. However, if more stations are affected,\n",
+                    "switching off the pollen calibration should be considered,\n ",
+                    "(depending on which stations, species and time of the year).",
                 )
-                sys.exit(1)
-    return array
+                stns_missing += 1
+                if (stns_missing > 1):
+                    print(
+                        "\nALERT: More than 4 stations have more than 50% missing data,\n",
+                        "no pollen calibration is performed! Pollen are still running but\n",
+                        "fix this asap by checking the reason for the missing observations.\n",
+                    )
+                    sys.exit(1)
+
+                # Remove the station from array, coord_stns, and stn_indicators
+                array = np.delete(array, istation, axis=1)
+                
+                updated_coord_stns = headerdata.coord_stns[:istation] + headerdata.coord_stns[istation + 1:]
+                headerdata = HeaderData(
+                    coord_stns=updated_coord_stns,
+                    missing_value=headerdata.missing_value,
+                    stn_indicators=np.delete(headerdata.stn_indicators, istation),
+                    n_header=headerdata.n_header,
+                )
+                stn_indicators = np.delete(stn_indicators, istation)
+                array_missing = np.delete(array_missing, istation, axis=1)
+
+                # Update nstns since a station was removed
+                nstns -= 1
+                # Do not increment istation; check the next station at the same index
+                continue
+        # Increment istation to move to the next station
+        istation += 1
+
+    return array, headerdata
 
 
 def get_field_at(ds, field: str, coords: tuple):
