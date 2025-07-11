@@ -1,47 +1,13 @@
 class Globals {
-    // sets the pipeline to execute all steps related to building the service
-    static boolean build = false
 
     // sets to abort the pipeline if the Sonarqube QualityGate fails
     static boolean qualityGateAbortPipeline = false
-
-    // sets the pipeline to execute all steps related to releasing the service
-    static boolean release = false
-
-    // sets the pipeline to execute all steps related to deployment of the service
-    static boolean deploy = false
-
-    // sets the pipeline to execute all steps related to delete the service from the container platform
-    static boolean deleteContainer = false
-
-    // sets the pipeline to execute all steps related to trigger the security scan
-    static boolean runSecurityScan = false
-
-    // the project name in container platform
-    static String ocpProject = ''
-
-    // Container deployment environment
-    static String deployEnv = ''
-
-    // the image tag used for tagging the image
-    static String imageTag = ''
-
-    // the service version
-    static String version = ''
 
 }
 
 
 pipeline {
     agent { label 'podman' }
-
-    parameters {
-        choice(choices: ['Build', 'Release', 'Delete', 'Security-Scan'],
-            description: 'Build type',
-            name: 'buildChoice')
-
-        booleanParam(name: 'PUBLISH_DOCUMENTATION', defaultValue: false, description: 'Publishes the generated documentation')
-    }
 
     options {
         // New jobs should wait until older jobs are finished
@@ -56,8 +22,6 @@ pipeline {
     environment {
         PATH = "$workspace/.venv-mchbuild/bin:$HOME/tools/openshift-client-tools:$HOME/tools/trivy:$PATH"
         KUBECONFIG = "$workspace/.kube/config"
-        HTTP_PROXY = 'http://proxy.meteoswiss.ch:8080'
-        HTTPS_PROXY = 'http://proxy.meteoswiss.ch:8080'
         SCANNER_HOME = tool name: 'Sonarqube-certs-PROD', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
     }
 
@@ -67,63 +31,16 @@ pipeline {
                 updateGitlabCommitStatus name: 'Build', state: 'running'
 
                 script {
+
                     echo '---- INSTALL MCHBUILD ----'
+
                     sh '''
                     python -m venv .venv-mchbuild
                     PIP_INDEX_URL=https://hub.meteoswiss.ch/nexus/repository/python-all/simple \
                       .venv-mchbuild/bin/pip install --upgrade mchbuild
                     '''
-                    echo '---- INITIALIZE PARAMETERS ----'
-                    Globals.deployEnv = params.environment
-                    Globals.ocpProject = Globals.deployEnv
-                        ? sh(script: "mchbuild openshiftExposeProperties -s deploymentEnvironment=${Globals.deployEnv} -g ocpProject",
-                             returnStdout: true) : ''
-                    // Determine the type of build
-                    switch (params.buildChoice) {
-                        case 'Build':
-                            Globals.build = true
-                            break
-                        case 'Deploy':
-                            Globals.deploy = true
-                            break
-                        case 'Release':
-                            Globals.release = true
-                            Globals.build = true
-                            break
-                        case 'Delete':
-                            Globals.deleteContainer = true
-                            break
-                        case 'Security-Scan':
-                            Globals.runSecurityScan = true
-                            break
-                    }
-
-                    if (Globals.release) {
-                        echo '---- TAGGING RELEASE ----'
-                        sh 'mchbuild deploy.addNextTag'
-                    }
-
-                    if (Globals.build || Globals.deploy || Globals.runSecurityScan) {
-                        def versionAndTag = sh(
-                            script: 'mchbuild -g version -g image build.getVersion',
-                            returnStdout: true
-                        ).split('\n')
-                        Globals.version = versionAndTag[0]
-                        Globals.imageTag = versionAndTag[1]
-                        echo "Using version ${Globals.version} and image tag ${Globals.imageTag}"
                     }
                 }
-            }
-        }
-
-        stage('Build') {
-            when { expression { Globals.build } }
-            steps {
-                echo '---- BUILD IMAGE ----'
-                sh """
-                mchbuild -s version=${Globals.version} -s image=${Globals.imageTag} \
-                  build.imageTester
-                """
             }
         }
 
@@ -134,9 +51,7 @@ pipeline {
                 // Therefore, we need to clone the git repository manually
                 skipDefaultCheckout()
             }
-            when { expression { Globals.build } }
             environment {
-                NO_PROXY = '.meteoswiss.ch,localhost,.cscs.ch,.github.com'
                 MAMBA_ROOT_PREFIX="$SCRATCH/mch_jenkins_node/tools/micromamba"
                 PATH="$SCRATCH/mch_jenkins_node/tools/mchbuild/bin:$MAMBA_ROOT_PREFIX/bin:$PATH"
             }
@@ -177,12 +92,10 @@ pipeline {
 
 
         stage('Scan') {
-            when { expression { Globals.build } }
             steps {
                 unstash 'test_reports'
 
-                echo '---- LINT & TYPE CHECK ----'
-                sh "mchbuild -s image=${Globals.imageTag} test.lint"
+                echo '---- TYPE CHECK ----'
                 script {
                     try {
                         recordIssues(qualityGates: [[threshold: 10, type: 'TOTAL', unstable: false]], tools: [myPy(pattern: 'test_reports/mypy.log')])
@@ -211,84 +124,7 @@ pipeline {
             }
         }
 
-
-
-
-        stage('Create Artifacts') {
-            when { expression { Globals.build || Globals.deploy || params.PUBLISH_DOCUMENTATION } }
-            steps {
-                script {
-                    if (Globals.build || Globals.deploy) {
-                        echo '---- CREATE IMAGE ----'
-                        sh """
-                        mchbuild -s version=${Globals.version} -s image=${Globals.imageTag} \
-                          build.imageRunner
-                        """
-                    }
-                    if (params.PUBLISH_DOCUMENTATION) {
-                        echo '---- CREATE DOCUMENTATION ----'
-                        sh """
-                        mchbuild -s version=${Globals.version} -s image=${Globals.imageTag} \
-                          build.docs
-                        """
-                    }
-                }
-            }
-        }
-
-        stage('Publish Artifacts') {
-            when { expression { Globals.deploy || Globals.release || params.PUBLISH_DOCUMENTATION } }
-            environment {
-                REGISTRY_AUTH_FILE = "$workspace/.containers/auth.json"
-            }
-            steps {
-                script {
-                    if (Globals.deploy || Globals.release) {
-                        echo "---- PUBLISH IMAGE ----"
-                        withCredentials([usernamePassword(credentialsId: 'openshift-nexus',
-                                                          passwordVariable: 'NXPASS',
-                                                          usernameVariable: 'NXUSER')]) {
-                            sh "mchbuild deploy.image -s fullImageName=${Globals.imageTag}"
-                        }
-                    }
-                }
-                script {
-                    if (params.PUBLISH_DOCUMENTATION) {
-                        echo "---- PUBLISH DOCUMENTATION ----"
-                        withCredentials([string(credentialsId: 'documentation-main-prod-token',
-                                                variable: 'DOC_TOKEN')]) {
-                            sh """
-                            mchbuild deploy.docs -s deploymentEnvironment=prod \
-                              -s docVersion=${Globals.version}
-                            """
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('Image Security Scan') {
-            when {
-               expression { Globals.runSecurityScan}
-            }
-            steps {
-                script {
-                   echo '---- RUN SECURITY SCAN ----'
-                   sh "mchbuild verify.imageSecurityScan -s deploymentEnvironment=${Globals.deployEnv}"
-                }
-            }
-        }
-
-    }
-
-
     post {
-        cleanup {
-            sh """
-            mchbuild -s image=${Globals.imageTag} \
-                     -s deploymentEnvironment=${Globals.deployEnv} clean
-            """
-        }
         aborted {
             updateGitlabCommitStatus name: 'Build', state: 'canceled'
         }
