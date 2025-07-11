@@ -25,19 +25,19 @@ def test_count_to_log_level():
 #    results from the fortran implementation in COSMO with (=reference)
 
 
-def test_interpolation(download_test_data):
+def test_interpolation(test_data_dir):
     # Specify the test case
     ds = cfgrib.open_dataset(
-        str(download_test_data) + "/laf2022022207_ALNUtune",
+        str(test_data_dir) + "/laf2022022207_ALNUtune",
         encode_cf=("time", "geography", "vertical"),
     )
     ds2 = cfgrib.open_dataset(
-        str(download_test_data) + "/laf2022022208_ALNUtune",
+        str(test_data_dir) + "/laf2022022208_ALNUtune",
         encode_cf=("time", "geography", "vertical"),
     )
     obs_mod_data = utils.read_atab(
         "ALNU",
-        str(download_test_data) + "/alnu_pollen_measured_values_2022022207.atab",
+        str(test_data_dir) + "/alnu_pollen_measured_values_2022022207.atab",
     )
     ######################
     # Specify the test

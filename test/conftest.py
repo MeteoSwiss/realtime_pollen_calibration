@@ -8,28 +8,29 @@ import urllib.request
 import tarfile
 from pathlib import Path
 
-from realtime_pollen_calibration.set_up import set_up_config
+from realtime_pollen_calibration.set_up import set_up_config, Config
 
 DATA_PATH = "/store_new/mch/msopr/osm/MISC/GIT_DATA/python/pollen_calibration"
 
 def pytest_configure(config):
     # The below section is used for setting up local tests only.
 
-    temp_dir = pytest.TempPathFactory.from_config(config).mktemp('definitions')
+    tmp_dir = pytest.TempPathFactory.from_config(config)
 
-    _set_grib_definitions_path(temp_dir)
+    definitions_dir = tmp_dir.mktemp('definitions')
 
-@pytest.fixture(scope="session")
-def test_directory(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    _set_grib_definitions_path(definitions_dir)
 
-    return tmp_path_factory.mktemp("rtcal_test_env")
+    data_dir = tmp_dir.mktemp('data')
 
+    data_dir = _download_test_data(data_dir)
+    config.data_dir = data_dir
 
-@pytest.fixture(scope="session")
-def config(download_test_data: Path): 
+@pytest.fixture(scope="session", autouse=True)
+def config(request) -> tuple[Path, Config]: 
     """Create config.yaml"""
 
-    test_directory = download_test_data
+    test_directory = request.config.data_dir
 
     config = {
         "pov_infile": str(test_directory / "ART_POV_iconR19B08-grid_0001_BETU_POAC_2024042910"),
@@ -50,23 +51,29 @@ def config(download_test_data: Path):
 
     return config_path, parsed_config
 
-@pytest.fixture(scope="session")
-def download_test_data(test_directory: Path) -> Path:
+def _download_test_data(test_directory: Path) -> None:
+
+    dest = test_directory / "RTcal_testdata"
 
     if 'balfrin' not in os.getenv('HOST', ''):
         # Copy data from remote using scp
         subprocess.run(["scp", "-r", f"balfrin:{DATA_PATH}", str(test_directory)], check=True)
-    else:
-        shutil.copytree(DATA_PATH, str(test_directory))
+        # Rename the copied directory
+        source = test_directory / "pollen_calibration"
+        dest = test_directory / "RTcal_testdata"
+        shutil.move(str(source), str(dest))
 
-    # Rename the copied directory
-    source = test_directory / "pollen_calibration"
-    dest = test_directory / "RTcal_testdata"
-    shutil.move(str(source), str(dest))
+    else:
+        shutil.copytree(DATA_PATH, str(dest), dirs_exist_ok=True)
 
     return dest
 
-def _set_grib_definitions_path(temp_dir):
+@pytest.fixture(scope="session", autouse=True)
+def test_data_dir(request) -> Path:
+    return request.config.data_dir
+
+
+def _set_grib_definitions_path(temp_dir) -> None:
 
     if 'GRIB_DEFINITION_PATH' not in os.environ:
 
