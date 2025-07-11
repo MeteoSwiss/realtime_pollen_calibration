@@ -72,7 +72,7 @@ pipeline {
                     // TODO TIP-227: Support also version control options: MeteoSwiss Github, Gitlab
                     withCredentials([gitUsernamePassword(credentialsId: 'github app credential for the meteoswiss-apn github organization')]){
                         sh """
-                        git clone --no-tags --force --progress -- $GIT_URL ${branch_name}
+                        git clone --no-tags --progress -- $GIT_URL ${branch_name}
                         git checkout -f $GIT_COMMIT
                         """
                     }
