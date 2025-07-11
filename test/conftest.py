@@ -57,7 +57,7 @@ def download_test_data(test_directory: Path) -> Path:
         # Copy data from remote using scp
         subprocess.run(["scp", "-r", f"balfrin:{DATA_PATH}", str(test_directory)], check=True)
     else:
-        shutil.copy(DATA_PATH, str(test_directory))
+        shutil.copytree(DATA_PATH, str(test_directory))
 
     # Rename the copied directory
     source = test_directory / "pollen_calibration"
