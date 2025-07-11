@@ -36,6 +36,15 @@ cfgrib = "^0.9.15.0"
 [tool.poetry.scripts]
 realtime-pollen-calibration = "realtime_pollen_calibration.cli:main"
 
+[tool.pytest.ini_options]
+addopts = "-s --log-cli-level=INFO"
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+log_cli_date_format = "%H:%M:%S"
+log_auto_indent = true
+color = "yes"
+
 [tool.yapf]
 based_on_style = "pep8"
 column_limit = "120"

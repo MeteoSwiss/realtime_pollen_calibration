@@ -23,11 +23,9 @@ ecCodes for GRIB decoding
 
 Review this section, based on installation of eccodes
 
-For decoding GRIB2 input data, ecCodes must be installed and the ecCodes and COSMO ecCodes definitions made available. The location of the definitions is stored in the environment variable `GRIB_DEFINITION_PATH` in the conda environment.
- ecCodes definitions are installed with the ecCodes library by conda, the COSMO ecCodes definitions are cloned and installed separately. This is handled by `tools/setup_env.sh` and only needs to be done once, the settings are then stored in the conda environment! If you want to use a personalised version of ecCodes definitions, you can specify the path to your version in `GRIB_DEFINITION_PATH` (and `GRIB_SAMPLES_PATH` if needed) in `tools/setup_env.sh`.
+For decoding GRIB2 input data, ecCodes must be installed and the ecCodes and COSMO ecCodes definitions made available. The location of the definitions is stored in the environment variable `GRIB_DEFINITION_PATH`.
+ ecCodes definitions are installed with the ecCodes library, the COSMO ecCodes definitions are cloned and installed separately. This is handled by `tools/setup_env.sh` and only needs to be done once, the settings are then stored in the conda environment! If you want to use a personalised version of ecCodes definitions, you can specify the path to your version in `GRIB_DEFINITION_PATH` (and `GRIB_SAMPLES_PATH` if needed).
  Be aware that the version of the COSMO eccodes definitions need to match the version of the ecCodes library.
- Please adapt both `requirements/requirements.yml` and `tools/setup_env.sh` if you need to change the ecCodes version.
-
 
  
 ## Features
