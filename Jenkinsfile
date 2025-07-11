@@ -124,6 +124,8 @@ pipeline {
             }
         }
 
+    }
+
     post {
         aborted {
             updateGitlabCommitStatus name: 'Build', state: 'canceled'
