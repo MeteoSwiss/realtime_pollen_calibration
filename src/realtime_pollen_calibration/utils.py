@@ -276,7 +276,7 @@ def create_data_arrays(cal_fields, clon, clat, time_values):
     return cal_fields_arrays
 
 
-def treat_missing(  # pylint: disable=too-many-positional-arguments
+def treat_missing( # pylint: disable=too-many-positional-arguments,too-many-arguments
     array,
     headerdata,
     max_miss_stns,
