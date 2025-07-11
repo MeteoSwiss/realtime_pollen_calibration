@@ -10,6 +10,7 @@ from pathlib import Path
 
 from realtime_pollen_calibration.set_up import set_up_config
 
+DATA_PATH = "/store_new/mch/msopr/osm/MISC/GIT_DATA/python/pollen_calibration"
 
 def pytest_configure(config):
     # The below section is used for setting up local tests only.
@@ -52,10 +53,11 @@ def config(download_test_data: Path):
 @pytest.fixture(scope="session")
 def download_test_data(test_directory: Path) -> Path:
 
-    remote_path = "balfrin:/store_new/mch/msopr/osm/MISC/GIT_DATA/python/pollen_calibration"
-
-    # Copy data from remote using scp
-    subprocess.run(["scp", "-r", remote_path, str(test_directory)], check=True)
+    if 'balfrin' not in os.getenv('HOST', ''):
+        # Copy data from remote using scp
+        subprocess.run(["scp", "-r", f"balfrin:{DATA_PATH}", str(test_directory)], check=True)
+    else:
+        shutil.copy(DATA_PATH, str(test_directory))
 
     # Rename the copied directory
     source = test_directory / "pollen_calibration"
