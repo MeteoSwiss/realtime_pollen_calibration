@@ -39,10 +39,10 @@ pipeline {
                     PIP_INDEX_URL=https://hub.meteoswiss.ch/nexus/repository/python-all/simple \
                       .venv-mchbuild/bin/pip install --upgrade mchbuild
                     '''
-                    }
                 }
             }
         }
+
 
         stage('Test') {
             agent { label 'balfrin' }
@@ -123,7 +123,6 @@ pipeline {
                 }
             }
         }
-
     }
 
     post {
