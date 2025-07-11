@@ -19,7 +19,7 @@ import xarray as xr  # type: ignore
 
 
 @dataclass
-class Config:
+class Config:  # pylint: disable=too-many-instance-attributes
 
     pov_infile: str = ""
     """ICON GRIB2 file including path containing the pollen fields:
@@ -31,7 +31,7 @@ class Config:
     """ICON GRIB2 file including path of the desired output file."""
 
     t2m_file: str = ""
-    """"ICON GRIB2 file including path containing T_2M."""
+    """ICON GRIB2 file including path containing T_2M."""
 
     const_file: str = ""
     """ICON GRIB2 file including path containing Longitudes (clon)
@@ -48,7 +48,14 @@ class Config:
        pollen concentrations at the stations.
     """
 
+    max_miss_stns: int = 4
+    """Maximum number of stations with more than 50% missing data
+       allowed. If more than this number of stations are missing,
+       the pollen calibration is not performed.
+    """
+
     hour_incr: int = 1
+    """Hour increment (grib coding) between input and output POV file."""
 
 
 ObsModData = namedtuple(
@@ -125,7 +132,11 @@ def read_clon_clat(const_file):
 
 
 def read_atab(
-    pollen_type: str, file_obs_stns: str, file_mod_stns: str = "", verbose: bool = True
+    pollen_type: str,
+    max_miss_stns: int,
+    file_obs_stns: str,
+    file_mod_stns: str = "",
+    verbose: bool = True,
 ) -> ObsModData:
     # pylint: disable=too-many-locals
     """Read the pollen concentrations and the station locations from the ATAB files.
@@ -134,6 +145,7 @@ def read_atab(
         pollen_type: String describing the pollen type analysed.
         file_obs_stns: Location of the observation ATAB file.
         file_mod_stns: Location of the model ATAB file. (Optional)
+        max_miss_stns: Max. number of stations with more than 50% missing data
         verbose: Optional additional debug prints.
 
     Returns:
@@ -228,14 +240,23 @@ def read_atab(
         data_mod = 0
         istation_mod = 0
     data_obs, headerdata = treat_missing(
-        data_obs, headerdata, headerdata.missing_value, headerdata.stn_indicators, verbose=verbose
+        data_obs,
+        headerdata,
+        max_miss_stns,
+        headerdata.stn_indicators,
+        headerdata.missing_value,
+        verbose=verbose,
     )
     # Calculating the station correspondence indices of obs/mod data.
-    if file_mod_stns != "":    
+    if file_mod_stns != "":
         istation_mod = get_mod_stn_index(headerdata.stn_indicators, stn_indicators_mod)
 
     return ObsModData(
-        data_obs, headerdata.coord_stns, headerdata.missing_value, data_mod, istation_mod
+        data_obs,
+        headerdata.coord_stns,
+        headerdata.missing_value,
+        data_mod,
+        istation_mod,
     )
 
 
@@ -255,11 +276,12 @@ def create_data_arrays(cal_fields, clon, clat, time_values):
     return cal_fields_arrays
 
 
-def treat_missing(
+def treat_missing(  # pylint: disable=too-many-arguments
     array,
     headerdata,
+    max_miss_stns,
+    stn_indicators: np.ndarray,
     missing_value: float = -9999.0,
-    stn_indicators: str = "",
     verbose: bool = True,
 ):
     """Treat the missing values of the input array.
@@ -268,6 +290,8 @@ def treat_missing(
         array: Array containing the concentration values.
         headerdata: HeaderData containing ATAB header info.
         missing_value: Value considered as a missing value.
+        stn_indicators: Array of station indicators (PBS, PBU, ...).
+        max_miss_stns: Max. number of stations with more than 50% missing data
         verbose: Optional additional debug prints.
 
     Returns:
@@ -278,7 +302,7 @@ def treat_missing(
     array_missing = array == missing_value
     nstns = array.shape[1]
     skip_missing_stn = np.zeros(nstns)
-    
+
     stns_missing = 0
     istation = 0
     while istation < nstns:
@@ -307,24 +331,28 @@ def treat_missing(
                     f"Station {stn_indicators[istation]} has more than 50% missing\n",
                     "data and is REMOVED from this pollen calibration run.\n",
                     "Please check the reason (Does jretrievedwh still work?).\n",
-                    "If this occurs only at few stations (2-4) the impact on the pollen\n",
+                    "If this occurs only at few stations the impact on the pollen\n",
                     "calibration is minimal. However, if more stations are affected,\n",
-                    "switching off the pollen calibration should be considered,\n ",
+                    "switching off the pollen calibration should be considered,\n",
                     "(depending on which stations, species and time of the year).",
                 )
                 stns_missing += 1
-                if (stns_missing > 1):
+                if stns_missing > max_miss_stns:
                     print(
-                        "\nALERT: More than 4 stations have more than 50% missing data,\n",
-                        "no pollen calibration is performed! Pollen are still running but\n",
-                        "fix this asap by checking the reason for the missing observations.\n",
+                        f"\nALERT: More than {max_miss_stns} stations have more than\n",
+                        "50% missing data, no pollen calibration is performed!\n",
+                        "Pollen are still running but fix this asap by checking\n",
+                        "the reason for the missing observations.\n",
                     )
                     sys.exit(1)
 
                 # Remove the station from array, coord_stns, and stn_indicators
                 array = np.delete(array, istation, axis=1)
-                
-                updated_coord_stns = headerdata.coord_stns[:istation] + headerdata.coord_stns[istation + 1:]
+
+                updated_coord_stns = (
+                    headerdata.coord_stns[:istation]
+                    + headerdata.coord_stns[istation + 1 :]
+                )
                 headerdata = HeaderData(
                     coord_stns=updated_coord_stns,
                     missing_value=headerdata.missing_value,
