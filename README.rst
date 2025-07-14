@@ -23,8 +23,8 @@ For decoding GRIB2 input data, ecCodes must be installed and the ecCodes and COS
 ecCodes definitions are installed with the ecCodes library, the COSMO ecCodes definitions are cloned and installed separately.
 Be aware that the version of the COSMO eccodes definitions need to match the version of the ecCodes library.
 
- 
-## Features
+
+Features
 -------------------------------
 
 The package includes two functionalities: one for updating the phenological fields and the other to update the strength of the pollen emission (tuning factor). Both can be executed independently.
@@ -54,11 +54,16 @@ The implementation includes a command line interface based on the click package.
 
 ``pov_infile``: This GRIB2 file must include the fields ``tthrs``, ``tthre`` (for POAC, ``saisl`` instead), ``saisn`` and ``ctsum`` if the module ``update_phenology`` is called. If the module ``update_strength`` is called ``pov_infile`` must include the fields ``saisn`` and ``tune``. If at least one of these mandatory fields is missing the package exits with status 1 and tells the user. ``pov_infile`` is used as template for ``pov_outfile``, i.e. the whole file is copied to ``pov_outfile`` with adapted values. Date and time information of ``pov_infile`` does not have to be correct, ICON just throws warnings.
 
-` pov_outfile``: Same as ``pov_infile`` but with adapted values.
+``pov_outfile``: Same as ``pov_infile`` but with adapted values.
+
 ``t2m_file``: This GRIB2 file must include T_2M valid for 12h UTC of the current day (only used if the module ``update_phenology`` is called).
+
 ``const_file``: This GRIB2 file must contain CLON and CLAT of the unstructured grid used in ``pov_infile`` and ``t2m_file``.
+
 ``station_obs_file``: Observed hourly pollen concentrations (ATAB format) of the latest 120 hours relative to the target date of ``pov_outfile``. The timestamps of the data in this file may vary depending on data availability, time of extraction etc. Missing values are allowed but at least 50% of each station must be there. If not, the package exits with status 1 and tells the user.
+
 ``station_mod_file``: Modelled hourly pollen concentrations (ATAB format) of the latest 120 hours relative to the target date of ``pov_outfile``. The timestamps of the data in this file may vary depending on data availability, time of extraction etc. In case of missing values the package exits with status 1 and tells the user. Same stations as in ``station_obs_file`` (only used if the module ``update_strength`` is called).
+
 ``hour_incr``: Increment of the timestamp of the outfile relative to the infile in hours (defaults to 1; negative values also supported). This parameter should be adapted if the calibration is done for a subsequent run more than one hour ahead.
 
 
@@ -84,8 +89,8 @@ Help functionalities are also available:
  realtime_pollen_calibration update_strength --help
 
 
-The implementation assumes hourly resolution of the modelled and observed pollen concentrations (ATAB files). Hence, updating the tuning field  `tune`) once per hour is recommended (i.e. running `realtime-pollen-calibration update_strength <path_to_config>/config.yaml`).
-Updating the phenological fields (i.e. `tthrs` and `tthre` (for POAC, `saisl` instead of `tthre`)) should be done once per day (i.e. running `realtime-pollen-calibration update_phenology <path_to_config>/config.yaml`).
+The implementation assumes hourly resolution of the modelled and observed pollen concentrations (ATAB files). Hence, updating the tuning field  ``tune``) once per hour is recommended (i.e. running ``realtime-pollen-calibration update_strength <path_to_config>/config.yaml``).
+Updating the phenological fields (i.e. ``tthrs`` and ``tthre`` (for POAC, ``saisl`` instead of ``tthre``)) should be done once per day (i.e. running ``realtime-pollen-calibration update_phenology <path_to_config>/config.yaml``).
 
 
 Development Setup with Mchbuild
@@ -108,7 +113,7 @@ Ensure you have mchbuild installed globally for your CSCS user. If not run the f
     mchbuild conda.test
     mchbuild conda.run
 
-Try it out at and stop it with Ctrl-C. More information can be found in :file:`.mch-ci.yml` and https://meteoswiss.atlassian.net/wiki/x/YoM-Jg?atlOrigin=eyJpIjoiNDgxYmJjMDhmNDViNGIyNmI1OGU4NzY4NTFhNzViZWEiLCJwIjoiYyJ9.
+Try it out at and stop it with Ctrl-C. More information can be found in the `.mch-ci.yml <./.mch-ci.yml>`_ file and `<https://meteoswiss.atlassian.net/wiki/x/YoM-Jg>`_.
 
 
 Development Setup with Poetry
