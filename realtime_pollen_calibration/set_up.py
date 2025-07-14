@@ -6,7 +6,7 @@ import yaml
 from realtime_pollen_calibration.utils import Config
 
 
-def set_up_config(config_file: str):
+def set_up_config(config_file: str) -> Config:
     """Set the configuration (path and time increment in hours).
 
     Args:
