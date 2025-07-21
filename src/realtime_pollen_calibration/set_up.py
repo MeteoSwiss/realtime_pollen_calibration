@@ -33,6 +33,8 @@ def set_up_config(config_file: str):
 
     config.pov_outfile = data["pov_outfile"]
 
+    config.max_miss_stns = data["max_miss_stns"]
+
     config.hour_incr = data["hour_incr"]
 
     return config
