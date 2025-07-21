@@ -19,6 +19,7 @@ const_file : $localpath/RTcal_testdata/CLON_CLAT_ICON-CH1.gb2
 station_obs_file : $localpath/RTcal_testdata/pollen_measured_2024020118.atab
 station_mod_file : $localpath/RTcal_testdata/pollen_modelled_2024020118.atab
 hour_incr : 1
+max_miss_stns : 4
 EOF
 
 # activate conda env
