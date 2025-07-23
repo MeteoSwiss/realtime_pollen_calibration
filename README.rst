@@ -108,7 +108,7 @@ Ensure you have mchbuild installed globally for your CSCS user. If not run the f
 
 .. code-block:: console
 
-    cd realtime-pollen-calibration
+    cd realtime_pollen_calibration
     mchbuild conda.build
     mchbuild conda.test
     mchbuild conda.run
