@@ -123,7 +123,7 @@ Development Setup with Poetry
 Building the Project
 ''''''''''''''''''''
 
-Create a conda environment with the correct Python version and Poetry:
+Create a conda environment with the correct Python version and Poetry (>=1.5):
 
 .. code-block:: console
 
