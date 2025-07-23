@@ -128,7 +128,7 @@ Create a conda environment with the correct Python version and Poetry (>=1.5):
 .. code-block:: console
 
     cd realtime-pollen-calibration
-    conda create -n realtime-pollen-calibration python=3.10 poetry=1.5
+    conda create -n realtime-pollen-calibration python=3.10 poetry>=1.5
     conda activate realtime-pollen-calibration
 
 Install the python dependencies with Poetry:
