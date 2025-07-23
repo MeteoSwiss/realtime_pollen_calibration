@@ -103,7 +103,7 @@ Ensure you have mchbuild installed globally for your CSCS user. If not run the f
     cd ~
     python -m venv mchbuild
     source mchbuild/bin/activate
-    pip install mchbuild
+    pip install mchbuild==0.8.0
     echo "append_path ~/mchbuild/bin" >> ~/.bashrc
 
 .. code-block:: console
