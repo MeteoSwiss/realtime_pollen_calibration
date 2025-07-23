@@ -117,8 +117,8 @@ Ensure you have mchbuild installed globally for your CSCS user. If not, ensure y
 Try it out at and stop it with Ctrl-C. More information can be found in the `.mch-ci.yml <./.mch-ci.yml>`_ file and `<https://meteoswiss.atlassian.net/wiki/x/YoM-Jg>`_.
 
 
-Development Setup with Poetry
------------------------------
+Development Setup with Conda and Poetry
+----------------------------------------
 
 Building the Project
 ''''''''''''''''''''
