@@ -96,11 +96,12 @@ Updating the phenological fields (i.e. ``tthrs`` and ``tthre`` (for POAC, ``sais
 Development Setup with Mchbuild
 -------------------------------
 
-Ensure you have mchbuild installed globally for your CSCS user. If not run the following:
+Ensure you have mchbuild installed globally for your CSCS user. If not, ensure your pip is able to reach the MCH PyPI (Nexus) see https://meteoswiss.atlassian.net/wiki/x/XogHAQ, and then run the following:
 
 .. code-block:: console
 
     cd ~
+    module load python/3.10.8
     python -m venv mchbuild
     source mchbuild/bin/activate
     pip install mchbuild==0.8.0
