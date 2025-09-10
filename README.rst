@@ -19,7 +19,7 @@ The tools directory also includes the scripts that were used to generate the tes
 ecCodes for GRIB decoding
 -------------------------------
 
-For decoding GRIB2 input data, ecCodes must be installed and the ecCodes and COSMO ecCodes definitions made available. The location of the definitions is stored in the environment variable ``ECCODES_DEFINITION_PATH``.
+For decoding GRIB2 input data, ecCodes must be available as well as the ecCodes and COSMO ecCodes definitions. The location of the definitions must be stored in the environment variable ``ECCODES_DEFINITION_PATH``.
 ecCodes definitions are installed with the ecCodes library, the COSMO ecCodes definitions are cloned and installed separately.
 Be aware that the version of the COSMO eccodes definitions need to match the version of the ecCodes library.
 
