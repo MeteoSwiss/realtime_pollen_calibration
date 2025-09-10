@@ -39,7 +39,8 @@ def config(request) -> tuple[Path, Config]:
         "const_file": str(test_directory / "CLON_CLAT_ICON-CH1.gb2"),
         "station_obs_file": str(test_directory / "pollen_measured_2024020118.atab"),
         "station_mod_file": str(test_directory / "pollen_modelled_2024020118.atab"),
-        "hour_incr": 1
+        "hour_incr": 1,
+        "max_miss_stns": 4
     }
 
     config_path = test_directory / "config.yaml"

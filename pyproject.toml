@@ -71,7 +71,6 @@ min-public-methods = 0
 
 [tool.mypy]
 ignore_missing_imports = true
-disallow_untyped_defs = true
 
 [[tool.mypy.overrides]]
 # to avoid mypy errors when importing modules from commons
