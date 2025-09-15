@@ -20,7 +20,11 @@ pyyaml = "^6.0.2"
 xarray = "<2025.7.0" # Later version require python 3.11
 numpy = "<2.3" # Later version require python 3.11
 pandas = "^2.3.1"
-eccodes = "~2.36.4"
+eccodes = "~2.37" 
+# eccodes lib is coming from conda dependencies or ECCODES_DIR definition
+# but the python wrapper version 2.37 works with 2.36 version of the lib.
+# The poetry.toml defines that the python eccodes package should not also
+# download the lib binary.
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.15.0"
