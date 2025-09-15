@@ -128,7 +128,7 @@ Create a conda environment with the correct Python version and Poetry (>=1.5):
 .. code-block:: console
 
     cd realtime-pollen-calibration
-    conda create -n realtime-pollen-calibration --file conda_deps.yml
+    conda env create -n realtime-pollen-calibration --file conda_deps.yml
     conda activate realtime-pollen-calibration
 
 Set the ecCodes definitions path (replace the value with paths to the correct versions):
