@@ -78,8 +78,8 @@ def _set_grib_definitions_path(temp_dir) -> None:
 
     if 'GRIB_DEFINITION_PATH' not in os.environ:
 
-        definitions = {'eccodes-cosmo-resources': "https://github.com/COSMO-ORG/eccodes-cosmo-resources/archive/refs/tags/v2.35.0.1dm1.tar.gz",
-                       'eccodes': "https://github.com/ecmwf/eccodes/archive/refs/tags/2.35.0.tar.gz"}
+        definitions = {'eccodes-cosmo-resources': "https://github.com/COSMO-ORG/eccodes-cosmo-resources/archive/refs/tags/v2.36.0.3.tar.gz",
+                       'eccodes': "https://github.com/ecmwf/eccodes/archive/refs/tags/2.36.4.tar.gz"}
 
         definitions = _download_definitions(definitions, temp_dir)
 
