@@ -22,28 +22,28 @@ def pytest_configure(config):
     _set_grib_definitions_path(definitions_dir)
 
     data_dir = tmp_dir.mktemp('data')
+    destination = _download_test_data(data_dir)
 
-    data_dir = _download_test_data(data_dir)
-    config.data_dir = data_dir
+    config.data_dir = destination
 
-@pytest.fixture(scope="session", autouse=True)
-def config(request) -> tuple[Path, Config]: 
+@pytest.fixture(autouse=True)
+def config(request, tmp_path) -> tuple[Path, Config]: 
     """Create config.yaml"""
 
-    test_directory = request.config.data_dir
+    session_path = request.config.data_dir
 
     config = {
-        "pov_infile": str(test_directory / "ART_POV_iconR19B08-grid_0001_BETU_POAC_2024042910"),
-        "pov_outfile": str(test_directory / "ART_POV_iconR19B08-grid_0001_tune"),
-        "t2m_file": str(test_directory / "T_2M_KENDA-CH1_2024020112.gb2"),
-        "const_file": str(test_directory / "CLON_CLAT_ICON-CH1.gb2"),
-        "station_obs_file": str(test_directory / "pollen_measured_2024020118.atab"),
-        "station_mod_file": str(test_directory / "pollen_modelled_2024020118.atab"),
+        "pov_infile": str(session_path / "ART_POV_iconR19B08-grid_0001_BETU_POAC_2024042910"),
+        "pov_outfile": str(tmp_path / "ART_POV_iconR19B08-grid_0001_tune"),
+        "t2m_file": str(session_path / "T_2M_KENDA-CH1_2024020112.gb2"),
+        "const_file": str(session_path / "CLON_CLAT_ICON-CH1.gb2"),
+        "station_obs_file": str(session_path / "pollen_measured_2024020118.atab"),
+        "station_mod_file": str(session_path / "pollen_modelled_2024020118.atab"),
         "hour_incr": 1,
         "max_miss_stns": 4
     }
 
-    config_path = test_directory / "config.yaml"
+    config_path = tmp_path / "config.yaml"
 
     with open(config_path, 'w') as f:
         yaml.dump(config, f)
@@ -52,7 +52,7 @@ def config(request) -> tuple[Path, Config]:
 
     return config_path, parsed_config
 
-def _download_test_data(test_directory: Path) -> None:
+def _download_test_data(test_directory: Path) -> Path:
 
     dest = test_directory / "RTcal_testdata"
 
@@ -61,12 +61,10 @@ def _download_test_data(test_directory: Path) -> None:
         subprocess.run(["scp", "-r", f"balfrin:{DATA_PATH}", str(test_directory)], check=True)
         # Rename the copied directory
         source = test_directory / "pollen_calibration"
-        dest = test_directory / "RTcal_testdata"
         shutil.move(str(source), str(dest))
 
     else:
         shutil.copytree(DATA_PATH, str(dest), dirs_exist_ok=True)
-
     return dest
 
 @pytest.fixture(scope="session", autouse=True)
