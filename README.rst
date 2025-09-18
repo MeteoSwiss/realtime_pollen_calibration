@@ -51,6 +51,7 @@ The implementation includes a command line interface based on the click package.
  station_obs_file : <path>/pollen_measured_2024020118.atab
  station_mod_file : <path>/pollen_modelled_2024020118.atab
  hour_incr : 1
+ max_miss_stns : 4
 
 ``pov_infile``: This GRIB2 file must include the fields ``tthrs``, ``tthre`` (for POAC, ``saisl`` instead), ``saisn`` and ``ctsum`` if the module ``update_phenology`` is called. If the module ``update_strength`` is called ``pov_infile`` must include the fields ``saisn`` and ``tune``. If at least one of these mandatory fields is missing the package exits with status 1 and tells the user. ``pov_infile`` is used as template for ``pov_outfile``, i.e. the whole file is copied to ``pov_outfile`` with adapted values. Date and time information of ``pov_infile`` does not have to be correct, ICON just throws warnings.
 
@@ -60,61 +61,13 @@ The implementation includes a command line interface based on the click package.
 
 ``const_file``: This GRIB2 file must contain CLON and CLAT of the unstructured grid used in ``pov_infile`` and ``t2m_file``.
 
-``station_obs_file``: Observed hourly pollen concentrations (ATAB format) of the latest 120 hours relative to the target date of ``pov_outfile``. The timestamps of the data in this file may vary depending on data availability, time of extraction etc. Missing values are allowed but at least 50% of each station must be there. If not, the package exits with status 1 and tells the user.
+``station_obs_file``: Observed hourly pollen concentrations (ATAB format) of the latest 120 hours relative to the target date of ``pov_outfile``. The timestamps of the data in this file may vary depending on data availability, time of extraction etc. Missing values are allowed but at least 50% of each station must be there. If not, the station is not used and set to missing. If more than ``max_miss_stns`` stations are missing, the package exits with status 1 and tells the user.
 
 ``station_mod_file``: Modelled hourly pollen concentrations (ATAB format) of the latest 120 hours relative to the target date of ``pov_outfile``. The timestamps of the data in this file may vary depending on data availability, time of extraction etc. In case of missing values the package exits with status 1 and tells the user. Same stations as in ``station_obs_file`` (only used if the module ``update_strength`` is called).
 
 ``hour_incr``: Increment of the timestamp of the outfile relative to the infile in hours (defaults to 1; negative values also supported). This parameter should be adapted if the calibration is done for a subsequent run more than one hour ahead.
 
-
-How to run the package
--------------------------------
-
-Review this section
-
-The two modules are called this way:
-
-.. code-block:: console
-
- conda activate <package_env_name>
- realtime-pollen-calibration update_phenology <path_to_config>/config.yaml
- realtime-pollen-calibration update_strength <path_to_config>/config.yaml
-
-Help functionalities are also available:
-
-.. code-block:: console
-
- realtime_pollen_calibration --help
- realtime_pollen_calibration update_phenology --help
- realtime_pollen_calibration update_strength --help
-
-
-The implementation assumes hourly resolution of the modelled and observed pollen concentrations (ATAB files). Hence, updating the tuning field  ``tune``) once per hour is recommended (i.e. running ``realtime-pollen-calibration update_strength <path_to_config>/config.yaml``).
-Updating the phenological fields (i.e. ``tthrs`` and ``tthre`` (for POAC, ``saisl`` instead of ``tthre``)) should be done once per day (i.e. running ``realtime-pollen-calibration update_phenology <path_to_config>/config.yaml``).
-
-
-Development Setup with Mchbuild
--------------------------------
-
-Ensure you have mchbuild installed globally for your CSCS user. If not, ensure your pip is able to reach the MCH PyPI (Nexus) see https://meteoswiss.atlassian.net/wiki/x/XogHAQ, and then run the following:
-
-.. code-block:: console
-
-    cd ~
-    module load python/3.10.8
-    python -m venv mchbuild
-    source mchbuild/bin/activate
-    pip install mchbuild==0.8.0
-    echo "append_path ~/mchbuild/bin" >> ~/.bashrc
-
-.. code-block:: console
-
-    cd realtime_pollen_calibration
-    mchbuild conda.build
-    mchbuild conda.test
-    mchbuild conda.run
-
-Try it out at and stop it with Ctrl-C. More information can be found in the `.mch-ci.yml <./.mch-ci.yml>`_ file and `<https://meteoswiss.atlassian.net/wiki/x/YoM-Jg>`_.
+``max_miss_stns``: Maximum number of stations allowed to be missing (defaults to 4). If more stations are missing, the package exits with status 1 and tells the user.
 
 
 Development Setup with Conda and Poetry
@@ -123,7 +76,7 @@ Development Setup with Conda and Poetry
 Building the Project
 ''''''''''''''''''''
 
-Create a conda environment with the correct Python version and Poetry (>=1.5):
+Create a conda environment with the correct versions of Python (3.10) and Poetry (>=1.5):
 
 .. code-block:: console
 
@@ -158,6 +111,65 @@ Run Quality Tools
     poetry run pylint realtime_pollen_calibration
     poetry run mypy realtime_pollen_calibration
 
+Run the App
+'''''''''''
+
+.. code-block:: console
+
+    poetry run realtime-pollen-calibration --help
+
+
+How to run the package
+-------------------------------
+
+Review this section
+
+The two modules are called this way:
+
+.. code-block:: console
+
+ conda activate <package_env_name>
+ realtime-pollen-calibration update_phenology <path_to_config>/config.yaml
+ realtime-pollen-calibration update_strength <path_to_config>/config.yaml
+
+Help functionalities are also available:
+
+.. code-block:: console
+
+ realtime_pollen_calibration --help
+ realtime_pollen_calibration update_phenology --help
+ realtime_pollen_calibration update_strength --help
+
+
+The implementation assumes hourly resolution of the modelled and observed pollen concentrations (ATAB files). Hence, updating the tuning field  ``tune``) once per hour is recommended (i.e. running ``realtime-pollen-calibration update_strength <path_to_config>/config.yaml``).
+Updating the phenological fields (i.e. ``tthrs`` and ``tthre`` (for POAC, ``saisl`` instead of ``tthre``)) should be done once per day (i.e. running ``realtime-pollen-calibration update_phenology <path_to_config>/config.yaml``).
+
+
+
+Development Setup with Mchbuild
+-------------------------------
+
+Ensure you have mchbuild installed globally for your CSCS user. If not, ensure your pip is able to reach the MCH PyPI (Nexus) see https://meteoswiss.atlassian.net/wiki/x/XogHAQ, and then run the following:
+
+.. code-block:: console
+
+    cd ~
+    module load python/3.10.8
+    python -m venv mchbuild
+    source mchbuild/bin/activate
+    pip install mchbuild==0.8.0
+    echo "append_path ~/mchbuild/bin" >> ~/.bashrc
+
+.. code-block:: console
+
+    cd realtime_pollen_calibration
+    mchbuild conda.build
+    mchbuild conda.test
+    mchbuild conda.run
+
+Try it out at and stop it with Ctrl-C. More information can be found in the `.mch-ci.yml <./.mch-ci.yml>`_ file and `<https://meteoswiss.atlassian.net/wiki/x/YoM-Jg>`_.
+
+
 Generate Documentation
 ''''''''''''''''''''''
 
@@ -167,9 +179,3 @@ Generate Documentation
 
 Then open the index.html file generated in *realtime-pollen-calibration/doc/_build/*.
 
-Run the App
-'''''''''''
-
-.. code-block:: console
-
-    poetry run realtime-pollen-calibration --help

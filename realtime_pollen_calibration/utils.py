@@ -672,7 +672,6 @@ def check_mandatory_fields(cal_fields, pol_fields, pov_infile):
     req_fields = [fld for fld in pol_fields if fld[:4] in species_read]
     print(f"Mandatory fields required for species: {req_fields}")  
     missing_fields = [fld for fld in req_fields if fld not in cal_fields.keys()]
-    print(f"missing_fields from pov_infile: {cal_fields.keys()}")
     if missing_fields:
         print(
             f"The mandatory field(s): {missing_fields}\n",

@@ -56,5 +56,4 @@ def test_interpolation(test_data_dir):
         change_tune_2, ds, "ALNUtune", obs_mod_data.coord_stns, "multiply"
     )
     err = ds2.ALNUtune - tune_vec_2
-    print(np.amax(np.abs(err.values)))
     assert np.amax(np.abs(err.values)) < 1e-1

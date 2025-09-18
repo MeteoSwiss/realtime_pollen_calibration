@@ -34,7 +34,7 @@ def config(request, tmp_path) -> tuple[Path, Config]:
 
     config = {
         "pov_infile": str(session_path / "ART_POV_iconR19B08-grid_0001_BETU_POAC_2024042910"),
-        "pov_outfile": str(tmp_path / "ART_POV_iconR19B08-grid_0001_tune"),
+        "pov_outfile": str(tmp_path / "ART_POV_iconR19B08-grid_0001_test_output"),
         "t2m_file": str(session_path / "T_2M_KENDA-CH1_2024020112.gb2"),
         "const_file": str(session_path / "CLON_CLAT_ICON-CH1.gb2"),
         "station_obs_file": str(session_path / "pollen_measured_2024020118.atab"),
