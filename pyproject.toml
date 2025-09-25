@@ -2,7 +2,7 @@
 package-mode = true
 name = "realtime-pollen-calibration"
 description = "Framework to update pollen input fields needed in ICON-ART"
-version = "1.2.0"
+version = "1.3.0"
 license = "BSD-3-Clause"
 authors = ["Andreas Pauling <andreas.pauling@meteoswiss.ch>", "Simon Adamov <simon.adamovg@meteoswiss.ch>"]
 readme = "README.rst"
