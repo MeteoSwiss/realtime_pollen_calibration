@@ -36,8 +36,9 @@ def test_interpolation(test_data_dir):
         encode_cf=("time", "geography", "vertical"),
     )
     obs_mod_data = utils.read_atab(
-        "ALNU",
-        str(test_data_dir) + "/alnu_pollen_measured_values_2022022207.atab",
+        pollen_type="ALNU",
+        max_miss_stns=2,
+        file_obs_stns=str(test_data_dir) + "/alnu_pollen_measured_values_2022022207.atab",
     )
     ######################
     # Specify the test

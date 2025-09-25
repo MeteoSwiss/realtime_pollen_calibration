@@ -102,6 +102,7 @@ def update_strength_realtime(config_obj: utils.Config, verbose: bool = True):
     for pollen_type in ptype_present:
         obs_mod_data = utils.read_atab(
             pollen_type,
+            config_obj.max_miss_stns,
             config_obj.station_obs_file,
             config_obj.station_mod_file,
             verbose=verbose,

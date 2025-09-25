@@ -135,7 +135,10 @@ def update_phenology_realtime(config_obj: utils.Config, verbose: bool = True):
     dict_fields = {}
     for pollen_type in utils.get_pollen_type(ds):
         obs_mod_data = utils.read_atab(
-            pollen_type, config_obj.station_obs_file, verbose=verbose
+            pollen_type,
+            config_obj.max_miss_stns,
+            config_obj.station_obs_file,
+            verbose=verbose,
         )
         change_phenology_fields = utils.get_change_phenol(
             pollen_type, obs_mod_data, ds, verbose
