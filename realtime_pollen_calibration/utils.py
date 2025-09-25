@@ -119,7 +119,6 @@ def read_clon_clat(const_file):
             if rec is None:
                 break
             short_name = eccodes.codes_get(rec, "shortName")
-
             # Extract longitude and latitude of the ICON grid
             if short_name == "CLON":
                 clon = eccodes.codes_get_array(rec, "values")
@@ -736,11 +735,10 @@ def check_mandatory_fields(cal_fields, pol_fields, pov_infile):
 
     """
     species_read = {key[:4] for key in cal_fields.keys()}
-
+    print(f"Species read in pov_infile: {species_read}")
     req_fields = [fld for fld in pol_fields if fld[:4] in species_read]
-
+    print(f"Mandatory fields required for species: {req_fields}")  
     missing_fields = [fld for fld in req_fields if fld not in cal_fields.keys()]
-
     if missing_fields:
         print(
             f"The mandatory field(s): {missing_fields}\n",
