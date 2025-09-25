@@ -61,6 +61,7 @@ def read_pov_file(pov_infile, pol_fields):
 def read_t2m_file(t2m_file, config_obj):
     time_values = None
     cal_fields = {}
+
     with open(t2m_file, "rb") as fh:
         while True:
 
@@ -69,6 +70,7 @@ def read_t2m_file(t2m_file, config_obj):
             if rec is None:
                 break
             short_name = codes_get(rec, "shortName")
+
             if short_name == "T_2M":
                 cal_fields["T_2M"] = codes_get_array(rec, "values")
 
