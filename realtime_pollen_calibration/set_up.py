@@ -36,5 +36,15 @@ def set_up_config(config_file: str) -> Config:
     config.max_miss_stns = data["max_miss_stns"]
 
     config.hour_incr = data["hour_incr"]
+    
+    config.weighting_type = data.get("weighting_type","constant")
+
+    config.ipstyle = data.get("ipstyle", "idw")
+
+    config.eps_val = data.get("eps_val", 1)
+
+    # Provide default if missing in YAML
+    config.max_param = data.get("max_param", config.max_param)
+    config.min_param = data.get("min_param", config.min_param)
 
     return config
