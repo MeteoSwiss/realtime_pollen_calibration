@@ -16,6 +16,7 @@ import eccodes  # type: ignore
 import numpy as np  # type: ignore
 import pandas as pd  # type: ignore
 import xarray as xr  # type: ignore
+from pykrige.ok import OrdinaryKriging
 
 
 @dataclass
@@ -57,6 +58,30 @@ class Config:  # pylint: disable=too-many-instance-attributes
     hour_incr: int = 1
     """Hour increment (grib coding) between input and output POV file."""
 
+    weighting_type: str = "constant"
+    """ Weighting function gradually to scale down the importance of the observed and modelled 
+        concentrations for the tuning factor as a function of time.
+        Options:
+        constant=all weights are set to 1, equivalent to the non-weighted method (default)
+        linear=all weights go linearly from 1 to 0, equivalent to the non-weighted method
+        stepwise=all weights are set to 1, up to 72 hours, then to 0, 
+        equivalent to the non-weighted method with reduced averaging window
+        switch=all weights are scaled from 1 to 0 using a switching kernel
+    """
+
+    # This part is to set the interpolation method
+    ipstyle: str="idw"
+    eps_val: float=1.0
+    """ Settings of the interpolation method for calculating tune and phenology field values between the stations
+        The default is inverse distance weighting (idw). Options: gaussian radial basis function (rbf_g) and 
+        inverse multiquadratic radial basis function (rbf_mq). eps_val is the free parameter of the kernel in degrees
+        it is converted to radians within the code.
+    """
+
+    # max_param and min_param are limiters for the change applied to the
+    # tuning factor. The purpose is to ensure the adaptations are not too large.
+    max_param: dict = field(default_factory=lambda: {"ALNU": 3.389, "BETU": 4.046, "POAC": 1.875, "CORY": 7.738})
+    min_param: dict = field(default_factory= lambda: {"ALNU": 0.235, "BETU": 0.222, "POAC": 0.405, "CORY": 0.216})
 
 ObsModData = namedtuple(
     "ObsModData",
@@ -392,6 +417,7 @@ def interpolate(  # pylint: disable=R0913,R0914
     ds,
     field: str,
     coord_stns,
+    config_obj,
     method: str = "multiply",
 ):
     """Interpolate the change of a field from its values at the stations.
@@ -410,6 +436,14 @@ def interpolate(  # pylint: disable=R0913,R0914
     with different threshold (minima and maxima) for different species.
 
     """
+    # ipstyle defines the style of interpolation between the stations
+    # currently available options are inverse distance weighting (idw)
+    # and gaussian radial basis function (rbf_g) the epsilon is currently hard coded at the value of 5 degrees
+    # TODO: implement multiquadratic rbf (rbf_mq)
+    # TODO: implement krigging (too memory intensive, maybe skip or find low mem solution)
+    # TODO: ipstyle settings and tunable parameters (espilon) should be changed in the config file
+    ipstyle = config_obj.ipstyle
+    eps_val=config_obj.eps_val
     vec = None
     nstns = len(coord_stns)
     pollen_type = field[:4]
@@ -417,8 +451,10 @@ def interpolate(  # pylint: disable=R0913,R0914
         # max_param and min_param are limiters for the change applied to the
         # tuning factor. The purpose is to ensure the adaptations are not too large.
         # TODO: these numbers should go into the config file # pylint: disable=fixme
-        max_param = {"ALNU": 3.389, "BETU": 4.046, "POAC": 1.875, "CORY": 7.738}
-        min_param = {"ALNU": 0.235, "BETU": 0.222, "POAC": 0.405, "CORY": 0.216}
+        max_param = config_obj.max_param  # {"ALNU": 3.389, "BETU": 4.046, "POAC": 1.875, "CORY": 7.738}
+        min_param = config_obj.min_param # {"ALNU": 0.235, "BETU": 0.222, "POAC": 0.405, "CORY": 0.216}
+        print("tune_max:", max_param)
+        print("tune_min:", min_param)
     else:
         bigvalue = 1e10
         max_param = {
@@ -450,12 +486,22 @@ def interpolate(  # pylint: disable=R0913,R0914
             diff_lon[istation, :] ** 2 + diff_lat[istation, :] ** 2
         )
         change_vec[istation, :] = change[istation]
+    if ipstyle=="idw":
+        weight=np.sum(change_vec / dist, axis=0) / np.sum(1 / dist, axis=0)
+    elif ipstyle=="rbf_g":
+        epsilon = eps_val*np.pi / 180  # You can tune this depending on the grid scale
+        rbf_weights = np.exp(- (dist / epsilon) ** 2)
+        weight = np.sum(change_vec * rbf_weights, axis=0) / np.sum(rbf_weights, axis=0)
+    elif ipstyle=="rbf_mq":
+        epsilon = eps_val*np.pi / 180  # You can tune this depending on the grid scale
+        rbf_weights = 1.0 / np.sqrt(1 + (dist / epsilon) ** 2)
+        weight = np.sum(change_vec * rbf_weights, axis=0) / np.sum(rbf_weights, axis=0)
+
     if method == "multiply":
         vec = np.maximum(
             np.minimum(
                 ds[field].values
-                * np.sum(change_vec / dist, axis=0)
-                / np.sum(1 / dist, axis=0),
+                * weight,
                 max_param[pollen_type],
             ),
             min_param[pollen_type],
@@ -464,18 +510,18 @@ def interpolate(  # pylint: disable=R0913,R0914
         vec = np.maximum(
             np.minimum(
                 ds[field].values
-                + np.sum(change_vec / dist, axis=0) / np.sum(1 / dist, axis=0),
+                + weight,
                 max_param[pollen_type],
             ),
             min_param[pollen_type],
         )
     return vec
 
-
 def get_change_tune(  # pylint: disable=R0913
     pollen_type: str,
     obs_mod_data: ObsModData,
     ds,
+    config_obj,
     verbose: bool = False,
 ):
     """Compute the change of the tune field.
@@ -497,11 +543,55 @@ def get_change_tune(  # pylint: disable=R0913
     tune_pol_default = 1.0
     nstns = obs_mod_data.data_obs.shape[1]
     change_tune = np.ones(nstns)
+    weighting_type = config_obj.weighting_type
+    print(weighting_type)
+    # In this part we define a weighting vector for the tuning factor calculation. 
+    # The purpose is to gradually scale down the importance of the observed/modelled ratio for the tuning factor.
+    if  weighting_type == "constant":
+        weights = np.ones(120)
+        weights = weights * 1
+    if  weighting_type == "linear":
+        weights = np.linspace(1,0,120)
+    if  weighting_type == "stepwise":
+        weights = np.zeros(120)
+        weights[:36] = 1
+    if  weighting_type == "switch":
+        sharpness = 12 # arbitrary choice for the sharpness, this keeps the weight of the first 24 hours near to one, goes to near 0 after about 100 hours 
+        weights = np.linspace(1,0,120)
+
+        weights = 1 / (1 + np.exp(-sharpness * (weights-0.5)))
+    print("The average of the weighs is:", weights.mean())
+
     for istation in range(nstns):
         # sum of hourly observed concentrations of the last 5 days
         sum_obs = np.sum(obs_mod_data.data_obs[:, istation])
+        # sum of hourly observed concentrations weighted
+        sum_obs_dyn = np.sum(obs_mod_data.data_obs[:, istation]*weights)
+        print(f"observed:{sum_obs}",
+              f"weighted: {sum_obs_dyn}")
         # sum of hourly modelled concentrations of the last 5 days
         sum_mod = np.sum(obs_mod_data.data_mod[:, obs_mod_data.istation_mod[istation]])
+        sum_mod_dyn =np.sum(obs_mod_data.data_mod[:, obs_mod_data.istation_mod[istation]]*weights)
+        # This is to ensure that the weighting works for the test set where 
+        # data = obs_mod_data.data_mod[:, obs_mod_data.istation_mod[istation]]
+
+        # Check for shape alignment
+       #  if len(weights) > len(data):
+             # Trim weights to match data
+         #     weights_short = weights[:len(data)]
+       #  elif len(weights) < len(data):
+         #     raise ValueError(
+           #      f"Length mismatch: weights ({len(weights)}) shorter than data ({len(data)})."
+           #      " Ensure weights cover the same time span."
+           #   )
+
+        # Apply weights and compute weighted sum
+       #  sum_mod_dyn = np.sum(data * weights_short)
+        print(f"modelled:{sum_mod}",
+              f"weighted: {sum_mod_dyn}")
+
+
+
         # tuning factor at the current station
         tune_stns = get_field_at(
             ds,
@@ -521,6 +611,8 @@ def get_change_tune(  # pylint: disable=R0913
                 f"lon: {obs_mod_data.coord_stns[istation][1]}), ",
                 f"last 120H concentration observed: {sum_obs}, ",
                 f"modeled: {sum_mod}",
+                f"observed_dynamic: {sum_obs_dyn}",
+                f"observed: {sum_obs}",
             )
             print(
                 f"Current tune value {tune_stns.values[0]} ",
@@ -546,7 +638,8 @@ def get_change_tune(  # pylint: disable=R0913
                 print(
                     "Season started and high observation ", "and modeled concentrations"
                 )
-            change_tune[istation] = (sum_obs / sum_mod) ** (1 / 24)
+            change_tune[istation] = (sum_obs_dyn / sum_mod_dyn ) ** (1 / 24)
+            # change_tune[istation] = (sum_obs / sum_mod) ** (1 / 24)
         if verbose:
             print(f"Change tune is now: {change_tune[istation]}")
             print("-----------------------------------------")
