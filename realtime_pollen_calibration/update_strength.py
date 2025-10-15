@@ -111,12 +111,14 @@ def update_strength_realtime(config_obj: utils.Config, verbose: bool = True):
             pollen_type,
             obs_mod_data,
             ds,
+            config_obj,
             verbose=verbose,
         )
         tune_vec = utils.interpolate(
             change_tune,
             ds,
             pollen_type + "tune",
+            config.obj,
             obs_mod_data.coord_stns,
             method="multiply",
         )
