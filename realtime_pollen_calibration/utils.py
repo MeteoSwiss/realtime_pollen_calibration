@@ -556,10 +556,10 @@ def get_change_tune(  # pylint: disable=R0913
         weights = np.zeros(120)
         weights[:36] = 1
     if  weighting_type == "switch":
-        sharpness = 12 # arbitrary choice for the sharpness, this keeps the weight of the first 24 hours near to one, goes to near 0 after about 100 hours 
+        sharpness = 25 # arbitrary choice for the sharpness, this keeps the weight of the first 24 hours near to one, goes to near 0 after about 100 hours 
         weights = np.linspace(1,0,120)
 
-        weights = 1 / (1 + np.exp(-sharpness * (weights-0.5)))
+        weights = 1 / (1 + np.exp(-sharpness * (weights-0.6)))
     print("The average of the weighs is:", weights.mean())
 
     for istation in range(nstns):
