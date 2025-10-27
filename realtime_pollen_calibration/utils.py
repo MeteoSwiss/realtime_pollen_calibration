@@ -9,7 +9,7 @@
 import logging
 import sys
 from collections import namedtuple
-from dataclasses import dataclass
+from dataclasses import dataclass,field
 from datetime import datetime, timedelta
 
 import eccodes  # type: ignore
@@ -297,6 +297,8 @@ def create_data_arrays(cal_fields, clon, clat, time_values):
         data_array.coords["longitude"] = (("index"), clon)
         data_array.coords["time"] = time_values
         cal_fields_arrays[var_name] = data_array
+    print("=== cal_fields_arrays keys created ===")
+    print(list(cal_fields_arrays.keys()))
     return cal_fields_arrays
 
 
@@ -447,6 +449,12 @@ def interpolate(  # pylint: disable=R0913,R0914
     vec = None
     nstns = len(coord_stns)
     pollen_type = field[:4]
+
+    print("coord_stns type:", type(coord_stns))
+    print("config_obj type:", type(config_obj))
+    print("method:", method)
+    print("DEBUG coord_stns type:", type(coord_stns))
+    print("DEBUG config_obj type:", type(config_obj))
     if method == "multiply":
         # max_param and min_param are limiters for the change applied to the
         # tuning factor. The purpose is to ensure the adaptations are not too large.
@@ -556,22 +564,30 @@ def get_change_tune(  # pylint: disable=R0913
         weights = np.zeros(120)
         weights[:36] = 1
     if  weighting_type == "switch":
-        sharpness = 25 # arbitrary choice for the sharpness, this keeps the weight of the first 24 hours near to one, goes to near 0 after about 100 hours 
+        sharpness = 25 
+        shift = 0.6
         weights = np.linspace(1,0,120)
 
-        weights = 1 / (1 + np.exp(-sharpness * (weights-0.6)))
+        weights = 1 / (1 + np.exp(-sharpness * (weights-shift)))
     print("The average of the weighs is:", weights.mean())
 
+    # Trim weights to match the actual data lengths to avoid crash if any of the station data is shorter than 120 hours for some reasn
+    weights_obs = weights[: obs_mod_data.data_obs.shape[0]]
+    weights_mod = weights[: obs_mod_data.data_mod.shape[0]]
+
     for istation in range(nstns):
+        print(f"obs_mod_data.data_mod shape: {obs_mod_data.data_mod.shape}")
+        print(f"istation_mod[{istation}] = {obs_mod_data.istation_mod[istation]}")
+        print(f"data_mod_station shape: {obs_mod_data.data_mod[:, obs_mod_data.istation_mod[istation]].shape}")
         # sum of hourly observed concentrations of the last 5 days
         sum_obs = np.sum(obs_mod_data.data_obs[:, istation])
         # sum of hourly observed concentrations weighted
-        sum_obs_dyn = np.sum(obs_mod_data.data_obs[:, istation]*weights)
+        sum_obs_dyn = np.sum(obs_mod_data.data_obs[:, istation]*weights_obs)
         print(f"observed:{sum_obs}",
               f"weighted: {sum_obs_dyn}")
         # sum of hourly modelled concentrations of the last 5 days
         sum_mod = np.sum(obs_mod_data.data_mod[:, obs_mod_data.istation_mod[istation]])
-        sum_mod_dyn =np.sum(obs_mod_data.data_mod[:, obs_mod_data.istation_mod[istation]]*weights)
+        sum_mod_dyn =np.sum(obs_mod_data.data_mod[:, obs_mod_data.istation_mod[istation]]*weights_mod)
         # This is to ensure that the weighting works for the test set where 
         # data = obs_mod_data.data_mod[:, obs_mod_data.istation_mod[istation]]
 

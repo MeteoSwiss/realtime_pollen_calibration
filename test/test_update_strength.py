@@ -21,6 +21,6 @@ def test_update_strength_realtime(config, tmp_path):
         assert gid is not None, "Could not read GRIB message"
 
         short_name = eccodes.codes_get(gid, "shortName")
-        assert short_name == "BETUsaisn", "BETUsaisn is expected to be the first field but it is not!"
+        assert short_name == "CORYtthrs", "CORYtthrs is expected to be the first field but it is not!"
         
         eccodes.codes_release(gid)

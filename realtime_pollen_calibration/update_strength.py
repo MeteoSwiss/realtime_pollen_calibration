@@ -45,7 +45,7 @@ def read_pov_file(pov_infile, pol_fields, config_obj):
 
             # Get the short name of the current field
             short_name = codes_get(rec, "shortName")
-
+            print("POV variable short name is:", short_name)
             # Extract field if present
             if short_name in pol_fields:
                 cal_fields[short_name] = codes_get_array(rec, "values")
@@ -118,8 +118,8 @@ def update_strength_realtime(config_obj: utils.Config, verbose: bool = True):
             change_tune,
             ds,
             pollen_type + "tune",
-            config.obj,
             obs_mod_data.coord_stns,
+            config_obj=config_obj,
             method="multiply",
         )
         dict_fields[pollen_type + "tune"] = tune_vec
