@@ -16,7 +16,6 @@ import eccodes  # type: ignore
 import numpy as np  # type: ignore
 import pandas as pd  # type: ignore
 import xarray as xr  # type: ignore
-from pykrige.ok import OrdinaryKriging
 
 
 @dataclass
