@@ -88,7 +88,7 @@ Set the ecCodes definitions path (replace the value with paths to the correct ve
 
 .. code-block:: console
 
-    conda env config vars set ECCODES_DEFINITIONS_PATH=<cosmo-definition-path:eccodes-definition-path>
+    conda env config vars set ECCODES_DEFINITION_PATH=<cosmo-definition-path:eccodes-definition-path>
 
 Install the python dependencies with Poetry:
 
