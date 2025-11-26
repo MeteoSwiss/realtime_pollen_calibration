@@ -36,7 +36,7 @@ def set_up_config(config_file: str) -> Config:
     config.max_miss_stns = data["max_miss_stns"]
 
     config.hour_incr = data["hour_incr"]
-    
+
     config.weighting_type = data.get("weighting_type","constant")
 
     config.ipstyle = data.get("ipstyle", "idw")

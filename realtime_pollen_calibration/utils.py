@@ -440,10 +440,7 @@ def interpolate(  # pylint: disable=R0913,R0914
     """
     # ipstyle defines the style of interpolation between the stations
     # currently available options are inverse distance weighting (idw)
-    # and gaussian radial basis function (rbf_g) the epsilon is currently hard coded at the value of 5 degrees
-    # TODO: implement multiquadratic rbf (rbf_mq)
-    # TODO: implement krigging (too memory intensive, maybe skip or find low mem solution)
-    # TODO: ipstyle settings and tunable parameters (espilon) should be changed in the config file
+    # and gaussian radial basis function (rbf_g)
     ipstyle = config_obj.ipstyle
     eps_val=config_obj.eps_val
     vec = None
@@ -499,6 +496,9 @@ def interpolate(  # pylint: disable=R0913,R0914
         epsilon = eps_val*np.pi / 180  # You can tune this depending on the grid scale
         rbf_weights = 1.0 / np.sqrt(1 + (dist / epsilon) ** 2)
         weight = np.sum(change_vec * rbf_weights, axis=0) / np.sum(rbf_weights, axis=0)
+    else:
+        print("ipstyle in config must be one of idw, rbf_g or rbf_mq), exiting.")
+        sys.exit(1)
 
     if method == "multiply":
         vec = np.maximum(
@@ -561,7 +561,7 @@ def get_change_tune(  # pylint: disable=R0913
         weights = np.linspace(1.0, 0.0, 120)
 
     elif weighting_type == "stepwise":
-        weights = np.zeros(120) 
+        weights = np.zeros(120)
         weights[:36] = 1
     elif weighting_type == "switch":
         sharpness = 25
@@ -570,7 +570,7 @@ def get_change_tune(  # pylint: disable=R0913
         weights = 1 / (1 + np.exp(-sharpness * (weights - shift)))
 
 
-    #Trim weights to match the actual data lengths to avoid crash 
+    #Trim weights to match the actual data lengths to avoid crash
     #if any of the station data is shorter than 120 hours for some reasn
     weights_obs = weights[: obs_mod_data.data_obs.shape[0]]
     weights_mod = weights[: obs_mod_data.data_mod.shape[0]]
@@ -606,10 +606,6 @@ def get_change_tune(  # pylint: disable=R0913
                 f"Current station n°{istation}, ",
                 f"(lat: {obs_mod_data.coord_stns[istation][0]}, ",
                 f"lon: {obs_mod_data.coord_stns[istation][1]}), ",
-                f"last 120H concentration observed: {sum_obs}, ",
-                f"modeled: {sum_mod}",
-                f"observed_dynamic: {sum_obs_dyn}",
-                f"observed: {sum_obs}",
             )
             print(
                 f"Current tune value {tune_stns.values[0]} ",
@@ -827,7 +823,7 @@ def check_mandatory_fields(cal_fields, pol_fields, pov_infile):
     species_read = {key[:4] for key in cal_fields.keys()}
     print(f"Species read in pov_infile: {species_read}")
     req_fields = [fld for fld in pol_fields if fld[:4] in species_read]
-    print(f"Mandatory fields required for species: {req_fields}")  
+    print(f"Mandatory fields required for species: {req_fields}")
     missing_fields = [fld for fld in req_fields if fld not in cal_fields.keys()]
     if missing_fields:
         print(
