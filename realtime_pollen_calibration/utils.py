@@ -14,6 +14,7 @@ from datetime import datetime, timedelta
 
 import eccodes  # type: ignore
 import numpy as np  # type: ignore
+import numpy.typing as npt
 import pandas as pd  # type: ignore
 import xarray as xr  # type: ignore
 
@@ -449,11 +450,6 @@ def interpolate(  # pylint: disable=R0913,R0914
     nstns = len(coord_stns)
     pollen_type = field[:4]
 
-    print("coord_stns type:", type(coord_stns))
-    print("config_obj type:", type(config_obj))
-    print("method:", method)
-    print("DEBUG coord_stns type:", type(coord_stns))
-    print("DEBUG config_obj type:", type(config_obj))
     if method == "multiply":
         # max_param and min_param are limiters for the change applied to the
         # tuning factor. The purpose is to ensure the adaptations are not too large.
@@ -552,58 +548,44 @@ def get_change_tune(  # pylint: disable=R0913
     change_tune = np.ones(nstns)
     weighting_type = config_obj.weighting_type
     print(weighting_type)
-    # In this part we define a weighting vector for the tuning factor calculation. 
+    # In this part we define a weighting vector for the tuning factor calculation.
     # The purpose is to gradually scale down the importance of the observed/modelled ratio for the tuning factor.
-    if  weighting_type == "constant":
+    # declare the type once
+
+    weights: npt.NDArray[np.floating]
+
+    if weighting_type == "constant":
         weights = np.ones(120)
-        weights = weights * 1
-    if  weighting_type == "linear":
-        weights = np.linspace(1,0,120)
-    if  weighting_type == "stepwise":
-        weights = np.zeros(120)
+
+    elif weighting_type == "linear":
+        weights = np.linspace(1.0, 0.0, 120)
+
+    elif weighting_type == "stepwise":
+        weights = np.zeros(120) 
         weights[:36] = 1
-    if  weighting_type == "switch":
-        sharpness = 25 
+    elif weighting_type == "switch":
+        sharpness = 25
         shift = 0.6
-        weights = np.linspace(1,0,120)
+        weights=np.linspace(1,0,120)
+        weights = 1 / (1 + np.exp(-sharpness * (weights - shift)))
 
-        weights = 1 / (1 + np.exp(-sharpness * (weights-shift)))
-    print("The average of the weighs is:", weights.mean())
 
-    # Trim weights to match the actual data lengths to avoid crash if any of the station data is shorter than 120 hours for some reasn
+    #Trim weights to match the actual data lengths to avoid crash 
+    #if any of the station data is shorter than 120 hours for some reasn
     weights_obs = weights[: obs_mod_data.data_obs.shape[0]]
     weights_mod = weights[: obs_mod_data.data_mod.shape[0]]
-
     for istation in range(nstns):
-        print(f"obs_mod_data.data_mod shape: {obs_mod_data.data_mod.shape}")
-        print(f"istation_mod[{istation}] = {obs_mod_data.istation_mod[istation]}")
-        print(f"data_mod_station shape: {obs_mod_data.data_mod[:, obs_mod_data.istation_mod[istation]].shape}")
         # sum of hourly observed concentrations of the last 5 days
         sum_obs = np.sum(obs_mod_data.data_obs[:, istation])
         # sum of hourly observed concentrations weighted
         sum_obs_dyn = np.sum(obs_mod_data.data_obs[:, istation]*weights_obs)
-        print(f"observed:{sum_obs}",
-              f"weighted: {sum_obs_dyn}")
+        print(f"observed non-weighted:{sum_obs}",
+              f"observed weighted : {sum_obs_dyn}")
         # sum of hourly modelled concentrations of the last 5 days
         sum_mod = np.sum(obs_mod_data.data_mod[:, obs_mod_data.istation_mod[istation]])
         sum_mod_dyn =np.sum(obs_mod_data.data_mod[:, obs_mod_data.istation_mod[istation]]*weights_mod)
-        # This is to ensure that the weighting works for the test set where 
-        # data = obs_mod_data.data_mod[:, obs_mod_data.istation_mod[istation]]
-
-        # Check for shape alignment
-       #  if len(weights) > len(data):
-             # Trim weights to match data
-         #     weights_short = weights[:len(data)]
-       #  elif len(weights) < len(data):
-         #     raise ValueError(
-           #      f"Length mismatch: weights ({len(weights)}) shorter than data ({len(data)})."
-           #      " Ensure weights cover the same time span."
-           #   )
-
-        # Apply weights and compute weighted sum
-       #  sum_mod_dyn = np.sum(data * weights_short)
-        print(f"modelled:{sum_mod}",
-              f"weighted: {sum_mod_dyn}")
+        print(f"modelled non-weighted:{sum_mod}",
+              f"observed weighted: {sum_mod_dyn}")
 
 
 
