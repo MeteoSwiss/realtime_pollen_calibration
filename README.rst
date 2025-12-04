@@ -33,14 +33,12 @@ The module ``update_phenology`` uses observed pollen concentrations to check whe
 
 The module ``update_strength`` uses both observed and modelled pollen concentrations to check whether the current ICON concentrations match the real world. In case of a mismatch the tuning field is adapted accordingly. Technically speaking, the field ``tune`` is adapted by using the GRIB2 field ``saisn`` and the observed and modelled pollen concentrations of the last 120 hours at hourly resolution in ATAB format (missing data supported).
 
-Missing fields result in an error and thus no update of the fields. The input fields remain unchanged. If not all station data (observed or modelled) is available, the extraction will still take place and the update of the fields will be tried. However, input fields will remain unchanged if more than 10% of the data is missing.
-
 For further details of the realtime pollen calibration concept one may refer to the paper above.
 
 How to configure the package
 -------------------------------
 
-The implementation includes a command line interface based on the click package. The configuration is done by editing the config.yaml file where the input/output is specified. There is the option to configure the increment of the timestamp of the outfile relative to the infile in hours. The config.yaml should include the following entries (sample file names):
+The implementation includes a command line interface based on the click package. The configuration is done by editing the config.yaml file where the input/output is specified. The config.yaml should include the following entries (sample file names/values):
 
 .. code-block:: console
 
@@ -52,6 +50,19 @@ The implementation includes a command line interface based on the click package.
  station_mod_file : <path>/pollen_modelled_2024020118.atab
  hour_incr : 1
  max_miss_stns : 4
+ weighting_type: switch
+ max_param:
+   ALNU: 3.389
+   BETU: 4.046
+   POAC: 1.875
+   CORY: 7.738
+ min_param:
+   ALNU: 0.235
+   BETU: 0.222
+   POAC: 0.405
+   CORY: 0.216
+ ipstyle: rbf_mq
+ eps_val: 1
 
 ``pov_infile``: This GRIB2 file must include the fields ``tthrs``, ``tthre`` (for POAC, ``saisl`` instead), ``saisn`` and ``ctsum`` if the module ``update_phenology`` is called. If the module ``update_strength`` is called ``pov_infile`` must include the fields ``saisn`` and ``tune``. If at least one of these mandatory fields is missing the package exits with status 1 and tells the user. ``pov_infile`` is used as template for ``pov_outfile``, i.e. the whole file is copied to ``pov_outfile`` with adapted values. Date and time information of ``pov_infile`` does not have to be correct, ICON just throws warnings.
 
@@ -67,7 +78,18 @@ The implementation includes a command line interface based on the click package.
 
 ``hour_incr``: Increment of the timestamp of the outfile relative to the infile in hours (defaults to 1; negative values also supported). This parameter should be adapted if the calibration is done for a subsequent run more than one hour ahead.
 
-``max_miss_stns``: Maximum number of stations allowed to be missing (defaults to 4). If more stations are missing, the package exits with status 1 and tells the user.
+``max_miss_stns``: Maximum number of stations allowed to be missing (defaults to 4). If more stations are missing, the package exits and tells the user.
+
+``weighting_type``: Type of weighting used for the 120h pollen history. One of "constant" (default; same weights for all 120h), "switch" (sigmoidal decrease of older data), "linear" (linear decrease from 1 to zero back in time), "stepwise" (latest 36h get the same weights, older data zero).
+
+``max_param``: Maximum allowed value for the tune parameter. If the updated value exceeds this maximum, it is set to this maximum.
+
+``min_param``: Minimum allowed value for the tune parameter. If the updated value is below this minimum, it is set to this minimum.
+
+``ipstyle``: Interpolation style used for spatial interpolation of station data to grid points. Options are "idw" (default; inverse distance weighting), "rbf_mq" (multiquadric radial basis function), "rbf_g" (gaussian radial basis function).
+
+``eps_val``: Epsilon value used in the radial basis function interpolation. Relevant only if ``ipstyle`` is set to "rbf_mq" or "rbf_g". Defaults to 1.
+
 
 
 Development Setup with Conda and Poetry
@@ -88,7 +110,7 @@ Set the ecCodes definitions path (replace the value with paths to the correct ve
 
 .. code-block:: console
 
-    conda env config vars set ECCODES_DEFINITIONS_PATH=<cosmo-definition-path:eccodes-definition-path>
+    conda env config vars set ECCODES_DEFINITION_PATH=<cosmo-definition-path:eccodes-definition-path>
 
 Install the python dependencies with Poetry:
 

@@ -26,23 +26,37 @@ def pytest_configure(config):
 
     config.data_dir = destination
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def config(request, tmp_path) -> tuple[Path, Config]: 
-    """Create config.yaml"""
+    """Create config.yaml for testing."""
 
-    session_path = request.config.data_dir
+    session_path = Path(request.config.data_dir)
 
     config = {
-        "pov_infile": str(session_path / "ART_POV_iconR19B08-grid_0001_BETU_POAC_2024042910"),
+        "pov_infile": str(session_path / "ART_POV_iconR19B08-grid_0001.gb2"),
         "pov_outfile": str(tmp_path / "ART_POV_iconR19B08-grid_0001_test_output"),
         "t2m_file": str(session_path / "T_2M_KENDA-CH1_2024020112.gb2"),
         "const_file": str(session_path / "CLON_CLAT_ICON-CH1.gb2"),
-        "station_obs_file": str(session_path / "pollen_measured_2024020118.atab"),
-        "station_mod_file": str(session_path / "pollen_modelled_2024020118.atab"),
+        "station_obs_file": str(session_path /  "pollen_measured_2024020118.atab"),
+        "station_mod_file": str(session_path /  "pollen_modelled_2024020118.atab"),
         "hour_incr": 1,
-        "max_miss_stns": 4
+        "max_miss_stns": 4,
+        "weighting_type": "constant",
+        "max_param": {
+            "ALNU": 3.389,
+            "BETU": 4.046,
+            "POAC": 1.875,
+            "CORY": 7.738,
+        },
+        "min_param": {
+            "ALNU": 0.235,
+            "BETU": 0.222,
+            "POAC": 0.405,
+            "CORY": 0.216,
+        },
+        "ipstyle": "idw",
+        "eps_val": 1,
     }
-
     config_path = tmp_path / "config.yaml"
 
     with open(config_path, 'w') as f:

@@ -158,6 +158,7 @@ def update_phenology_realtime(config_obj: utils.Config, verbose: bool = True):
                     ds,
                     pollen_type + field_name[7:],
                     obs_mod_data.coord_stns,
+                    config_obj=config_obj,
                     method="sum",
                 )
 
