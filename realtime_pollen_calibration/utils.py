@@ -228,9 +228,8 @@ def read_atab(
         file_obs_stns,
         header=headerdata.n_header,
         sep=r"\s+",
-        parse_dates=[[1, 2, 3, 4, 5]],
     )
-    data_obs = data_obs[data_obs["PARAMETER"] == pollen_type].iloc[:, 2:].to_numpy()
+    data_obs = data_obs[data_obs["PARAMETER"] == pollen_type].iloc[:, 6:].to_numpy()
     if file_mod_stns != "":
         stn_indicators_mod = None
         missing_value = None
@@ -247,9 +246,8 @@ def read_atab(
             file_mod_stns,
             header=n_header_mod,
             sep=r"\s+",
-            parse_dates=[[3, 4, 5, 6, 7]],
         )
-        data_mod = data_mod[data_mod["PARAMETER"] == pollen_type].iloc[:, 4:].to_numpy()
+        data_mod = data_mod[data_mod["PARAMETER"] == pollen_type].iloc[:, 8:].to_numpy()
         if missing_value in data_mod:
             print(
                 "There is at least one missing value",
