@@ -583,7 +583,7 @@ def get_change_tune(  # pylint: disable=R0913
         sum_mod = np.sum(obs_mod_data.data_mod[:, obs_mod_data.istation_mod[istation]])
         sum_mod_dyn =np.sum(obs_mod_data.data_mod[:, obs_mod_data.istation_mod[istation]]*weights_mod)
         print(f"modelled non-weighted:{sum_mod}",
-              f"observed weighted: {sum_mod_dyn}")
+              f"modelled weighted: {sum_mod_dyn}")
 
 
 
