@@ -121,7 +121,7 @@ local:
           - pythonContainerTypeCheck:
   - run:
       - main:
-          - pythonRun:
+          - pythonLocalRunTask:
               commands: realtime-pollen-calibration update_phenology --help
 
 # Configuration to install and test the python project
@@ -131,7 +131,7 @@ conda:
       - getSemanticVersion:
           - gitCalculateSemanticVersion:
       - install:
-          pythonRun:
+          pythonLocalRunTask:
             packageManager: micromamba
             commands: |
               micromamba create -y -n ${var.project}-${var.semanticVersion} --file conda_deps.yml --rc-file .mambarc && 
@@ -141,12 +141,12 @@ conda:
       - getSemanticVersion:
           - gitCalculateSemanticVersion:
       - unit:
-          pythonRun:
+          pythonLocalRunTask:
             packageManager: micromamba
             commands: |
               micromamba run -n ${var.project}-${var.semanticVersion} bash -c "mchbuild local.test.unit"
       - lint:
-          pythonRun:
+          pythonLocalRunTask:
             packageManager: micromamba
             commands: |
               micromamba run -n ${var.project}-${var.semanticVersion} bash -c "mchbuild local.test.lint"
@@ -154,7 +154,7 @@ conda:
       - getSemanticVersion:
           - gitCalculateSemanticVersion:
       - main:
-          - pythonRun:
+          - pythonLocalRunTask:
               packageManager: micromamba
               commands: |
                 micromamba run -n ${var.project}-${var.semanticVersion} bash -c "mchbuild local.run.main"
@@ -162,7 +162,7 @@ conda:
       - getSemanticVersion:
           - gitCalculateSemanticVersion:
       - deleteCondaEnv:
-          pythonRun:
+          pythonLocalRunTask:
             packageManager: micromamba
             commands: |
               micromamba env remove -y -n ${var.project}-${var.semanticVersion}
