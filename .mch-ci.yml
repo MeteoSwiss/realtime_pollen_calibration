@@ -121,7 +121,7 @@ local:
           - pythonContainerTypeCheck:
   - run:
       - main:
-          - pythonLocalRunTask:
+          - pythonRun:
               commands: realtime-pollen-calibration update_phenology --help
 
 # Configuration to install and test the python project
@@ -131,30 +131,34 @@ conda:
       - getSemanticVersion:
           - gitCalculateSemanticVersion:
       - install:
-          pythonLocalRunTask:
-            packageManager: micromamba
-            commands: |
-              micromamba create -y -n ${var.project}-${var.semanticVersion} --file conda_deps.yml --rc-file .mambarc && 
-              micromamba run -n ${var.project}-${var.semanticVersion} poetry install &&
-              echo "Activate your environment with 'micromamba activate ${var.project}-${var.semanticVersion}'"
+          - pythonRun:
+              pythonSourcePackage: realtime_pollen_calibration
+              packageManager: micromamba
+              commands: |
+                micromamba create -y -n ${var.project}-${var.semanticVersion} --file conda_deps.yml --rc-file .mambarc &&
+                micromamba run -n ${var.project}-${var.semanticVersion} poetry install &&
+                echo "Activate your environment with 'micromamba activate ${var.project}-${var.semanticVersion}'"
   - test:
       - getSemanticVersion:
           - gitCalculateSemanticVersion:
       - unit:
-          pythonLocalRunTask:
-            packageManager: micromamba
-            commands: |
-              micromamba run -n ${var.project}-${var.semanticVersion} bash -c "mchbuild local.test.unit"
+          - pythonRun:
+              pythonSourcePackage: realtime_pollen_calibration
+              packageManager: micromamba
+              commands: |
+                micromamba run -n ${var.project}-${var.semanticVersion} bash -c "mchbuild local.test.unit"
       - lint:
-          pythonLocalRunTask:
-            packageManager: micromamba
-            commands: |
-              micromamba run -n ${var.project}-${var.semanticVersion} bash -c "mchbuild local.test.lint"
+          - pythonRun:
+              pythonSourcePackage: realtime_pollen_calibration
+              packageManager: micromamba
+              commands: |
+                micromamba run -n ${var.project}-${var.semanticVersion} bash -c "mchbuild local.test.lint"
   - run:
       - getSemanticVersion:
           - gitCalculateSemanticVersion:
       - main:
-          - pythonLocalRunTask:
+          - pythonRun:
+              pythonSourcePackage: realtime_pollen_calibration
               packageManager: micromamba
               commands: |
                 micromamba run -n ${var.project}-${var.semanticVersion} bash -c "mchbuild local.run.main"
@@ -162,10 +166,11 @@ conda:
       - getSemanticVersion:
           - gitCalculateSemanticVersion:
       - deleteCondaEnv:
-          pythonLocalRunTask:
-            packageManager: micromamba
-            commands: |
-              micromamba env remove -y -n ${var.project}-${var.semanticVersion}
+          - pythonRun:
+              pythonSourcePackage: realtime_pollen_calibration
+              packageManager: micromamba
+              commands: |
+                micromamba env remove -y -n ${var.project}-${var.semanticVersion}
 
 variables:
   project: realtime-pollen-calibration
