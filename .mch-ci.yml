@@ -25,7 +25,7 @@ default:
             pullAlways: false
       - docs:
           - script: mkdir -p doc/_build
-          - pythonDocs:
+          - pythonContainerDocs:
               imageName: ${var.image}-tester
               imageTag: ${var.semanticVersion}
               packageManager: ''
@@ -36,11 +36,6 @@ default:
       - unit:
           - script: mkdir -p test_reports
           - pythonContainerTest:
-              imageName: ${var.image}-tester
-              imageTag: ${var.semanticVersion}
-              packageManager: ''
-              pullAlways: false
-          - pythonCoverage:
               imageName: ${var.image}-tester
               imageTag: ${var.semanticVersion}
               packageManager: ''
@@ -104,21 +99,20 @@ default:
 local:
   - build:
       - install:
-          pythonInstall:
+          pythonLocalInstall:
       - docs:
-          pythonDocs:
+          pythonLocalDocs:
       - format:
-          pythonFormat:
+          pythonLocalFormat:
             inPlace: true
   - test:
       - unit:
           - script: mkdir -p test_reports
-          - pythonContainerTest:
-          - pythonCoverage:
+          - pythonLocalTest:
       - lint:
           - script: mkdir -p test_reports
-          - pythonContainerLint:
-          - pythonContainerTypeCheck:
+          - pythonLocalLint:
+          - pythonLocalTypeCheck:
   - run:
       - main:
           - pythonLocalRun:
