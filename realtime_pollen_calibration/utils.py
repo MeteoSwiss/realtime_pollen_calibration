@@ -228,9 +228,8 @@ def read_atab(
         file_obs_stns,
         header=headerdata.n_header,
         sep=r"\s+",
-        parse_dates=[[1, 2, 3, 4, 5]],
     )
-    data_obs = data_obs[data_obs["PARAMETER"] == pollen_type].iloc[:, 2:].to_numpy()
+    data_obs = data_obs[data_obs["PARAMETER"] == pollen_type].iloc[:, 6:].to_numpy()
     if file_mod_stns != "":
         stn_indicators_mod = None
         missing_value = None
@@ -247,9 +246,8 @@ def read_atab(
             file_mod_stns,
             header=n_header_mod,
             sep=r"\s+",
-            parse_dates=[[3, 4, 5, 6, 7]],
         )
-        data_mod = data_mod[data_mod["PARAMETER"] == pollen_type].iloc[:, 4:].to_numpy()
+        data_mod = data_mod[data_mod["PARAMETER"] == pollen_type].iloc[:, 8:].to_numpy()
         if missing_value in data_mod:
             print(
                 "There is at least one missing value",
@@ -411,7 +409,7 @@ def get_field_at(ds, field: str, coords: tuple):
 
     """
     dist = (ds.latitude - coords[0]) ** 2 + (ds.longitude - coords[1]) ** 2
-    return ds[field].where(dist == dist.min(), drop=True)
+    return ds[field].where(dist == dist.min(), drop=True).item()
 
 
 def interpolate(  # pylint: disable=R0913,R0914
@@ -585,7 +583,7 @@ def get_change_tune(  # pylint: disable=R0913
         sum_mod = np.sum(obs_mod_data.data_mod[:, obs_mod_data.istation_mod[istation]])
         sum_mod_dyn =np.sum(obs_mod_data.data_mod[:, obs_mod_data.istation_mod[istation]]*weights_mod)
         print(f"modelled non-weighted:{sum_mod}",
-              f"observed weighted: {sum_mod_dyn}")
+              f"modelled weighted: {sum_mod_dyn}")
 
 
 
@@ -608,8 +606,8 @@ def get_change_tune(  # pylint: disable=R0913
                 f"lon: {obs_mod_data.coord_stns[istation][1]}), ",
             )
             print(
-                f"Current tune value {tune_stns.values[0]} ",
-                f"and saisn: {saisn_stns.values[0]}",
+                f"Current tune value {tune_stns} ",
+                f"and saisn: {saisn_stns}",
             )
         if saisn_stns > 0 and (
             sum_obs <= thr_con_120[pollen_type] or sum_mod <= thr_con_120[pollen_type]
@@ -619,7 +617,7 @@ def get_change_tune(  # pylint: disable=R0913
                 print(
                     "Season started but low observation or modeled concentrations, "
                     "(tune)**(-1/24) = "
-                    f"{(tune_pol_default / tune_stns.values[0]) ** (1 / 24)}"
+                    f"{(tune_pol_default / tune_stns) ** (1 / 24)}"
                 )
             change_tune[istation] = (tune_pol_default / tune_stns) ** (1 / 24)
         if (
@@ -696,15 +694,15 @@ def get_change_phenol(  # pylint: disable=R0912,R0914,R0915
                 f"and last 120H {sum_obs}",
             )
             print(
-                f"Cumulative temperature sum {ctsum_stns.values[0]} ",
-                f"and threshold (start): {tthrs_stns.values[0]}",
-                f" and saisn: {saisn_stns.values[0]}",
+                f"Cumulative temperature sum {ctsum_stns} ",
+                f"and threshold (start): {tthrs_stns}",
+                f" and saisn: {saisn_stns}",
             )
             if pollen_type != "POAC":
-                print(f"Cumsum temp threshold end: {tthre_stns.values[0]}")
+                print(f"Cumsum temp threshold end: {tthre_stns}")
             else:
-                print(f"Saisl: {saisl_stns.values[0]}")
-            print(f"Temperature at station {t_2m_stns.values[0]}, " f"date: {date}")
+                print(f"Saisl: {saisl_stns}")
+            print(f"Temperature at station {t_2m_stns}, " f"date: {date}")
             print("-----------------------------------------")
         # ADJUSTMENT OF SEASON START AND END AT THE BEGINNING OF THE SEASON
         if (
