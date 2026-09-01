@@ -132,7 +132,7 @@ conda:
           - gitCalculateSemanticVersion:
       - install:
           - pythonLocalRun:
-              packageManager: micromamba
+              packageManager: ''
               commands: |
                 micromamba create -y -n ${var.project}-${var.semanticVersion} --file conda_deps.yml --rc-file .mambarc &&
                 micromamba run -n ${var.project}-${var.semanticVersion} poetry install &&
@@ -142,12 +142,12 @@ conda:
           - gitCalculateSemanticVersion:
       - unit:
           - pythonLocalRun:
-              packageManager: micromamba
+              packageManager: ''
               commands: |
                 micromamba run -n ${var.project}-${var.semanticVersion} bash -c "mchbuild local.test.unit"
       - lint:
           - pythonLocalRun:
-              packageManager: micromamba
+              packageManager: ''
               commands: |
                 micromamba run -n ${var.project}-${var.semanticVersion} bash -c "mchbuild local.test.lint"
   - run:
@@ -155,7 +155,7 @@ conda:
           - gitCalculateSemanticVersion:
       - main:
           - pythonLocalRun:
-              packageManager: micromamba
+              packageManager: ''
               commands: |
                 micromamba run -n ${var.project}-${var.semanticVersion} bash -c "mchbuild local.run.main"
   - clean:
@@ -163,7 +163,7 @@ conda:
           - gitCalculateSemanticVersion:
       - deleteCondaEnv:
           - pythonLocalRun:
-              packageManager: micromamba
+              packageManager: ''
               commands: |
                 micromamba env remove -y -n ${var.project}-${var.semanticVersion}
 
