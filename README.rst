@@ -98,7 +98,7 @@ Development Setup with Conda and Poetry
 Building the Project
 ''''''''''''''''''''
 
-Create a conda environment with the correct versions of Python (3.10) and Poetry (>=1.5):
+Create a conda environment with the correct versions of Python (3.13) and Poetry (>=1.5):
 
 .. code-block:: console
 
@@ -158,9 +158,9 @@ Help functionalities are also available:
 
 .. code-block:: console
 
- realtime_pollen_calibration --help
- realtime_pollen_calibration update_phenology --help
- realtime_pollen_calibration update_strength --help
+ realtime-pollen-calibration --help
+ realtime-pollen-calibration update_phenology --help
+ realtime-pollen-calibration update_strength --help
 
 
 The implementation assumes hourly resolution of the modelled and observed pollen concentrations (ATAB files). Hence, updating the tuning field  ``tune``) once per hour is recommended (i.e. running ``realtime-pollen-calibration update_strength <path_to_config>/config.yaml``).

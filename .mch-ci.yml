@@ -4,50 +4,52 @@
 # can be run separately.
 default:
   - build:
-      - getVersion:
-          gitCalculateVersion:
+      - getSemanticVersion:
+          - gitCalculateSemanticVersion:
       - imageTester:
           containerBuildImage:
-            fullImageName: ${var.image}-tester
+            imageName: ${var.image}-tester
+            imageTag: ${var.semanticVersion}
             target: tester
             extraArgs:
               - --build-arg
-              - VERSION=${var.version}
+              - VERSION=${var.semanticVersion}
       - imageRunner:
           containerBuildImage:
-            fullImageName: ${var.image}
+            imageName: ${var.image}
+            imageTag: ${var.semanticVersion}
             target: runner
             extraArgs:
               - --build-arg
-              - VERSION=${var.version}
+              - VERSION=${var.semanticVersion}
             pullAlways: false
       - docs:
           - script: mkdir -p doc/_build
-          - pythonDocs:
-              fullImageName: ${var.image}-tester
+          - pythonContainerDocs:
+              imageName: ${var.image}-tester
+              imageTag: ${var.semanticVersion}
               packageManager: ''
               pullAlways: false
   - test:
-      - getVersion:
-          gitCalculateVersion:
+      - getSemanticVersion:
+          - gitCalculateSemanticVersion:
       - unit:
           - script: mkdir -p test_reports
-          - pythonTest:
-              fullImageName: ${var.image}-tester
-              packageManager: ''
-              pullAlways: false
-          - pythonCoverage:
-              fullImageName: ${var.image}-tester
+          - pythonContainerTest:
+              imageName: ${var.image}-tester
+              imageTag: ${var.semanticVersion}
               packageManager: ''
               pullAlways: false
       - lint:
           - script: mkdir -p test_reports
-          - pythonLint:
-              fullImageName: ${var.image}-tester
+          - pythonContainerLint:
+              imageName: ${var.image}-tester
+              imageTag: ${var.semanticVersion}
               packageManager: ''
               pullAlways: false
-          - pythonTypeChecker:
-              fullImageName: ${var.image}-tester
+          - pythonContainerTypeCheck:
+              imageName: ${var.image}-tester
+              imageTag: ${var.semanticVersion}
               packageManager: ''
               pullAlways: false
   - verify:
@@ -81,13 +83,13 @@ default:
           openshiftDeploy:
             restartDeployment: false
   - clean:
-      - getVersion:
-          gitCalculateVersion:
+      - getSemanticVersion:
+          - gitCalculateSemanticVersion:
       - images:
           script: |
-            if test -n "${var.version}"; then
+            if test -n "${var.semanticVersion}"; then
               podman image rm -f $(podman image ls -q \
-                -f "label=ch.meteoswiss.project=${var.project}-${var.version}") || :
+                -f "label=ch.meteoswiss.project=${var.project}-${var.semanticVersion}") || :
             fi
 
 # Alternative configuration to install and test the service locally using
@@ -97,69 +99,69 @@ default:
 local:
   - build:
       - install:
-          pythonInstall:
+          pythonLocalInstall:
       - docs:
-          pythonDocs:
+          pythonLocalDocs:
       - format:
-          pythonFormat:
+          pythonLocalFormat:
             inPlace: true
   - test:
       - unit:
           - script: mkdir -p test_reports
-          - pythonTest:
-          - pythonCoverage:
+          - pythonLocalTest:
       - lint:
           - script: mkdir -p test_reports
-          - pythonLint:
-          - pythonTypeChecker:
+          - pythonLocalLint:
+          - pythonLocalTypeCheck:
   - run:
       - main:
-          - pythonRun:
+          - pythonLocalRun:
               commands: realtime-pollen-calibration update_phenology --help
 
 # Configuration to install and test the python project
 # on top of a conda environment using micromamba to set it up
 conda:
   - build:
-      - getVersion:
-          gitCalculateVersion:
+      - getSemanticVersion:
+          - gitCalculateSemanticVersion:
       - install:
-          pythonRun:
-            packageManager: micromamba
-            commands: |
-              micromamba create -y -n ${var.project}-${var.version} --file conda_deps.yml --rc-file .mambarc && 
-              micromamba run -n ${var.project}-${var.version} poetry install &&
-              echo "Activate your environment with 'micromamba activate ${var.project}-${var.version}'"
-  - test:
-      - getVersion:
-          gitCalculateVersion:
-      - unit:
-          pythonRun:
-            packageManager: micromamba
-            commands: |
-              micromamba run -n ${var.project}-${var.version} bash -c "mchbuild local.test.unit"
-      - lint:
-          pythonRun:
-            packageManager: micromamba
-            commands: |
-              micromamba run -n ${var.project}-${var.version} bash -c "mchbuild local.test.lint"
-  - run:
-      - getVersion:
-          gitCalculateVersion:
-      - main:
-          - pythonRun:
-              packageManager: micromamba
+          - pythonLocalRun:
+              packageManager: ''
               commands: |
-                micromamba run -n ${var.project}-${var.version} bash -c "mchbuild local.run.main"
+                micromamba create -y -n ${var.project}-${var.semanticVersion} --file conda_deps.yml --rc-file .mambarc &&
+                micromamba run -n ${var.project}-${var.semanticVersion} poetry install &&
+                echo "Activate your environment with 'micromamba activate ${var.project}-${var.semanticVersion}'"
+  - test:
+      - getSemanticVersion:
+          - gitCalculateSemanticVersion:
+      - unit:
+          - pythonLocalRun:
+              packageManager: ''
+              commands: |
+                micromamba run -n ${var.project}-${var.semanticVersion} bash -c "mchbuild local.test.unit"
+      - lint:
+          - pythonLocalRun:
+              packageManager: ''
+              commands: |
+                micromamba run -n ${var.project}-${var.semanticVersion} bash -c "mchbuild local.test.lint"
+  - run:
+      - getSemanticVersion:
+          - gitCalculateSemanticVersion:
+      - main:
+          - pythonLocalRun:
+              packageManager: ''
+              commands: |
+                micromamba run -n ${var.project}-${var.semanticVersion} bash -c "mchbuild local.run.main"
   - clean:
-      - getVersion:
-          gitCalculateVersion:
+      - getSemanticVersion:
+          - gitCalculateSemanticVersion:
       - deleteCondaEnv:
-          pythonRun:
-            packageManager: micromamba
-            commands: |
-              micromamba env remove -y -n ${var.project}-${var.version}
+          - pythonLocalRun:
+              packageManager: ''
+              commands: |
+                micromamba env remove -y -n ${var.project}-${var.semanticVersion}
 
 variables:
   project: realtime-pollen-calibration
   solution: icon
+  semanticVersion: 0.0.0  # is overwritten in Jenkins

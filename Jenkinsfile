@@ -85,7 +85,7 @@ pipeline {
             }
             post {
                 always {
-                    sh "mchbuild conda.build.getVersion conda.clean || true"
+                    sh "mchbuild conda.build.getSemanticVersion conda.clean || true"
                     junit keepLongStdio: true, testResults: 'test_reports/junit*.xml'
                 }
             }
