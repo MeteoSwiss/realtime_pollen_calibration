@@ -45,7 +45,7 @@ pipeline {
 
 
         stage('Test') {
-            agent { label 'balfrin' }
+            agent { label 'balfrin || linard' }
             options {
                 // GIT Jenkins plugin has configured the MCH Web proxy, which is not accessible from CSCS.
                 // Therefore, we need to clone the git repository manually

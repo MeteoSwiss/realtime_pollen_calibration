@@ -1,5 +1,4 @@
 import shutil
-import subprocess
 import pytest
 import yaml
 import os
@@ -70,15 +69,7 @@ def _download_test_data(test_directory: Path) -> Path:
 
     dest = test_directory / "RTcal_testdata"
 
-    if 'balfrin' not in os.getenv('HOST', ''):
-        # Copy data from remote using scp
-        subprocess.run(["scp", "-r", f"balfrin:{DATA_PATH}", str(test_directory)], check=True)
-        # Rename the copied directory
-        source = test_directory / "pollen_calibration"
-        shutil.move(str(source), str(dest))
-
-    else:
-        shutil.copytree(DATA_PATH, str(dest), dirs_exist_ok=True)
+    shutil.copytree(DATA_PATH, str(dest), dirs_exist_ok=True)
     return dest
 
 @pytest.fixture(scope="session", autouse=True)
